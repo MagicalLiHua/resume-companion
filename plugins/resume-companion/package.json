@@ -1,0 +1,22 @@
+{
+  "name": "resume-companion-codex-plugin",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node scripts/self-test.mjs",
+    "test:live": "node scripts/live-extension-test.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.30.0",
+    "ws": "8.21.3",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}

@@ -1,0 +1,160 @@
+{
+  "$defs": {
+    "SourceItem": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "maxLength": 80,
+          "title": "Path",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 80,
+          "title": "Label",
+          "type": "string"
+        },
+        "group": {
+          "enum": [
+            "basic",
+            "education",
+            "experience",
+            "project",
+            "skills",
+            "other"
+          ],
+          "title": "Group",
+          "type": "string"
+        },
+        "value_type": {
+          "enum": [
+            "text",
+            "enum",
+            "month",
+            "list"
+          ],
+          "title": "Value Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "label",
+        "group",
+        "value_type"
+      ],
+      "title": "SourceItem",
+      "type": "object"
+    },
+    "WebField": {
+      "additionalProperties": false,
+      "properties": {
+        "field_id": {
+          "pattern": "^[A-Za-z0-9_-]{1,100}$",
+          "title": "Field Id",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "group": {
+          "enum": [
+            "basic",
+            "education",
+            "experience",
+            "project",
+            "skills",
+            "other"
+          ],
+          "title": "Group",
+          "type": "string"
+        },
+        "group_label": {
+          "maxLength": 80,
+          "title": "Group Label",
+          "type": "string"
+        },
+        "input_kind": {
+          "enum": [
+            "text",
+            "email",
+            "tel",
+            "textarea",
+            "select-one",
+            "radio",
+            "date",
+            "month",
+            "checkbox"
+          ],
+          "title": "Input Kind",
+          "type": "string"
+        },
+        "required": {
+          "title": "Required",
+          "type": "boolean"
+        },
+        "option_labels": {
+          "items": {
+            "maxLength": 80,
+            "type": "string"
+          },
+          "maxItems": 80,
+          "title": "Option Labels",
+          "type": "array"
+        }
+      },
+      "required": [
+        "field_id",
+        "label",
+        "group",
+        "group_label",
+        "input_kind",
+        "required",
+        "option_labels"
+      ],
+      "title": "WebField",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "protocol_version": {
+      "const": "1.0",
+      "title": "Protocol Version",
+      "type": "string"
+    },
+    "request_id": {
+      "pattern": "^[A-Za-z0-9_-]{1,100}$",
+      "title": "Request Id",
+      "type": "string"
+    },
+    "fields": {
+      "items": {
+        "$ref": "#/$defs/WebField"
+      },
+      "maxItems": 40,
+      "minItems": 1,
+      "title": "Fields",
+      "type": "array"
+    },
+    "source_catalog": {
+      "items": {
+        "$ref": "#/$defs/SourceItem"
+      },
+      "maxItems": 120,
+      "minItems": 1,
+      "title": "Source Catalog",
+      "type": "array"
+    }
+  },
+  "required": [
+    "protocol_version",
+    "request_id",
+    "fields",
+    "source_catalog"
+  ],
+  "title": "ResolveRequest",
+  "type": "object"
+}

@@ -1,0 +1,72 @@
+name: resume-companion
+services:
+  api:
+    build:
+      context: .
+      args:
+        PYTHON_IMAGE: ${PYTHON_IMAGE:-python:3.12-slim}
+    image: resume-companion-api:0.4.0
+    user: "${API_UID:-10001}:${API_GID:-10001}"
+    environment:
+      RESUME_API_CONFIG: /run/resume/config.json
+    volumes:
+      - ./.runtime:/run/resume:ro
+      - ./.data:/data
+    ports:
+      - "127.0.0.1:18080:18080"
+    networks: [ingress]
+    read_only: true
+    tmpfs: ["/tmp:rw,noexec,nosuid,size=16m"]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    cpus: 2
+    mem_limit: 1g
+    pids_limit: 128
+    restart: unless-stopped
+    stop_grace_period: 180s
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:18080/healthz', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "2"}
+  ollama:
+    profiles: [local-model]
+    image: ${OLLAMA_IMAGE:-ollama/ollama:0.20.0}
+    pull_policy: never
+    environment:
+      OLLAMA_HOST: "0.0.0.0:11434"
+      OLLAMA_MODELS: /models
+      OLLAMA_NUM_PARALLEL: "1"
+      OLLAMA_KEEP_ALIVE: "-1"
+      OLLAMA_MAX_LOADED_MODELS: "1"
+      OLLAMA_MAX_QUEUE: "2"
+      OLLAMA_CONTEXT_LENGTH: "32768"
+      OLLAMA_DEBUG: "false"
+      OLLAMA_NO_CLOUD: "true"
+    volumes:
+      - ${OLLAMA_MODELS_PATH:-/data/ollama_data/models}:/models:ro
+    networks: [model]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["${OLLAMA_GPU:-0}"]
+              capabilities: [gpu]
+    read_only: true
+    tmpfs: ["/tmp:rw,nosuid,size=1g", "/root/.ollama:rw,noexec,nosuid,size=1m", "/root/.cache:rw,nosuid,size=128m"]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    cpus: 8
+    mem_limit: 16g
+    pids_limit: 512
+    restart: unless-stopped
+    logging:
+      driver: none
+networks:
+  ingress: {}
+  model:
+    internal: true

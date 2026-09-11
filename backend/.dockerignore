@@ -1,0 +1,13 @@
+*
+!app/
+!app/**
+!web/
+!web/**
+!requirements.lock
+!Dockerfile
+!Dockerfile.offline
+!wheelhouse/
+!wheelhouse/**
+**/__pycache__/
+**/*.pyc
+**/._*

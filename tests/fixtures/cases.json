@@ -1,0 +1,156 @@
+{
+  "fields": [
+    {
+      "key": "full_name",
+      "label": "姓名",
+      "english": "fullName",
+      "expected": "示例同学",
+      "section": "basic"
+    },
+    {
+      "key": "email",
+      "label": "电子邮箱",
+      "english": "email",
+      "expected": "student@example.com",
+      "section": "basic"
+    },
+    {
+      "key": "phone",
+      "label": "手机号",
+      "english": "phone",
+      "expected": "13800000000",
+      "section": "basic"
+    },
+    {
+      "key": "city",
+      "label": "现居城市",
+      "english": "city",
+      "expected": "南京",
+      "section": "basic"
+    },
+    {
+      "key": "job_intention",
+      "label": "求职意向",
+      "english": "求职意向",
+      "expected": "测试开发工程师",
+      "section": "basic"
+    },
+    {
+      "key": "school",
+      "label": "学校名称",
+      "english": "school",
+      "expected": "示例理工大学",
+      "section": "education"
+    },
+    {
+      "key": "major",
+      "label": "所学专业",
+      "english": "major",
+      "expected": "软件工程",
+      "section": "education"
+    },
+    {
+      "key": "education_level",
+      "label": "学历",
+      "english": "educationlevel",
+      "expected": "level-6",
+      "section": "education"
+    },
+    {
+      "key": "degree",
+      "label": "所获学位",
+      "english": "degree",
+      "expected": "工学学士",
+      "section": "education"
+    },
+    {
+      "key": "start_month",
+      "label": "入学时间",
+      "english": "startdate",
+      "expected": "2020-09",
+      "section": "education"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": 1,
+      "name": "标准关联标签"
+    },
+    {
+      "id": 2,
+      "name": "标签包裹输入框"
+    },
+    {
+      "id": 3,
+      "name": "ARIA 标签"
+    },
+    {
+      "id": 4,
+      "name": "ARIA 文本引用"
+    },
+    {
+      "id": 5,
+      "name": "占位文本提示"
+    },
+    {
+      "id": 6,
+      "name": "英文属性名"
+    },
+    {
+      "id": 7,
+      "name": "必填星号"
+    },
+    {
+      "id": 8,
+      "name": "空格和全角标点"
+    },
+    {
+      "id": 9,
+      "name": "标题分组"
+    },
+    {
+      "id": 10,
+      "name": "表格布局"
+    },
+    {
+      "id": 11,
+      "name": "字段逆序排列"
+    },
+    {
+      "id": 12,
+      "name": "窄屏布局"
+    },
+    {
+      "id": 13,
+      "name": "学历别名与编码选项"
+    },
+    {
+      "id": 14,
+      "name": "原生单选组"
+    },
+    {
+      "id": 15,
+      "name": "autocomplete 属性"
+    },
+    {
+      "id": 16,
+      "name": "隐藏字段共存"
+    },
+    {
+      "id": 17,
+      "name": "密码字段共存"
+    },
+    {
+      "id": 18,
+      "name": "多层容器"
+    },
+    {
+      "id": 19,
+      "name": "多行文本框"
+    },
+    {
+      "id": 20,
+      "name": "标签换行"
+    }
+  ]
+}

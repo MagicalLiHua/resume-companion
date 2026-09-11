@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "profile_id": "missing-profile",
+  "revision": 0,
+  "basic": {
+    "full_name": null,
+    "email": null,
+    "phone": null,
+    "city": null,
+    "job_intention": null
+  },
+  "education": [],
+  "experience": [],
+  "projects": [],
+  "skills": [],
+  "certificates": [],
+  "custom_answers": []
+}

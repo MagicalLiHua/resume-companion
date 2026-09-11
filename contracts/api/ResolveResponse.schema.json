@@ -1,0 +1,87 @@
+{
+  "$defs": {
+    "FieldResult": {
+      "additionalProperties": false,
+      "properties": {
+        "field_id": {
+          "pattern": "^[A-Za-z0-9_-]{1,100}$",
+          "title": "Field Id",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "suggested",
+            "abstain"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "source_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Source Path"
+        },
+        "confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "reason_code": {
+          "enum": [
+            "LABEL_AND_GROUP_MATCH",
+            "ALIAS_MATCH",
+            "AMBIGUOUS_FIELD",
+            "NO_COMPATIBLE_SOURCE",
+            "INSUFFICIENT_CONTEXT"
+          ],
+          "title": "Reason Code",
+          "type": "string"
+        }
+      },
+      "required": [
+        "field_id",
+        "status",
+        "source_path",
+        "confidence",
+        "reason_code"
+      ],
+      "title": "FieldResult",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "protocol_version": {
+      "const": "1.0",
+      "title": "Protocol Version",
+      "type": "string"
+    },
+    "request_id": {
+      "pattern": "^[A-Za-z0-9_-]{1,100}$",
+      "title": "Request Id",
+      "type": "string"
+    },
+    "results": {
+      "items": {
+        "$ref": "#/$defs/FieldResult"
+      },
+      "maxItems": 40,
+      "title": "Results",
+      "type": "array"
+    }
+  },
+  "required": [
+    "protocol_version",
+    "request_id",
+    "results"
+  ],
+  "title": "ResolveResponse",
+  "type": "object"
+}

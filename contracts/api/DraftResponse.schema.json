@@ -1,0 +1,62 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "protocol_version": {
+      "const": "1.0",
+      "title": "Protocol Version",
+      "type": "string"
+    },
+    "request_id": {
+      "pattern": "^[A-Za-z0-9_-]{1,100}$",
+      "title": "Request Id",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "needs_review",
+        "insufficient_facts"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "text": {
+      "maxLength": 1000,
+      "title": "Text",
+      "type": "string"
+    },
+    "used_fact_ids": {
+      "items": {
+        "pattern": "^[A-Za-z0-9_-]{1,100}$",
+        "type": "string"
+      },
+      "maxItems": 20,
+      "title": "Used Fact Ids",
+      "type": "array"
+    },
+    "warnings": {
+      "items": {
+        "enum": [
+          "INSUFFICIENT_FACTS",
+          "UNVERIFIED_NUMBER",
+          "UNVERIFIED_CLAIM",
+          "UNRESOLVED_PLACEHOLDER",
+          "LENGTH_LIMIT"
+        ],
+        "type": "string"
+      },
+      "maxItems": 5,
+      "title": "Warnings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "protocol_version",
+    "request_id",
+    "status",
+    "text",
+    "used_fact_ids",
+    "warnings"
+  ],
+  "title": "DraftResponse",
+  "type": "object"
+}

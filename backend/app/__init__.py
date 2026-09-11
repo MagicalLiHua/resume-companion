@@ -1,0 +1,1 @@
+"""Resume Companion private API."""

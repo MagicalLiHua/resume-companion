@@ -1,0 +1,100 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="drawio" version="29.0.0">
+  <diagram id="resume-system" name="系统架构（审阅稿）">
+    <mxGraphModel dx="2240" dy="1340" grid="1" gridSize="10" page="1" pageScale="1" pageWidth="2240" pageHeight="1340" background="#ffffff">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="2" value="简历填写插件｜从本地闭环到私有模型" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#243247;fontSize=23;fontFamily=Helvetica;spacing=14;fillColor=none;strokeColor=none;fontSize=36;fontStyle=1;align=left;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="40" y="20" width="2160" height="80" />
+        </mxCell>
+        <mxCell id="3" value="用户电脑 · Chrome 插件" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#243247;fontSize=23;fontFamily=Helvetica;spacing=14;swimlane;startSize=55;container=1;pointerEvents=0;rounded=0;fillColor=#ffffff;fontStyle=1;fontSize=25;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="40" y="140" width="760" height="900" />
+        </mxCell>
+        <mxCell id="4" value="业务后端 · FastAPI" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontColor=#243247;fontSize=23;fontFamily=Helvetica;spacing=14;swimlane;startSize=55;container=1;pointerEvents=0;rounded=0;fillColor=#ffffff;fontStyle=1;fontSize=25;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1080" y="140" width="420" height="900" />
+        </mxCell>
+        <mxCell id="5" value="可替换的推理端" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontColor=#243247;fontSize=23;fontFamily=Helvetica;spacing=14;swimlane;startSize=55;container=1;pointerEvents=0;rounded=0;fillColor=#ffffff;fontStyle=1;fontSize=25;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1780" y="140" width="420" height="900" />
+        </mxCell>
+        <mxCell id="6" value="本地简历&#10;用户确认的事实&#10;本机保存与备份" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#243247;fontSize=23;fontFamily=Helvetica;spacing=14;" vertex="1" parent="3">
+          <mxGeometry as="geometry" x="40" y="80" width="220" height="160" />
+        </mxCell>
+        <mxCell id="7" value="侧边栏&#10;规则匹配・请求预览&#10;填写确认・会话管理" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#243247;fontSize=23;fontFamily=Helvetica;spacing=14;" vertex="1" parent="3">
+          <mxGeometry as="geometry" x="480" y="80" width="240" height="160" />
+        </mxCell>
+        <mxCell id="8" value="招聘网页表单&#10;当前授权页面&#10;用户自行提交" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#243247;fontSize=23;fontFamily=Helvetica;spacing=14;" vertex="1" parent="3">
+          <mxGeometry as="geometry" x="40" y="480" width="220" height="160" />
+        </mxCell>
+        <mxCell id="9" value="内容脚本&#10;扫描・有限写入&#10;回读・有条件撤销" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#243247;fontSize=23;fontFamily=Helvetica;spacing=14;" vertex="1" parent="3">
+          <mxGeometry as="geometry" x="480" y="480" width="240" height="160" />
+        </mxCell>
+        <mxCell id="10" value="后台 Service Worker：打开面板、短事件&#10;模型请求由侧边栏管理" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#243247;fontSize=23;fontFamily=Helvetica;spacing=14;fontSize=22;" vertex="1" parent="3">
+          <mxGeometry as="geometry" x="40" y="760" width="680" height="100" />
+        </mxCell>
+        <mxCell id="11" value="业务接口&#10;鉴权・限流&#10;输入与输出校验" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontColor=#243247;fontSize=23;fontFamily=Helvetica;spacing=14;" vertex="1" parent="4">
+          <mxGeometry as="geometry" x="50" y="80" width="320" height="160" />
+        </mxCell>
+        <mxCell id="12" value="模型适配层&#10;固定任务・结构约束&#10;超时与资源控制" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontColor=#243247;fontSize=23;fontFamily=Helvetica;spacing=14;" vertex="1" parent="4">
+          <mxGeometry as="geometry" x="50" y="480" width="320" height="160" />
+        </mxCell>
+        <mxCell id="13" value="不持久化简历或草稿正文&#10;日志仅记录无正文指标" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#243247;fontSize=23;fontFamily=Helvetica;spacing=14;fontSize=22;" vertex="1" parent="4">
+          <mxGeometry as="geometry" x="50" y="760" width="320" height="100" />
+        </mxCell>
+        <mxCell id="14" value="模拟推理端&#10;先做本地联调&#10;验证协议与异常" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontColor=#243247;fontSize=23;fontFamily=Helvetica;spacing=14;" vertex="1" parent="5">
+          <mxGeometry as="geometry" x="50" y="80" width="320" height="160" />
+        </mxCell>
+        <mxCell id="15" value="私有模型服务&#10;vLLM 等推理框架&#10;双 4090：后期实测" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontColor=#243247;fontSize=23;fontFamily=Helvetica;spacing=14;" vertex="1" parent="5">
+          <mxGeometry as="geometry" x="50" y="480" width="320" height="160" />
+        </mxCell>
+        <mxCell id="16" value="模拟结果不代表模型效果&#10;真实模型通过评测后试用" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#243247;fontSize=23;fontFamily=Helvetica;spacing=14;fontSize=22;" vertex="1" parent="5">
+          <mxGeometry as="geometry" x="50" y="760" width="320" height="100" />
+        </mxCell>
+        <mxCell id="17" value="仅本地访问" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#526279;strokeWidth=2;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;fontColor=#334155;fontSize=21;exitX=1;exitY=0.5;entryX=0;entryY=0.5;startArrow=block;startFill=1;" edge="1" parent="1" source="6" target="7">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="18" value="扫描结果 ↑&#10;确认后的字段值 ↓" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#526279;strokeWidth=2;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;fontColor=#334155;fontSize=21;exitX=0.5;exitY=1;entryX=0.5;entryY=0;startArrow=block;startFill=1;" edge="1" parent="1" source="7" target="9">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="19" value="扫描 / 有限写入" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#526279;strokeWidth=2;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;fontColor=#334155;fontSize=21;exitX=0;exitY=0.5;entryX=1;entryY=0.5;startArrow=block;startFill=1;" edge="1" parent="1" source="9" target="8">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="20" value="字段描述 / 选定事实&#10;私有连接；本地可联调" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#526279;strokeWidth=2;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;fontColor=#334155;fontSize=21;exitX=1;exitY=0.5;entryX=0;entryY=0.5;startArrow=block;startFill=1;" edge="1" parent="1" source="7" target="11">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="21" value="受控任务 / 校验结果" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#526279;strokeWidth=2;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;fontColor=#334155;fontSize=21;exitX=0.5;exitY=1;entryX=0.5;entryY=0;startArrow=block;startFill=1;" edge="1" parent="1" source="11" target="12">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="22" value="开发阶段" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#526279;strokeWidth=2;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;fontColor=#334155;fontSize=21;exitX=1;exitY=0.25;entryX=0;entryY=0.5;dashed=1;" edge="1" parent="1" source="12" target="14">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="1640" y="660" />
+              <mxPoint x="1640" y="300" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="23" value="后期接入" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#526279;strokeWidth=2;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;fontColor=#334155;fontSize=21;exitX=1;exitY=0.5;entryX=0;entryY=0.5;startArrow=block;startFill=1;dashed=1;" edge="1" parent="1" source="12" target="15">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="24" value="真实资料优先留在本地  ·  仅发送必要内容  ·  预览后填写  ·  不自动提交" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#243247;fontSize=23;fontFamily=Helvetica;spacing=14;fontSize=28;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="40" y="1090" width="2160" height="90" />
+        </mxCell>
+        <mxCell id="25" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#243247;fontSize=23;fontFamily=Helvetica;spacing=14;container=1;pointerEvents=0;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="40" y="1220" width="2160" height="70" />
+        </mxCell>
+        <mxCell id="26" value="插件内部功能" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#243247;fontSize=23;fontFamily=Helvetica;spacing=14;fontSize=23;" vertex="1" parent="25">
+          <mxGeometry as="geometry" x="0" y="0" width="480" height="70" />
+        </mxCell>
+        <mxCell id="27" value="业务处理" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontColor=#243247;fontSize=23;fontFamily=Helvetica;spacing=14;fontSize=23;" vertex="1" parent="25">
+          <mxGeometry as="geometry" x="540" y="0" width="480" height="70" />
+        </mxCell>
+        <mxCell id="28" value="推理能力" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontColor=#243247;fontSize=23;fontFamily=Helvetica;spacing=14;fontSize=23;" vertex="1" parent="25">
+          <mxGeometry as="geometry" x="1080" y="0" width="480" height="70" />
+        </mxCell>
+        <mxCell id="29" value="页面与说明" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#243247;fontSize=23;fontFamily=Helvetica;spacing=14;fontSize=23;" vertex="1" parent="25">
+          <mxGeometry as="geometry" x="1620" y="0" width="480" height="70" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,0 +1,7 @@
+# Optional legacy local inference, enabled explicitly with --profile local-model.
+services:
+  api:
+    networks: [ingress, model]
+    depends_on:
+      ollama:
+        condition: service_started

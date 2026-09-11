@@ -1,0 +1,13 @@
+<!doctype html><meta charset="utf-8"><title>匿名申请表仿真（不联网）</title>
+<style>body{font:16px sans-serif}li{margin:16px;list-style:none}.application-field{margin-top:5px}input,textarea{padding:8px}.error{color:#955}</style>
+<!-- Independently authored fixture of observed label/control relationships; no employer data. -->
+<form id="application-form"><ul>
+<li class="application-question"><label><div class="application-label">Full name<span class="required">✱</span></div><div class="application-field"><input name="name" required><span class="error">Please check this field</span></div></label></li>
+<li class="application-question"><label><div class="application-label">Email<span class="required">✱</span></div><div class="application-field"><input name="email" type="email" required></div></label></li>
+<li class="application-question"><label><div class="application-label">Phone <span class="required">✱</span></div><div class="application-field"><input name="phone" required></div></label></li>
+<li class="application-question"><label><div class="application-label">Current location</div><div class="application-field"><input id="location-input" name="location"><div>No location found. Try entering a different location</div></div></label></li>
+<li class="application-question custom-question"><div><div class="application-label full-width textarea"><div class="text">Describe your project</div></div><div class="application-field full-width"><textarea name="cards[synthetic][field0]" placeholder="Type your response"></textarea></div></div></li>
+<li class="application-question custom-question"><div><div class="application-label full-width dropdown"><div class="text">How did you hear about this role?</div></div><div class="application-field full-width"><select name="cards[synthetic][field1]"><option value="">Select</option><option value="friend">Friend</option><option value="website">Website</option></select></div></div></li>
+<li class="application-question custom-question"><div class="application-label">Do you consent to sharing your application?</div><div class="application-field"><label><input type="radio" name="consent-choice" value="yes">Yes</label><label><input type="radio" name="consent-choice" value="no">No</label></div></li>
+</ul><button type="submit">Submit application</button></form>
+<script>window.__submitted=0;document.querySelector('form').addEventListener('submit',event=>{event.preventDefault();window.__submitted++});</script>

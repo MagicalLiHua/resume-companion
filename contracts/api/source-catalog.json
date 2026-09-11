@@ -1,0 +1,152 @@
+[
+  {
+    "path": "basic.full_name",
+    "label": "姓名",
+    "group": "basic",
+    "value_type": "text"
+  },
+  {
+    "path": "basic.email",
+    "label": "邮箱",
+    "group": "basic",
+    "value_type": "text"
+  },
+  {
+    "path": "basic.phone",
+    "label": "手机号",
+    "group": "basic",
+    "value_type": "text"
+  },
+  {
+    "path": "basic.city",
+    "label": "现居城市",
+    "group": "basic",
+    "value_type": "text"
+  },
+  {
+    "path": "basic.job_intention",
+    "label": "求职意向",
+    "group": "basic",
+    "value_type": "text"
+  },
+  {
+    "path": "education[].school",
+    "label": "学校",
+    "group": "education",
+    "value_type": "text"
+  },
+  {
+    "path": "education[].major",
+    "label": "专业",
+    "group": "education",
+    "value_type": "text"
+  },
+  {
+    "path": "education[].education_level",
+    "label": "学历层次",
+    "group": "education",
+    "value_type": "enum"
+  },
+  {
+    "path": "education[].degree",
+    "label": "所获学位",
+    "group": "education",
+    "value_type": "enum"
+  },
+  {
+    "path": "education[].expected_degree",
+    "label": "预计学位",
+    "group": "education",
+    "value_type": "enum"
+  },
+  {
+    "path": "education[].study_mode",
+    "label": "学习形式",
+    "group": "education",
+    "value_type": "enum"
+  },
+  {
+    "path": "education[].start_month",
+    "label": "入学时间",
+    "group": "education",
+    "value_type": "month"
+  },
+  {
+    "path": "education[].end_month",
+    "label": "毕业时间",
+    "group": "education",
+    "value_type": "month"
+  },
+  {
+    "path": "experience[].organization",
+    "label": "单位",
+    "group": "experience",
+    "value_type": "text"
+  },
+  {
+    "path": "experience[].role",
+    "label": "职位",
+    "group": "experience",
+    "value_type": "text"
+  },
+  {
+    "path": "experience[].start_month",
+    "label": "开始时间",
+    "group": "experience",
+    "value_type": "month"
+  },
+  {
+    "path": "experience[].end_month",
+    "label": "结束时间",
+    "group": "experience",
+    "value_type": "month"
+  },
+  {
+    "path": "experience[].facts",
+    "label": "工作内容",
+    "group": "experience",
+    "value_type": "text"
+  },
+  {
+    "path": "projects[].name",
+    "label": "项目名称",
+    "group": "project",
+    "value_type": "text"
+  },
+  {
+    "path": "projects[].role",
+    "label": "项目角色",
+    "group": "project",
+    "value_type": "text"
+  },
+  {
+    "path": "projects[].start_month",
+    "label": "开始时间",
+    "group": "project",
+    "value_type": "month"
+  },
+  {
+    "path": "projects[].end_month",
+    "label": "结束时间",
+    "group": "project",
+    "value_type": "month"
+  },
+  {
+    "path": "projects[].technologies",
+    "label": "技术栈",
+    "group": "project",
+    "value_type": "list"
+  },
+  {
+    "path": "projects[].facts",
+    "label": "项目描述",
+    "group": "project",
+    "value_type": "text"
+  },
+  {
+    "path": "skills",
+    "label": "专业技能",
+    "group": "skills",
+    "value_type": "list"
+  }
+]

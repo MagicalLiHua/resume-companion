@@ -1,0 +1,5 @@
+services:
+  api:
+    build:
+      dockerfile: Dockerfile.offline
+      network: none

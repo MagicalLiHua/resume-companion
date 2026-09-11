@@ -1,0 +1,78 @@
+{
+  "schema_version": "1.0",
+  "profile_id": "single-profile",
+  "revision": 0,
+  "basic": {
+    "full_name": "示例同学",
+    "email": "student@example.com",
+    "phone": "13800000000",
+    "city": "南京",
+    "job_intention": "测试开发工程师"
+  },
+  "education": [
+    {
+      "id": "edu-bachelor",
+      "school": "示例理工大学",
+      "major": "软件工程",
+      "education_level": "bachelor",
+      "degree": "工学学士",
+      "expected_degree": null,
+      "completed": true,
+      "study_mode": "full_time",
+      "start_month": "2020-09",
+      "end_month": "2024-06",
+      "is_current": false,
+      "is_expected_end": false
+    }
+  ],
+  "experience": [
+    {
+      "id": "exp-demo",
+      "kind": "internship",
+      "organization": "示例科技公司",
+      "role": "测试开发实习生",
+      "start_month": "2026-06",
+      "end_month": "2026-08",
+      "is_current": false,
+      "facts": [
+        {
+          "id": "fact-exp",
+          "text": "编写接口回归测试用例，整理测试结果。"
+        }
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "id": "project-demo",
+      "name": "接口测试工具",
+      "role": "主要开发者",
+      "start_month": "2026-03",
+      "end_month": "2026-05",
+      "is_current": false,
+      "technologies": [
+        "Python",
+        "pytest"
+      ],
+      "facts": [
+        {
+          "id": "fact-project",
+          "text": "实现测试结果汇总与失败用例定位。"
+        }
+      ]
+    }
+  ],
+  "skills": [
+    "Python",
+    "Java",
+    "接口测试"
+  ],
+  "certificates": [],
+  "custom_answers": [
+    {
+      "id": "answer-demo",
+      "title": "自我评价",
+      "text": "注重问题复现与验证，愿意持续学习并改进工具。"
+    }
+  ]
+}
