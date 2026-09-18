@@ -4,11 +4,8 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
-import WebSocket from 'ws';
 
 const root = resolve(import.meta.dirname, '..');
-const extensionId = 'feifaflnkjdihpbbhnihidjjkeapamnh';
-const port = 47_000 + process.pid % 500;
 const dataDir = await mkdtemp(join(tmpdir(), 'resume-companion-mcp-'));
 const baseEnv = Object.fromEntries(Object.entries(process.env).filter(([, value]) => typeof value === 'string'));
 const client = new Client({ name: 'resume-companion-contract', version: '1.0' });
@@ -16,18 +13,12 @@ const transport = new StdioClientTransport({
   command: process.execPath,
   args: ['server.bundle.mjs'],
   cwd: root,
-  env: {
-    ...baseEnv,
-    RESUME_COMPANION_BRIDGE_PORT: String(port),
-    RESUME_COMPANION_DATA_DIR: dataDir,
-    RESUME_COMPANION_BROWSER_DRIVER: 'extension',
-  },
+  env: { ...baseEnv, RESUME_COMPANION_DATA_DIR: dataDir },
   stderr: 'pipe',
 });
 
 const call = async (name, arguments_ = {}) => client.callTool({ name, arguments: arguments_ });
 await client.connect(transport);
-let socket;
 try {
   const listed = (await client.listTools()).tools.map(tool => tool.name).sort();
   assert.deepEqual(listed, [
@@ -38,6 +29,8 @@ try {
 
   const initial = await call('resume_status');
   assert.equal(initial.structuredContent.storage.profile_count, 0);
+  assert.equal(initial.structuredContent.browser.kind, 'devtools');
+  assert.equal(initial.structuredContent.browser.ready, true);
   assert.equal(initial.structuredContent.browser.connected, false);
 
   const created = await call('resume_profile_save', {
@@ -57,6 +50,18 @@ try {
   assert.equal((await call('resume_profile_list')).structuredContent.profiles.length, 1);
   const basic = await call('resume_profile_read', { profile_id: profile.id, section: 'basic' });
   assert.equal(basic.structuredContent.data.full_name, '测试同学');
+  const education = await call('resume_profile_read', { profile_id: profile.id, section: 'education' });
+  const educationId = education.structuredContent.data[0].id;
+
+  const sources = await call('resume_profile_read', {
+    profile_id: profile.id,
+    source_refs: ['basic/full_name', `education/${educationId}/school`],
+  });
+  assert.deepEqual(sources.structuredContent.entries.map(entry => [entry.source_ref, entry.value]), [
+    ['basic/full_name', '测试同学'],
+    [`education/${educationId}/school`, '示例大学'],
+  ]);
+
   const stale = await call('resume_profile_save', {
     profile_id: profile.id,
     expected_revision: 0,
@@ -64,61 +69,8 @@ try {
   });
   assert.equal(stale.isError, true);
   assert.equal(stale.structuredContent.error.code, 'profile_changed');
-
-  socket = await new Promise((resolveSocket, rejectSocket) => {
-    const value = new WebSocket(`ws://127.0.0.1:${port}`, { origin: `chrome-extension://${extensionId}` });
-    value.once('open', () => resolveSocket(value));
-    value.once('error', rejectSocket);
-  });
-  socket.send(JSON.stringify({ type: 'hello', extensionId, version: '0.8.0', epoch: 'test-epoch', protocolVersion: '2.1' }));
-  const forwarded = [];
-  let cancelled = false;
-  socket.on('message', raw => {
-    const message = JSON.parse(String(raw));
-    if (message.type === 'cancel') { cancelled = true; return; }
-    if (!message.id) return;
-    forwarded.push(message);
-    if (message.method === 'wait') return;
-    socket.send(JSON.stringify({ id: message.id, ok: true, result: { received: message.method, params: message.params } }));
-  });
-  await new Promise(resolveDelay => setTimeout(resolveDelay, 20));
-
-  const observed = await call('resume_observe', { tab_id: 12, mode: 'overview' });
-  assert.equal(observed.structuredContent.received, 'observe');
-  const acted = await call('resume_act', {
-    session_id: 'session',
-    snapshot_id: 'snapshot',
-    operation_id: 'write-name',
-    action: {
-      kind: 'set_value',
-      ref: 'e1',
-      expected_value_token: 'token',
-      value: { source: { profile_id: profile.id, profile_revision: 1, source_ref: 'basic/full_name' } },
-    },
-  });
-  assert.equal(acted.structuredContent.params.action.value.literal, '测试同学');
-  assert.equal('source' in acted.structuredContent.params.action.value, false);
-
-  const invalid = await call('resume_act', {
-    session_id: 'session', snapshot_id: 'snapshot', operation_id: 'bad',
-    action: { kind: 'press_key', ref: 'e1', key: 'Enter' },
-  });
-  assert.equal(invalid.isError, true);
-  assert.equal(forwarded.filter(item => item.method === 'act').length, 1);
-
-  const controller = new AbortController();
-  const waiting = client.callTool({
-    name: 'resume_wait',
-    arguments: { session_id: 'session', snapshot_id: 'snapshot', condition: { kind: 'visible', ref: 'e1' } },
-  }, undefined, { signal: controller.signal }).catch(() => null);
-  while (!forwarded.some(item => item.method === 'wait')) await new Promise(resolveDelay => setTimeout(resolveDelay, 10));
-  controller.abort();
-  await waiting;
-  for (let attempt = 0; attempt < 30 && !cancelled; attempt++) await new Promise(resolveDelay => setTimeout(resolveDelay, 10));
-  assert.equal(cancelled, true);
 } finally {
-  socket?.close();
   await client.close();
   await rm(dataDir, { recursive: true, force: true });
 }
-console.log('MCP local storage, source resolution, strict browser wire and cancellation: OK');
+console.log('MCP tool catalog, DevTools readiness, local storage, source resolution and revision conflicts: OK');

@@ -76,7 +76,7 @@ async function resolveActionSources(params: ActParams): Promise<ResolvedActParam
   return wireSchemas.act.parse(resolved) as ResolvedActParams;
 }
 
-const server = new McpServer({ name: 'resume-companion', version: '0.5.0' });
+const server = new McpServer({ name: 'resume-companion', version: '0.6.0' });
 
 server.registerTool('resume_status', {
   title: '检查简历随行状态',
@@ -111,7 +111,7 @@ server.registerTool('resume_list_tabs', {
   title: '列出可处理的 Chrome 标签页',
   description: '按需连接当前 Chrome，列出普通 HTTP/HTTPS 标签页，只返回标题、网址和标签页 ID，不读取页面正文。',
   inputSchema: {
-    current_window_only: z.boolean().optional().describe('扩展驱动默认 true；DevTools 驱动枚举已授权浏览器上下文'),
+    current_window_only: z.boolean().optional().describe('DevTools 驱动枚举已授权浏览器上下文；当前版本不区分 Chrome 窗口'),
     url_contains: z.string().trim().max(500).optional().describe('可选的标题或网址过滤文本'),
   },
   annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },

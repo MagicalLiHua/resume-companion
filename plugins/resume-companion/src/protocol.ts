@@ -1,4 +1,4 @@
-/** Version-neutral contract shared by the MCP and the fallback extension. */
+/** Stable contract exposed by the MCP's Chrome DevTools driver. */
 export const PROTOCOL_VERSION = '2.1';
 export type Scalar = string | boolean;
 export type Effect = 'interaction' | 'save_record' | 'save_draft' | 'advance_step' | 'final_submit' | 'unknown';
@@ -25,7 +25,7 @@ export type ResolvedActParams = Omit<ActParams, 'action'> & { action: ResolvedAc
 export type WaitParams = { session_id: string; snapshot_id: string; condition: Condition; timeout_ms?: number };
 export type UndoParams = { session_id: string; operation_ids: string[]; operation_id: string };
 
-/** The only cross-Zod boundary: the MCP uses Zod 3 and the extension uses Zod 4. */
+/** Builds separate client and literal-only browser-wire schemas. */
 export function createAutomationSchemas(z: any, options: { allowSources?: boolean } = {}) {
   const id = z.string().min(1).max(160);
   const scalar = z.union([z.string().max(10_000), z.boolean()]);

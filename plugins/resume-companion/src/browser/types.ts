@@ -1,7 +1,7 @@
 import type { ActParams, ObserveParams, ResolvedActParams, UndoParams, WaitParams } from '../protocol.js';
 
-export type DriverKind = 'extension' | 'devtools';
-export type ProfileMode = 'extension' | 'dedicated' | 'isolated' | 'auto_connect';
+export type DriverKind = 'devtools';
+export type ProfileMode = 'dedicated' | 'isolated' | 'auto_connect';
 export type DriverStatus = {
   kind: DriverKind;
   ready: boolean;

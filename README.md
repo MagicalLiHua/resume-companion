@@ -7,7 +7,7 @@
 
 简历随行是一个本地 MCP 插件。用户在 Codex、Claude Desktop 或其他 MCP 客户端中发送简历或补充信息，AI 把明确事实保存到本地资料库；填写时，AI 读取所选资料、观察 Chrome 的无障碍树，并组合输入、选择、点击、等待和核对等基础动作。
 
-0.8.0 默认通过官方 [Chrome DevTools MCP](https://github.com/ChromeDevTools/chrome-devtools-mcp) 连接当前已经登录的 Chrome，所以日常使用不需要安装浏览器扩展，也不需要为招聘网站重新登录。原扩展保留为兼容回退。最终申请提交、声明、验证码、密码、附件上传和删除始终由用户操作。
+0.9.0 通过官方 [Chrome DevTools MCP](https://github.com/ChromeDevTools/chrome-devtools-mcp) 连接当前已经登录的 Chrome，所以不需要安装浏览器扩展，也不需要为招聘网站重新登录。最终申请提交、声明、验证码、密码、附件上传和删除始终由用户操作。
 
 [安装与使用](docs/getting-started.md) · [MCP 工具](docs/mcp-tools.md) · [验证范围](docs/validation.md) · [参与开发](CONTRIBUTING.md)
 
@@ -24,8 +24,6 @@ Resume Companion MCP
   └─ Chrome DevTools 驱动
             ↓
 当前已登录的 Chrome → 招聘网站
-
-可选回退：Resume Companion MCP → Chrome 扩展执行桥
 ~~~
 
 模型负责理解不同网站的字段含义和规划步骤，MCP 只提供稳定、有限、可组合的工具。网站改字段名称时无需发布整套站点脚本；AI 可以根据当前页面重新匹配。
@@ -46,6 +44,25 @@ Resume Companion MCP
 ## 快速开始
 
 需要 Node.js 24、Chrome 144+，以及支持本地 stdio MCP 的 AI 客户端。
+
+### 复制给 AI 自动配置
+
+把下面这段发给具有本地命令执行和 stdio MCP 配置能力的 AI Agent。它会按当前客户端选择安装方式；如果客户端完全不支持本地 MCP，应明确说明，而不是伪造已安装结果。
+
+~~~text
+请帮我安装并配置 Resume Companion：https://github.com/MagicalLiHua/resume-companion
+
+要求：
+1. 先识别操作系统、当前 AI 客户端、Node.js 与 Chrome 版本；需要 Node.js 24 和 Chrome 144+。
+2. 优先使用 GitHub 最新 Release，并校验随附的 SHA-256；安装到稳定的用户目录，不要放在临时目录。
+3. 如果当前客户端是 Codex，使用仓库提供的 Codex marketplace/plugin 安装方式；其他客户端则按其官方方法注册本地 stdio MCP，入口为发布包内 plugins/resume-companion/server.mjs，必须使用绝对路径。
+4. 保留现有 MCP 配置，不覆盖无关条目，不写入简历、Cookie、密钥或真实个人信息做测试。
+5. 启动后确认 resume_status 可调用、工具总数为 10、browser.kind 为 devtools，并用虚构资料测试一次本地资料的创建和读取。
+6. 引导我在 Chrome 打开 chrome://inspect/#remote-debugging 并手动启用远程调试；连接提示出现时由我点击 Allow。不要尝试绕过 Chrome 的授权。
+7. 如果客户端需要重启或新建会话才能加载 MCP，请完成可自动完成的步骤后明确告诉我。最后汇报安装目录、修改的配置文件、验证结果和下一条可直接使用的指令。
+~~~
+
+### 手动安装
 
 ~~~sh
 git clone https://github.com/MagicalLiHua/resume-companion.git
@@ -69,7 +86,7 @@ codex plugin add resume-companion@resume-companion
 
 > 用“测试开发版”连续完成当前网申。可以保存经历和进入普通下一步，最终提交交给我。
 
-第一次使用网页工具时，Chrome 会询问是否允许调试当前浏览器。点击 **Allow** 后即可沿用现有登录状态。简历随行不会修改 Chrome 应用文件，不需要授予 ChatGPT“修改当前 Mac 上的 App”权限。
+首次使用前，需要在 Chrome 打开 `chrome://inspect/#remote-debugging` 并启用远程调试。每次建立新的调试会话时，Chrome 会显示授权窗口；点击 **Allow** 后即可沿用现有登录状态。这个开关和授权窗口是 [Chrome 为当前 Profile 连接设置的安全边界](https://developer.chrome.com/blog/chrome-devtools-mcp-debug-your-browser-session)，不能由工具静默代点。简历随行不会修改 Chrome 应用文件，不需要授予 ChatGPT“修改当前 Mac 上的 App”权限。
 
 ## 十个 MCP 工具
 
@@ -92,4 +109,4 @@ codex plugin add resume-companion@resume-companion
 
 本地存储不代表离线推理：当前 AI 客户端会接触任务需要的简历字段和网页片段。浏览器驱动只开放项目内部允许的少量 DevTools 工具，不开放任意脚本执行、网络抓包或文件上传。完整说明见 [SECURITY.md](SECURITY.md)。
 
-0.8.0 已通过 TypeScript 检查、单元测试、扩展回退回归，以及不加载扩展的真实 MCP → Chrome DevTools 集成测试。真实招聘网站仍需逐站试用；详见 [验证范围](docs/validation.md)。
+0.9.0 已通过 TypeScript 检查、MCP 契约测试、发布包自检，以及真实 MCP → Chrome DevTools 集成测试。真实招聘网站仍需逐站试用；详见 [验证范围](docs/validation.md)。

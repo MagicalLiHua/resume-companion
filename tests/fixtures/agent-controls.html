@@ -4,8 +4,8 @@
 <section aria-label="布尔与单选"><h2>布尔与单选</h2><label><input type="checkbox" aria-label="可以出差">可以出差</label><label><input type="radio" name="degree" aria-label="本科" value="本科">本科</label><label><input type="radio" name="degree" aria-label="硕士" value="硕士">硕士</label></section>
 <section aria-label="动态局部栏目"><h2>动态局部栏目</h2><label>第一字段<input id="first" aria-label="第一字段"></label><label>第二字段<input id="second" aria-label="第二字段"></label></section>
 <section aria-label="保存失败样例"><h2>保存失败样例</h2><article><h3>已保存的记录</h3><p>相同记录</p></article><form aria-label="新记录"><input aria-label="记录名称" value="相同记录"><button type="submit">保存记录</button><p role="alert" id="error"></p></form></section>
-<script src="/test-engine.js"></script><script>
-window.labEngine=new window.ResumeTest.AutomationEngine();const params=new URLSearchParams(location.search);let year=2026;
+<script>
+const params=new URLSearchParams(location.search);let year=2026;
 const month=document.querySelector('#month');month.onclick=()=>{month.closest('.ant-picker').classList.add('ant-picker-focused');month.focus();draw()};
 function draw(){document.querySelector('.ant-picker-dropdown')?.remove();const panel=document.createElement('div');panel.className='ant-picker-dropdown';panel.innerHTML=`<div class="ant-picker-header"><button aria-label="上一年">«</button><strong>${year}</strong><button aria-label="下一年">»</button></div><div class="ant-picker-body">${Array.from({length:12},(_,i)=>`<div class="ant-picker-cell" title="${year}-${String(i+1).padStart(2,'0')}"><div class="ant-picker-cell-inner">${i+1}月</div></div>`).join('')}</div>`;document.body.append(panel);const buttons=panel.querySelectorAll('button');buttons[0].onclick=()=>{year--;draw()};buttons[1].onclick=()=>{year++;draw()};panel.querySelectorAll('.ant-picker-cell-inner').forEach(n=>n.onclick=()=>{month.value=n.parentElement.title;panel.remove();month.closest('.ant-picker').classList.remove('ant-picker-focused')})}
 const input=document.querySelector('#skill'),list=document.querySelector('#skills');let timer,selected='';

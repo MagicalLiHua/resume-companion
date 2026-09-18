@@ -70,6 +70,8 @@ export class DevToolsDriver implements BrowserDriver {
         continuousForms: true,
         finalSubmit: false,
         trustedEvents: true,
+        chromeSetupUrl: 'chrome://inspect/#remote-debugging',
+        manualChromeAuthorization: true,
         verticalScroll: true,
         horizontalScroll: false,
         frames: 'accessibility-tree',
@@ -81,7 +83,7 @@ export class DevToolsDriver implements BrowserDriver {
         : this.connected
           ? 'Chrome DevTools 驱动已连接'
           : this.profileMode === 'auto_connect'
-            ? '网页工具首次调用时连接当前 Chrome；如出现提示，请在 Chrome 中点击 Allow'
+            ? '请先在 chrome://inspect/#remote-debugging 启用远程调试；网页工具首次调用会连接当前 Chrome，并由用户在 Chrome 中点击 Allow'
             : '网页工具首次调用时启动 Chrome',
     };
   }
@@ -261,7 +263,7 @@ export class DevToolsDriver implements BrowserDriver {
       },
       stderr: 'pipe',
     });
-    const client = new Client({ name: 'resume-companion-browser-driver', version: '0.5.0' });
+    const client = new Client({ name: 'resume-companion-browser-driver', version: '0.6.0' });
     try {
       await client.connect(transport);
     } catch (error) {

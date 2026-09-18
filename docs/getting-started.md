@@ -1,6 +1,6 @@
 # 安装与使用
 
-本版由 MCP 插件 0.5.0、内置 Chrome DevTools 驱动和可选扩展回退 0.8.0 组成。简历保存在 MCP 本地资料库中。
+本版由 MCP 插件 0.6.0 和内置 Chrome DevTools 驱动组成。简历保存在 MCP 本地资料库中。
 
 ## 安装
 
@@ -35,12 +35,13 @@ codex plugin add resume-companion@resume-companion
 
 ## 第一次连接 Chrome
 
-1. 使用日常 Chrome 打开招聘网站并正常登录。
-2. 让 AI 开始填写，或调用 `resume_list_tabs`。
-3. Chrome 首次连接时会显示远程调试授权提示；点击 **Allow**。
-4. AI 继续列出标签页、观察页面和填写表单。
+1. 使用日常 Chrome 打开 `chrome://inspect/#remote-debugging`，手动启用远程调试。
+2. 打开招聘网站并正常登录。
+3. 让 AI 开始填写，或调用 `resume_list_tabs`。
+4. Chrome 显示本次远程调试授权提示时，点击 **Allow**。
+5. AI 继续列出标签页、观察页面和填写表单。
 
-默认 `auto_connect` 使用当前 Chrome 的现有 Profile，因此 Cookie 和登录状态都会保留。无需加载扩展，无需关闭 Chrome，也无需给 ChatGPT“修改当前 Mac 上的 App”的权限。
+默认 `auto_connect` 使用当前 Chrome 的现有 Profile，因此 Cookie 和登录状态都会保留。无需加载扩展，无需关闭 Chrome，也无需给 ChatGPT“修改当前 Mac 上的 App”的权限。远程调试开关和每次新连接的 Allow 由 Chrome 明确要求，工具不能静默开启或代替用户授权；参见 [Chrome 官方当前会话连接说明](https://developer.chrome.com/blog/chrome-devtools-mcp-debug-your-browser-session)。
 
 如果用户拒绝 Chrome 的授权，资料管理仍然可用；`resume_status.browser.permission_state` 会提示需要授权。再次调用网页工具即可重新尝试连接。
 
@@ -67,19 +68,16 @@ AI 会选择标签页、按需读取资料、观察页面，并通过基础动�
 | `RESUME_COMPANION_CHROME_PROFILE_MODE=auto_connect` | 默认；连接当前 Chrome，沿用登录态 |
 | `RESUME_COMPANION_CHROME_PROFILE_MODE=dedicated` | 使用数据目录下的专用 Profile，适合隐私隔离 |
 | `RESUME_COMPANION_CHROME_PROFILE_MODE=isolated` | 临时 Profile，仅用于自动化测试 |
-| `RESUME_COMPANION_BROWSER_DRIVER=extension` | 强制使用旧扩展桥回退 |
-
-DevTools 方式确实不可用时，才在 `chrome://extensions` 加载发布包的 `extension-fallback` 目录，打开扩展设置并开启本地桥接。不要同时启动多个扩展驱动实例，它们会争用本地端口。
 
 ## 常见问题
 
 | 现象 | 处理方式 |
 | --- | --- |
 | `resume_status` 不在工具目录 | 检查插件是否启用，重载 MCP 配置或新开任务 |
-| Chrome 显示 Allow | 这是当前浏览器的调试授权；允许后继续 |
+| Chrome 没有显示 Allow | 打开 `chrome://inspect/#remote-debugging` 并确认远程调试已启用，再调用网页工具 |
+| Chrome 显示 Allow | 这是本次浏览器调试授权；允许后继续 |
 | macOS 提示 ChatGPT 修改 App | 拒绝即可；简历随行不需要这个权限 |
 | 资料可用但网页连接失败 | 保持 Chrome 运行，确认版本为 144+，重新调用网页工具 |
 | `profile_changed` | 另一会话已更新资料；重新读取并合并 |
 | 页面引用过期 | 重新观察当前页面，不重放旧动作 |
 | 保存结果为 `unknown` | 先观察页面卡片、步骤和错误提示，不直接重试 |
-| 必须使用旧环境 | 设置扩展驱动并加载 `extension-fallback` |

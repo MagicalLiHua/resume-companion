@@ -48,7 +48,6 @@ beforeAll(async () => {
     env: {
       ...environment,
       RESUME_COMPANION_DATA_DIR: dataDir,
-      RESUME_COMPANION_BROWSER_DRIVER: 'devtools',
       RESUME_COMPANION_CHROME_PROFILE_MODE: 'isolated',
       RESUME_COMPANION_DEVTOOLS_HEADLESS: '1',
       RESUME_COMPANION_DEVTOOLS_START_URL: `http://127.0.0.1:4174/agent-lab.html?run=devtools-${Date.now()}`,
@@ -66,7 +65,7 @@ afterAll(async () => {
 });
 
 describe('DevTools MCP browser driver', () => {
-  test('fills, verifies and conditionally undoes a field without a Chrome extension', async () => {
+  test('fills, verifies and conditionally undoes fields through Chrome DevTools', async () => {
     const status = await call('resume_status');
     expect(status.browser).toMatchObject({ kind: 'devtools', connected: false, profile_mode: 'isolated' });
 

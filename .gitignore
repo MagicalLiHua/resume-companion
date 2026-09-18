@@ -40,3 +40,4 @@ research/third-party/
 /plugins/resume-companion/scripts/debug-client.mjs
 /plugins/resume-companion/scripts/model-eval-client.mjs
 /plugins/resume-companion/runtime/
+/.local-archive/

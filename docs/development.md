@@ -9,23 +9,20 @@
 ~~~sh
 npm ci
 npm ci --prefix plugins/resume-companion
-npx playwright install chromium
-npm run check
 npm test --prefix plugins/resume-companion
+npm run build --prefix plugins/resume-companion
 npm run test:core --prefix plugins/resume-companion
 npm run test:devtools --prefix plugins/resume-companion
-npm run test:live --prefix plugins/resume-companion
 ~~~
 
-`test:devtools` 会启动本地虚构表单和临时隔离 Chrome，通过真正的 Chrome DevTools MCP 填写、核对和撤销字段，不加载项目扩展。`test:live` 验证可选扩展回退。测试只使用合成资料和临时数据目录。
+`test:devtools` 会启动本地虚构表单和临时隔离 Chrome，通过真正的 Chrome DevTools MCP 填写、核对和撤销字段。测试只使用合成资料和临时数据目录。
 
 ## 目录
 
 | 目录 | 内容 |
 | --- | --- |
 | `plugins/resume-companion/src` | MCP、资料库、协议和浏览器驱动 TypeScript 源码 |
-| `plugins/resume-companion/src/browser` | DevTools 主驱动、扩展回退、快照、安全策略和操作日志 |
-| `extension/src` | 可选 Chrome 扩展回退 |
+| `plugins/resume-companion/src/browser` | DevTools 驱动、快照、安全策略和操作日志 |
 | `tests/fixtures` | 虚构多步骤招聘表单 |
 | `tests/unit`、`plugins/resume-companion/tests` | 协议、资料库、驱动和策略测试 |
 
@@ -49,4 +46,4 @@ npm run lab
 npm run package
 ~~~
 
-实验页位于 `http://127.0.0.1:4174/agent-lab.html`。发布包包含自包含 MCP、固定的 DevTools 运行时、skill、公开文档和 `extension-fallback`。不要手工编辑 `server.bundle.mjs`；修改 TypeScript 后运行插件构建。
+实验页位于 `http://127.0.0.1:4174/agent-lab.html`。发布包包含自包含 MCP、固定的 DevTools 运行时、skill 和公开文档。不要手工编辑 `server.bundle.mjs`；修改 TypeScript 后运行插件构建。
