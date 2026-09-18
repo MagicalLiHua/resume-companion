@@ -1,5 +1,14 @@
 # 更新记录
 
+## 0.9.1 · Chrome 153 连接诊断与安全回退
+
+- 确认 Chrome 153 权限代理的 9222 返回 404 属于预期行为；`auto_connect` 仍依赖可读的 `DevToolsActivePort`。
+- 默认改为持久专用 Chrome Profile，避开 Codex/macOS 沙箱对默认 Profile 端点文件的限制。
+- 区分远程调试未开启、等待 Allow、ActivePort 缺失/无权限/格式错误、权限代理不兼容和真实 transport 断开。
+- 连接错误后关闭并丢弃旧客户端与会话，确保下一次调用真正重连。
+- 诊断只公开安全分类，不记录 Cookie、请求头、页面内容、表单值或 WebSocket token。
+- 新增 Chrome 150+/153 故障矩阵、重连和持久专用 Profile 集成回归。
+
 ## 0.9.0 · 单一 DevTools 路线
 
 - 从公开源码、安装包和运行时中移除旧 Chrome 扩展桥及 WebSocket 回退驱动。

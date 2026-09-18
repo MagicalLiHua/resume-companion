@@ -5,13 +5,26 @@ import { fileURLToPath } from 'node:url';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { canonical, type Condition, type LiteralWrite, type ObserveParams, type ResolvedActParams, type Scalar, type UndoParams, type WaitParams } from '../protocol.js';
-import { BrowserError, messageOf, normalizeBrowserError } from './errors.js';
+import { probeAutoConnect, probeBrowserUrl, safeDiagnosticFromText, type ConnectionDiagnostic } from './connection-diagnostics.js';
+import { BrowserError, isConnectionError, messageOf, normalizeBrowserError, type ErrorCode } from './errors.js';
 import { OperationJournal, type OperationChange, type OperationReceipt } from './operation-journal.js';
 import { assertSnapshotEntry, descendantsOf, normalizeSnapshot, ReferenceBook, type AxNode, type NormalizedSnapshot, type SnapshotEntry } from './snapshot.js';
 import type { ActivateTabInput, BrowserDriver, DriverStatus, ListTabsInput, ProfileMode } from './types.js';
 
 type UpstreamPage = { id: number; url: string; title: string; selected?: boolean };
 type UpstreamResult = { content?: Array<{ type: string; text?: string }>; structuredContent?: unknown; isError?: boolean };
+type TransportParameters = ConstructorParameters<typeof StdioClientTransport>[0];
+type UpstreamClient = {
+  connect(transport: StdioClientTransport): Promise<void>;
+  callTool(request: { name: string; arguments: Record<string, unknown> }, resultSchema?: unknown, options?: { signal?: AbortSignal }): Promise<UpstreamResult>;
+  close(): Promise<void>;
+};
+export type DevToolsDriverDependencies = {
+  createClient: () => UpstreamClient;
+  createTransport: (parameters: TransportParameters) => StdioClientTransport;
+  probeAutoConnect: typeof probeAutoConnect;
+  probeBrowserUrl: typeof probeBrowserUrl;
+};
 type Session = {
   id: string;
   pageId: number;
@@ -39,24 +52,38 @@ export class DevToolsDriver implements BrowserDriver {
   private readonly runtimePath: string;
   private readonly profileMode: ProfileMode;
   private readonly dataDir: string;
-  private client: Client | null = null;
+  private readonly dependencies: DevToolsDriverDependencies;
+  private client: UpstreamClient | null = null;
   private transport: StdioClientTransport | null = null;
-  private connecting: Promise<Client> | null = null;
+  private connecting: Promise<UpstreamClient> | null = null;
   private connected = false;
   private permissionState: DriverStatus['permission_state'];
+  private lastConnectionError: { code: ErrorCode; message: string } | null = null;
+  private lastDiagnostic: ConnectionDiagnostic | null = null;
+  private lastRawStderrCause: Error | null = null;
+  private readonly stderrDiagnostics: string[] = [];
   private seededStartPage = false;
   private readonly sessions = new Map<string, Session>();
   private readonly pageSessions = new Map<number, Session>();
 
-  constructor(options: { runtimePath?: string; profileMode?: ProfileMode; dataDir: string }) {
+  constructor(options: { runtimePath?: string; profileMode?: ProfileMode; dataDir: string; dependencies?: Partial<DevToolsDriverDependencies> }) {
     this.runtimePath = options.runtimePath ?? process.env.RESUME_COMPANION_DEVTOOLS_RUNTIME ?? DEFAULT_RUNTIME;
     this.profileMode = options.profileMode ?? parseProfileMode(process.env.RESUME_COMPANION_CHROME_PROFILE_MODE);
     this.dataDir = options.dataDir;
     this.permissionState = this.profileMode === 'auto_connect' ? 'unknown' : 'not_required';
+    this.dependencies = {
+      createClient: () => new Client({ name: 'resume-companion-browser-driver', version: '0.6.1' }) as unknown as UpstreamClient,
+      createTransport: parameters => new StdioClientTransport(parameters),
+      probeAutoConnect,
+      probeBrowserUrl,
+      ...options.dependencies,
+    };
   }
 
   async status(): Promise<DriverStatus> {
     const runtimeReady = existsSync(this.runtimePath);
+    if (runtimeReady && !this.connected) await this.refreshConnectionDiagnostic();
+    const connectionError = this.lastConnectionError;
     return {
       kind: this.kind,
       ready: runtimeReady,
@@ -64,14 +91,18 @@ export class DevToolsDriver implements BrowserDriver {
       compatible: runtimeReady,
       profile_mode: this.profileMode,
       permission_state: this.permissionState,
+      ...(connectionError ? { connection_error_code: connectionError.code, connection_error_message: connectionError.message } : {}),
       runtime_version: '1.9.0',
       capabilities: {
         coreProtocol: '2.1',
         continuousForms: true,
         finalSubmit: false,
         trustedEvents: true,
-        chromeSetupUrl: 'chrome://inspect/#remote-debugging',
-        manualChromeAuthorization: true,
+        chromeSetupUrl: this.profileMode === 'auto_connect' ? 'chrome://inspect/#remote-debugging' : undefined,
+        manualChromeAuthorization: this.profileMode === 'auto_connect',
+        dedicatedProfile: true,
+        explicitBrowserUrl: true,
+        explicitWebSocketEndpoint: true,
         verticalScroll: true,
         horizontalScroll: false,
         frames: 'accessibility-tree',
@@ -82,9 +113,14 @@ export class DevToolsDriver implements BrowserDriver {
         ? 'Chrome DevTools MCP 运行包缺失，请重新构建或安装完整发行包'
         : this.connected
           ? 'Chrome DevTools 驱动已连接'
+          : connectionError
+            ? connectionError.message
           : this.profileMode === 'auto_connect'
-            ? '请先在 chrome://inspect/#remote-debugging 启用远程调试；网页工具首次调用会连接当前 Chrome，并由用户在 Chrome 中点击 Allow'
-            : '网页工具首次调用时启动 Chrome',
+            ? '远程调试端点已就绪；网页工具首次调用会连接当前 Chrome，并由用户在 Chrome 中点击 Allow'
+            : this.profileMode === 'dedicated'
+              ? '网页工具首次调用将启动 Resume Companion 专用的持久 Chrome Profile；首次使用需要在其中登录招聘网站'
+              : '网页工具首次调用时启动临时隔离 Chrome',
+      ...(this.stderrDiagnostics.length > 0 ? { diagnostics: { stderr: [...this.stderrDiagnostics] } } : {}),
     };
   }
 
@@ -228,17 +264,13 @@ export class DevToolsDriver implements BrowserDriver {
   }
 
   async close(): Promise<void> {
-    this.sessions.clear();
-    this.pageSessions.clear();
-    const client = this.client;
-    this.client = null;
-    this.transport = null;
-    this.connecting = null;
-    this.connected = false;
-    await client?.close().catch(() => undefined);
+    await this.resetConnection();
+    this.lastConnectionError = null;
+    this.lastDiagnostic = null;
+    this.lastRawStderrCause = null;
   }
 
-  private async ensureClient(): Promise<Client> {
+  private async ensureClient(): Promise<UpstreamClient> {
     if (this.client) return this.client;
     if (this.connecting) return this.connecting;
     this.connecting = this.startClient();
@@ -249,10 +281,12 @@ export class DevToolsDriver implements BrowserDriver {
     }
   }
 
-  private async startClient(): Promise<Client> {
+  private async startClient(): Promise<UpstreamClient> {
     if (!existsSync(this.runtimePath)) throw new BrowserError('driver_unavailable', `Chrome DevTools MCP 运行包不存在：${this.runtimePath}`);
+    await this.assertConnectionPrerequisites();
+    this.lastRawStderrCause = null;
     if (this.profileMode === 'dedicated') await mkdir(join(this.dataDir, 'chrome-profile'), { recursive: true, mode: 0o700 });
-    const transport = new StdioClientTransport({
+    const transport = this.dependencies.createTransport({
       command: process.execPath,
       args: [this.runtimePath, ...this.upstreamArguments()],
       cwd: dirname(this.runtimePath),
@@ -263,12 +297,13 @@ export class DevToolsDriver implements BrowserDriver {
       },
       stderr: 'pipe',
     });
-    const client = new Client({ name: 'resume-companion-browser-driver', version: '0.6.0' });
+    this.captureStderr(transport);
+    const client = this.dependencies.createClient();
     try {
       await client.connect(transport);
     } catch (error) {
       await client.close().catch(() => undefined);
-      throw normalizeBrowserError(error);
+      throw normalizeBrowserError(this.withStderrCause(error));
     }
     this.transport = transport;
     this.client = client;
@@ -293,7 +328,10 @@ export class DevToolsDriver implements BrowserDriver {
       '--no-category-pwa',
     ];
     const browserUrl = process.env.RESUME_COMPANION_DEVTOOLS_BROWSER_URL;
-    if (browserUrl) args.push(`--browser-url=${browserUrl}`);
+    const wsEndpoint = process.env.RESUME_COMPANION_DEVTOOLS_WS_ENDPOINT;
+    if (browserUrl && wsEndpoint) throw new BrowserError('invalid_request', 'browser URL 和 WebSocket endpoint 只能配置一个');
+    if (wsEndpoint) args.push(`--ws-endpoint=${wsEndpoint}`);
+    else if (browserUrl) args.push(`--browser-url=${browserUrl}`);
     else if (this.profileMode === 'auto_connect') args.push('--auto-connect', '--channel=stable');
     else if (this.profileMode === 'isolated') args.push('--isolated');
     else args.push(`--user-data-dir=${join(this.dataDir, 'chrome-profile')}`, '--channel=stable');
@@ -308,24 +346,93 @@ export class DevToolsDriver implements BrowserDriver {
     if (name === 'new_page' && process.env.RESUME_COMPANION_DEVTOOLS_START_URL) allowed.add('new_page');
     if (!allowed.has(name)) throw new BrowserError('blocked', `内部浏览器工具不在允许列表：${name}`);
     this.throwIfAborted(signal);
-    const client = await this.ensureClient();
     let result: UpstreamResult;
     try {
+      const client = await this.ensureClient();
       result = await client.callTool({ name, arguments: arguments_ }, undefined, signal ? { signal } : undefined) as UpstreamResult;
     } catch (error) {
-      this.connected = false;
-      throw normalizeBrowserError(error);
+      const normalized = normalizeBrowserError(this.withStderrCause(error), { endpointReady: this.lastDiagnostic?.code === 'endpoint_ready' });
+      if (isConnectionError(normalized.code)) await this.failConnection(normalized);
+      throw normalized;
     }
     if (result.isError) {
       const text = result.content?.map(item => item.text ?? '').filter(Boolean).join('\n') || `${name} 执行失败`;
-      if (/permission|Allow|remote debugging|chrome:\/\/inspect/i.test(text)) this.permissionState = 'required';
-      throw normalizeBrowserError(new Error(text));
+      const normalized = normalizeBrowserError(this.withStderrCause(new Error(text)), { endpointReady: this.lastDiagnostic?.code === 'endpoint_ready' });
+      if (isConnectionError(normalized.code)) await this.failConnection(normalized);
+      throw normalized;
     }
     this.connected = true;
+    this.lastConnectionError = null;
+    this.lastRawStderrCause = null;
     if (this.profileMode === 'auto_connect') this.permissionState = 'granted';
     const structured = isRecord(result.structuredContent) ? result.structuredContent : {};
     if (structured.reconnected === true) this.invalidateSessions();
     return structured;
+  }
+
+  private async refreshConnectionDiagnostic(): Promise<void> {
+    if (process.env.RESUME_COMPANION_DEVTOOLS_WS_ENDPOINT) {
+      this.lastConnectionError = null;
+      this.permissionState = 'unknown';
+      return;
+    }
+    let diagnostic: ConnectionDiagnostic | null = null;
+    const browserUrl = process.env.RESUME_COMPANION_DEVTOOLS_BROWSER_URL;
+    if (browserUrl) diagnostic = await this.dependencies.probeBrowserUrl(browserUrl);
+    else if (this.profileMode === 'auto_connect') diagnostic = await this.dependencies.probeAutoConnect();
+    if (!diagnostic) return;
+    this.lastDiagnostic = diagnostic;
+    this.permissionState = diagnostic.permission_state;
+    if (diagnostic.code === 'endpoint_ready' || diagnostic.code === 'explicit_endpoint_ready') {
+      this.lastConnectionError = null;
+      return;
+    }
+    this.lastConnectionError = { code: diagnostic.code, message: diagnostic.message };
+  }
+
+  private async assertConnectionPrerequisites(): Promise<void> {
+    await this.refreshConnectionDiagnostic();
+    const browserUrl = process.env.RESUME_COMPANION_DEVTOOLS_BROWSER_URL;
+    const usesDiscoverableEndpoint = this.profileMode === 'auto_connect' || Boolean(browserUrl);
+    const endpointReady = this.lastDiagnostic?.code === 'endpoint_ready' || this.lastDiagnostic?.code === 'explicit_endpoint_ready';
+    if (!usesDiscoverableEndpoint || endpointReady || !this.lastConnectionError) return;
+    throw new BrowserError(this.lastConnectionError.code, this.lastConnectionError.message);
+  }
+
+  private async failConnection(error: BrowserError): Promise<void> {
+    this.lastConnectionError = { code: error.code, message: error.message.replace(/^[a-z_]+:\s*/, '') };
+    this.permissionState = permissionStateForError(error.code, this.profileMode);
+    await this.resetConnection();
+  }
+
+  private async resetConnection(): Promise<void> {
+    const client = this.client;
+    this.client = null;
+    this.transport = null;
+    this.connecting = null;
+    this.connected = false;
+    this.invalidateSessions();
+    await client?.close().catch(() => undefined);
+  }
+
+  private captureStderr(transport: StdioClientTransport): void {
+    transport.stderr?.on('data', chunk => {
+      for (const line of String(chunk).split(/\r?\n/)) {
+        const diagnostic = safeDiagnosticFromText(line);
+        if (!diagnostic) continue;
+        this.lastRawStderrCause = new Error(line.slice(0, 4_096));
+        if (this.stderrDiagnostics.at(-1) === diagnostic) continue;
+        this.stderrDiagnostics.push(diagnostic);
+        if (this.stderrDiagnostics.length > 8) this.stderrDiagnostics.shift();
+      }
+    });
+  }
+
+  private withStderrCause(error: unknown): unknown {
+    if (!this.lastRawStderrCause) return error;
+    return new Error(messageOf(error), {
+      cause: new Error(this.lastRawStderrCause.message, { cause: error }),
+    });
   }
 
   private async pages(signal?: AbortSignal): Promise<UpstreamPage[]> {
@@ -609,9 +716,16 @@ export class DevToolsDriver implements BrowserDriver {
 }
 
 function parseProfileMode(value: string | undefined): ProfileMode {
-  if (!value) return 'auto_connect';
+  if (!value) return 'dedicated';
   if (value === 'auto_connect' || value === 'dedicated' || value === 'isolated') return value;
   throw new Error('RESUME_COMPANION_CHROME_PROFILE_MODE 必须是 auto_connect、dedicated 或 isolated');
+}
+
+function permissionStateForError(code: ErrorCode, profileMode: ProfileMode): DriverStatus['permission_state'] {
+  if (profileMode !== 'auto_connect') return 'not_required';
+  if (code === 'browser_approval_required' || code === 'remote_debugging_disabled') return 'required';
+  if (['devtools_active_port_invalid', 'devtools_active_port_missing', 'devtools_active_port_permission_denied', 'permission_proxy_unsupported'].includes(code)) return 'blocked';
+  return 'unknown';
 }
 
 function stringEnvironment(): Record<string, string> {

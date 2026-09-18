@@ -15,6 +15,8 @@
 
 `changes.basic` 只合并明确提供的字段。education、experience、projects、skills、certificates、custom_answers 和 supplemental_fields 一旦提供，就替换对应整个栏目。
 
+`resume_status.browser` 会返回 `profile_mode`、`connected`、`permission_state`、`message`，并在失败时返回 `connection_error_code`。连接错误区分远程调试未启用、等待 Allow、ActivePort 缺失或无权限、Chrome 权限代理不兼容，以及真实 transport 断开。连接失败会释放旧客户端，下一次网页调用可重新创建连接。
+
 资料引用示例：
 
 ~~~json

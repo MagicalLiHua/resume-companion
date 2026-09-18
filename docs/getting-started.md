@@ -1,6 +1,6 @@
 # 安装与使用
 
-本版由 MCP 插件 0.6.0 和内置 Chrome DevTools 驱动组成。简历保存在 MCP 本地资料库中。
+本版由 MCP 插件 0.6.1 和内置 Chrome DevTools 驱动组成。简历保存在 MCP 本地资料库中。
 
 ## 安装
 
@@ -24,7 +24,8 @@ codex plugin add resume-companion@resume-companion
       "command": "node",
       "args": ["/绝对路径/plugins/resume-companion/server.mjs"],
       "env": {
-        "RESUME_COMPANION_DATA_DIR": "/可选的本地资料目录"
+        "RESUME_COMPANION_DATA_DIR": "/可选的本地资料目录",
+        "RESUME_COMPANION_CHROME_PROFILE_MODE": "dedicated"
       }
     }
   }
@@ -35,15 +36,13 @@ codex plugin add resume-companion@resume-companion
 
 ## 第一次连接 Chrome
 
-1. 使用日常 Chrome 打开 `chrome://inspect/#remote-debugging`，手动启用远程调试。
-2. 打开招聘网站并正常登录。
-3. 让 AI 开始填写，或调用 `resume_list_tabs`。
-4. Chrome 显示本次远程调试授权提示时，点击 **Allow**。
-5. AI 继续列出标签页、观察页面和填写表单。
+1. 让 AI 调用 `resume_list_tabs`，Resume Companion 会启动专用 Chrome。
+2. 在这个 Chrome 窗口打开招聘网站并正常登录。
+3. 让 AI 再次列出标签页、观察页面和填写表单。
 
-默认 `auto_connect` 使用当前 Chrome 的现有 Profile，因此 Cookie 和登录状态都会保留。无需加载扩展，无需关闭 Chrome，也无需给 ChatGPT“修改当前 Mac 上的 App”的权限。远程调试开关和每次新连接的 Allow 由 Chrome 明确要求，工具不能静默开启或代替用户授权；参见 [Chrome 官方当前会话连接说明](https://developer.chrome.com/blog/chrome-devtools-mcp-debug-your-browser-session)。
+默认 `dedicated` 把 Profile 保存在 Resume Companion 数据目录。招聘网站只需在这个 Profile 登录一次，后续启动会继续使用它的会话。无需加载扩展、开启远程调试或给 ChatGPT“修改当前 Mac 上的 App”的权限。
 
-如果用户拒绝 Chrome 的授权，资料管理仍然可用；`resume_status.browser.permission_state` 会提示需要授权。再次调用网页工具即可重新尝试连接。
+资料管理不依赖 Chrome。浏览器启动或连接失败时，`resume_status.browser.connection_error_code` 会返回具体原因；连接类错误会清理旧客户端，下一次网页调用会建立新连接。
 
 ## 保存第一份资料
 
@@ -65,19 +64,24 @@ AI 会选择标签页、按需读取资料、观察页面，并通过基础动�
 
 | 配置 | 用途 |
 | --- | --- |
-| `RESUME_COMPANION_CHROME_PROFILE_MODE=auto_connect` | 默认；连接当前 Chrome，沿用登录态 |
-| `RESUME_COMPANION_CHROME_PROFILE_MODE=dedicated` | 使用数据目录下的专用 Profile，适合隐私隔离 |
+| `RESUME_COMPANION_CHROME_PROFILE_MODE=dedicated` | 默认；使用数据目录下的持久专用 Profile |
+| `RESUME_COMPANION_CHROME_PROFILE_MODE=auto_connect` | 可选；连接日常 Chrome，要求客户端能读取 `DevToolsActivePort` |
 | `RESUME_COMPANION_CHROME_PROFILE_MODE=isolated` | 临时 Profile，仅用于自动化测试 |
+
+高级配置还支持 `RESUME_COMPANION_DEVTOOLS_BROWSER_URL` 或 `RESUME_COMPANION_DEVTOOLS_WS_ENDPOINT`。Chrome 150+ 默认 Profile 的 9222 权限代理不会提供 `/json/version`，因此不能把它当作普通 browser URL。若 `auto_connect` 返回 `devtools_active_port_permission_denied`，说明 AI 客户端的 macOS 沙箱无法读取端点文件；请改回 `dedicated`，继续重开远程调试不会解决这个权限问题。
 
 ## 常见问题
 
 | 现象 | 处理方式 |
 | --- | --- |
 | `resume_status` 不在工具目录 | 检查插件是否启用，重载 MCP 配置或新开任务 |
-| Chrome 没有显示 Allow | 打开 `chrome://inspect/#remote-debugging` 并确认远程调试已启用，再调用网页工具 |
-| Chrome 显示 Allow | 这是本次浏览器调试授权；允许后继续 |
+| 专用 Chrome 没有出现 | 查看 `resume_status.browser.connection_error_code`，再重试一次网页工具 |
+| `devtools_active_port_permission_denied` | 当前客户端无权读取日常 Chrome 的端点文件；使用默认 `dedicated` |
+| `permission_proxy_unsupported` | 9222 是权限代理，不能作为 browser URL；使用 `auto_connect` 或 `dedicated` |
+| `browser_approval_required` | `auto_connect` 已找到端点，等待用户在 Chrome 点击 Allow |
+| `remote_debugging_disabled` | 仅在 `auto_connect` 模式下开启 `chrome://inspect/#remote-debugging` |
 | macOS 提示 ChatGPT 修改 App | 拒绝即可；简历随行不需要这个权限 |
-| 资料可用但网页连接失败 | 保持 Chrome 运行，确认版本为 144+，重新调用网页工具 |
+| 资料可用但网页 transport 断开 | 再调用一次网页工具；旧连接会先被清理并重新创建 |
 | `profile_changed` | 另一会话已更新资料；重新读取并合并 |
 | 页面引用过期 | 重新观察当前页面，不重放旧动作 |
 | 保存结果为 `unknown` | 先观察页面卡片、步骤和错误提示，不直接重试 |

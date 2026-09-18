@@ -8,7 +8,8 @@ export type DriverStatus = {
   connected: boolean;
   compatible: boolean;
   profile_mode: ProfileMode;
-  permission_state: 'not_required' | 'unknown' | 'required' | 'granted';
+  permission_state: 'not_required' | 'unknown' | 'required' | 'granted' | 'blocked';
+  connection_error_code?: string;
   capabilities: Record<string, unknown>;
   message: string;
   [key: string]: unknown;

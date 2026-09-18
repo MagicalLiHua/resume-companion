@@ -5,13 +5,15 @@ description: Store resume facts in Resume Companion's local MCP profile library 
 
 # Resume Autofill
 
-Resume Companion combines a local multi-profile library with a constrained Chrome DevTools browser driver. The driver connects to the user's current Chrome and keeps existing website sessions. A separate model API or business backend is unnecessary.
+Resume Companion combines a local multi-profile library with a constrained Chrome DevTools browser driver. The default driver launches a persistent dedicated Chrome profile and keeps that profile's website sessions. A separate model API or business backend is unnecessary.
 
 ## Check availability before work
 
 Before saving profile information or filling a form, confirm that `resume_status` exists and call it once. A successful result proves that the MCP process and local library are active. Profile tools work even when Chrome is closed or not yet authorized.
 
-For webpage work, inspect `browser.ready`, `browser.profile_mode`, `browser.permission_state` and `browser.connected`. The browser connection is lazy: call `resume_list_tabs` to start it when ready but disconnected. In `auto_connect` mode, remote debugging must be manually enabled at `chrome://inspect/#remote-debugging`; each new debugging connection also requires the user to click **Allow** in Chrome. If permission is required, give those exact instructions and retry `resume_list_tabs` once after the user finishes. Do not try to bypass Chrome's authorization and do not request macOS permission to modify applications.
+For webpage work, inspect `browser.ready`, `browser.profile_mode`, `browser.permission_state`, `browser.connection_error_code` and `browser.connected`. The browser connection is lazy: call `resume_list_tabs` to start it when ready but disconnected. In the default `dedicated` mode, ask the user to log in once only after the dedicated Chrome window opens.
+
+Treat connection codes precisely. `remote_debugging_disabled` means current-profile mode needs the user to enable `chrome://inspect/#remote-debugging`. `browser_approval_required` means the endpoint is already available and the user must click **Allow**. `devtools_active_port_missing`, `devtools_active_port_permission_denied`, `devtools_active_port_invalid` and `permission_proxy_unsupported` are not fixed by repeatedly toggling remote debugging; recommend `dedicated` or a valid explicit endpoint. Do not bypass Chrome authorization or request macOS permission to modify applications.
 
 If a Resume Companion tool returns a transient startup or transport error, retry `resume_status` once. Do not launch `server.bundle.mjs` as an independent background process because the AI host owns the stdio MCP lifecycle. If `resume_status` is absent from the task's tool catalog, use `codex mcp get resume_companion --json` when local shell access exists to distinguish an uninstalled, disabled or failed server. The current task cannot register a completely absent MCP tool into itself; reload MCP configuration or start a new task after installation or enablement.
 

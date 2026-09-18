@@ -2,9 +2,11 @@
 
 Resume Companion stores profiles in the local MCP data directory. Its browser driver connects to Chrome through the official Chrome DevTools protocol. It does not store model API keys.
 
-Current-Chrome access requires the user to accept Chrome's own remote-debugging prompt. This grants the MCP visibility into pages in that authorized browser context, including their rendered form content. Close the MCP task or Chrome debugging session when it is no longer needed. Resume Companion does not modify the Chrome application bundle and does not require macOS permission to modify applications.
+The default dedicated Chrome profile is stored under the local Resume Companion data directory. It keeps that profile's website sessions across launches and does not require Chrome's remote-debugging switch. Close the MCP task or its dedicated Chrome when it is no longer needed. Resume Companion does not modify the Chrome application bundle and does not require macOS permission to modify applications.
 
-The DevTools driver exposes only an internal allowlist for page enumeration, selection, accessibility snapshots, filling, clicks and key presses. Arbitrary JavaScript evaluation, network inspection, performance tools, file upload, extension management and upstream tool discovery are disabled. A dedicated Chrome profile remains available for users who prefer stronger browser-context isolation.
+Optional current-Chrome access uses Chrome's own remote-debugging authorization. Chrome 150+ permission-proxy sessions require access to `DevToolsActivePort`; a sandboxed client may be unable to read it. Resume Companion reports that condition explicitly and does not fall back to scraping proxy responses. Browser diagnostics exposed through MCP are reduced to safe categories and do not include Cookie, authorization headers, page content, form values or WebSocket tokens.
+
+The DevTools driver exposes only an internal allowlist for page enumeration, selection, accessibility snapshots, filling, clicks and key presses. Arbitrary JavaScript evaluation, network inspection, performance tools, file upload, extension management and upstream tool discovery are disabled.
 
 Profile files are written atomically and use owner-only permissions where supported. They are not encrypted by the application. Protect the operating-system account and disk, choose a suitable RESUME_COMPANION_DATA_DIR, and include the directory in backups intentionally.
 

@@ -142,4 +142,43 @@ describe('DevTools MCP browser driver', () => {
     expect(after.elements.find((element: Record<string, unknown>) => element.kind === 'text' && element.name === '姓名 *')?.value).toBe('');
     expect(after.elements.find((element: Record<string, unknown>) => element.kind === 'text' && element.name === '电子邮箱 *')?.value).toBe('');
   }, 45_000);
+
+  test('starts and reconnects to a persistent dedicated profile', async () => {
+    const dedicatedDataDir = await mkdtemp(join(tmpdir(), 'resume-companion-dedicated-'));
+    const environment = Object.fromEntries(Object.entries(process.env).filter((entry): entry is [string, string] => typeof entry[1] === 'string'));
+    const transport = new StdioClientTransport({
+      command: process.execPath,
+      args: ['server.bundle.mjs'],
+      cwd: pluginRoot,
+      env: {
+        ...environment,
+        RESUME_COMPANION_DATA_DIR: dedicatedDataDir,
+        RESUME_COMPANION_CHROME_PROFILE_MODE: 'dedicated',
+        RESUME_COMPANION_DEVTOOLS_HEADLESS: '1',
+        RESUME_COMPANION_DEVTOOLS_START_URL: `http://127.0.0.1:4174/agent-lab.html?run=dedicated-${Date.now()}`,
+      },
+      stderr: 'pipe',
+    });
+    const dedicatedClient = new Client({ name: 'resume-companion-dedicated-live', version: '1.0.0' });
+    const dedicatedCall = async (name: string, arguments_: Record<string, unknown> = {}): Promise<Record<string, any>> => {
+      const result = await dedicatedClient.callTool({ name, arguments: arguments_ });
+      const content = Array.isArray(result.content) ? result.content.find(item => item.type === 'text') : undefined;
+      if (result.isError) throw new Error(content?.type === 'text' ? content.text : `${name} failed`);
+      return result.structuredContent as Record<string, any>;
+    };
+    try {
+      await dedicatedClient.connect(transport);
+      expect((await dedicatedCall('resume_status')).browser).toMatchObject({
+        connected: false,
+        profile_mode: 'dedicated',
+        permission_state: 'not_required',
+      });
+      const tabs = await dedicatedCall('resume_list_tabs', { url_contains: 'agent-lab.html' });
+      expect(tabs.tabs).toHaveLength(1);
+      expect((await dedicatedCall('resume_status')).browser).toMatchObject({ connected: true, profile_mode: 'dedicated' });
+    } finally {
+      await dedicatedClient.close();
+      await rm(dedicatedDataDir, { recursive: true, force: true });
+    }
+  }, 45_000);
 });

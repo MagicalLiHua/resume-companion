@@ -21943,7 +21943,7 @@ import { resolve as resolve2 } from "node:path";
 // src/browser/devtools-driver.ts
 import { existsSync } from "node:fs";
 import { mkdir } from "node:fs/promises";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join as join2, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 // node_modules/@modelcontextprotocol/sdk/dist/esm/experimental/tasks/client.js
@@ -22837,6 +22837,113 @@ function canonical(value) {
   return JSON.stringify(value);
 }
 
+// src/browser/connection-diagnostics.ts
+import { readFile } from "node:fs/promises";
+import { homedir, platform as currentPlatform } from "node:os";
+import { join } from "node:path";
+function chromeUserDataDir(dependencies = {}) {
+  const platform = dependencies.platform ?? currentPlatform();
+  const home = dependencies.homeDir ?? homedir();
+  if (platform === "darwin") return join(home, "Library", "Application Support", "Google", "Chrome");
+  if (platform === "win32") {
+    const localAppData = dependencies.localAppData ?? process.env.LOCALAPPDATA;
+    return localAppData ? join(localAppData, "Google", "Chrome", "User Data") : null;
+  }
+  if (platform === "linux") return join(home, ".config", "google-chrome");
+  return null;
+}
+async function probeAutoConnect(dependencies = {}) {
+  const userDataDir = chromeUserDataDir(dependencies);
+  if (!userDataDir) {
+    return diagnostic("devtools_active_port_missing", "\u65E0\u6CD5\u786E\u5B9A\u5F53\u524D\u5E73\u53F0\u7684 Chrome \u6570\u636E\u76EE\u5F55\uFF1B\u8BF7\u6539\u7528\u4E13\u7528 Profile \u6216\u660E\u786E\u914D\u7F6E WebSocket endpoint", "blocked");
+  }
+  const readText = dependencies.readText ?? ((path, encoding) => readFile(path, encoding));
+  try {
+    const value = await readText(join(userDataDir, "DevToolsActivePort"), "utf8");
+    return validActivePort(value) ? diagnostic("endpoint_ready", "\u8FDC\u7A0B\u8C03\u8BD5\u7AEF\u70B9\u5DF2\u5C31\u7EEA\uFF1B\u8FDE\u63A5\u8BF7\u6C42\u51FA\u73B0\u65F6\u8BF7\u5728 Chrome \u70B9\u51FB Allow", "required") : diagnostic("devtools_active_port_invalid", "Chrome \u7684 DevToolsActivePort \u683C\u5F0F\u65E0\u6548\uFF1B\u8BF7\u91CD\u542F Chrome \u540E\u91CD\u65B0\u5F00\u542F\u8FDC\u7A0B\u8C03\u8BD5", "blocked");
+  } catch (error2) {
+    const code = fileErrorCode(error2);
+    if (code === "EACCES" || code === "EPERM") {
+      return diagnostic(
+        "devtools_active_port_permission_denied",
+        "\u5F53\u524D AI \u5BA2\u6237\u7AEF\u65E0\u6743\u8BFB\u53D6 Chrome \u7684 DevToolsActivePort\uFF1B\u8BF7\u4F7F\u7528 Resume Companion \u4E13\u7528 Profile\uFF0C\u6216\u5728\u5141\u8BB8\u8BFB\u53D6\u8BE5\u6587\u4EF6\u7684\u5BA2\u6237\u7AEF\u4E2D\u4F7F\u7528 current-profile \u6A21\u5F0F",
+        "blocked"
+      );
+    }
+    if (code !== "ENOENT") {
+      return diagnostic("devtools_active_port_missing", "\u65E0\u6CD5\u8BFB\u53D6 Chrome \u7684 DevToolsActivePort\uFF1B\u8BF7\u4F7F\u7528\u4E13\u7528 Profile \u6216\u68C0\u67E5 Chrome \u5B89\u88C5", "blocked");
+    }
+  }
+  const endpoint = await probeHttpEndpoint("http://127.0.0.1:9222", dependencies);
+  if (endpoint === "permission_proxy") {
+    return diagnostic(
+      "permission_proxy_unsupported",
+      "Chrome \u6743\u9650\u4EE3\u7406\u6B63\u5728\u76D1\u542C\uFF0C\u4F46\u5F53\u524D\u8FDE\u63A5\u73AF\u5883\u6CA1\u6709\u53EF\u8BFB\u7684 DevToolsActivePort\uFF0C\u4E0D\u80FD\u901A\u8FC7 HTTP discovery \u4EE3\u66FF\uFF1B\u8BF7\u4F7F\u7528\u4E13\u7528 Profile",
+      "blocked"
+    );
+  }
+  if (endpoint === "standard") {
+    return diagnostic(
+      "devtools_active_port_missing",
+      "Chrome \u8C03\u8BD5\u7AEF\u53E3\u53EF\u8BBF\u95EE\uFF0C\u4F46 DevToolsActivePort \u7F3A\u5931\uFF1B\u8BF7\u660E\u786E\u914D\u7F6E RESUME_COMPANION_DEVTOOLS_BROWSER_URL",
+      "blocked"
+    );
+  }
+  return diagnostic(
+    "remote_debugging_disabled",
+    "\u5F53\u524D\u672A\u53D1\u73B0\u53EF\u8FDE\u63A5\u7684 Chrome \u8FDC\u7A0B\u8C03\u8BD5\u7AEF\u70B9\uFF1B\u5982\u9700\u4F7F\u7528\u5F53\u524D Profile\uFF0C\u8BF7\u5148\u5728 chrome://inspect/#remote-debugging \u5F00\u542F\u8FDC\u7A0B\u8C03\u8BD5",
+    "required"
+  );
+}
+async function probeBrowserUrl(browserUrl, dependencies = {}) {
+  const endpoint = await probeHttpEndpoint(browserUrl, dependencies);
+  if (endpoint === "permission_proxy") {
+    return diagnostic(
+      "permission_proxy_unsupported",
+      "\u914D\u7F6E\u7684 browser URL \u662F Chrome \u6743\u9650\u4EE3\u7406\uFF0C\u5B83\u4E0D\u4F1A\u63D0\u4F9B /json/version\uFF1B\u8BF7\u4F7F\u7528 auto_connect \u6216\u975E\u9ED8\u8BA4 Profile \u7684\u6807\u51C6\u8C03\u8BD5\u7AEF\u53E3",
+      "blocked"
+    );
+  }
+  if (endpoint === "standard") {
+    return diagnostic("explicit_endpoint_ready", "\u660E\u786E\u914D\u7F6E\u7684 Chrome \u8C03\u8BD5\u7AEF\u70B9\u5DF2\u5C31\u7EEA", "unknown");
+  }
+  return diagnostic("remote_debugging_disabled", "\u660E\u786E\u914D\u7F6E\u7684 Chrome \u8C03\u8BD5\u7AEF\u70B9\u4E0D\u53EF\u8BBF\u95EE", "blocked");
+}
+function sanitizeDiagnosticText(value) {
+  return value.replace(/wss?:\/\/[^\s"']+/gi, "[redacted-websocket]").replace(/https?:\/\/[^\s"']+/gi, "[redacted-url]").replace(/("?(?:cookie|authorization|headers?|value)"?\s*[:=]\s*)("[^"]*"|'[^']*'|[^\s,}]+)/gi, "$1[redacted]").replace(/\/devtools\/browser\/[A-Za-z0-9._~!$&'()*+,;=:@%-]+/g, "/devtools/browser/[redacted]").slice(0, 500);
+}
+function safeDiagnosticFromText(value) {
+  const sanitized = sanitizeDiagnosticText(value);
+  if (/\b(?:EPERM|EACCES)\b|operation not permitted|permission denied/i.test(sanitized)) return "DevToolsActivePort read denied by host permissions";
+  if (/DevToolsActivePort/i.test(sanitized) && /ENOENT|not found|could not find/i.test(sanitized)) return "DevToolsActivePort was not found";
+  if (/disconnected|connection closed|transport closed|TargetClose/i.test(sanitized)) return "Chrome transport disconnected";
+  if (/permission|\bAllow\b/i.test(sanitized)) return "Chrome connection approval is required";
+  return null;
+}
+function diagnostic(code, message, permission_state) {
+  return { code, message, permission_state };
+}
+function validActivePort(value) {
+  const [rawPort, rawPath] = value.split("\n").map((line) => line.trim()).filter(Boolean);
+  const port = Number(rawPort);
+  return Number.isInteger(port) && port > 0 && port <= 65535 && Boolean(rawPath?.startsWith("/devtools/browser/"));
+}
+async function probeHttpEndpoint(browserUrl, dependencies) {
+  const fetcher = dependencies.fetch ?? globalThis.fetch;
+  const timeoutMs = dependencies.timeoutMs ?? 600;
+  try {
+    const endpoint = new URL("/json/version", browserUrl).toString();
+    const response = await fetcher(endpoint, { method: "GET", signal: AbortSignal.timeout(timeoutMs) });
+    if (response.status === 404) return "permission_proxy";
+    return response.ok ? "standard" : "unavailable";
+  } catch {
+    return "unavailable";
+  }
+}
+function fileErrorCode(error2) {
+  return typeof error2 === "object" && error2 !== null && "code" in error2 && typeof error2.code === "string" ? error2.code : void 0;
+}
+
 // src/browser/errors.ts
 var BrowserError = class extends Error {
   constructor(code, message, options) {
@@ -22849,12 +22956,64 @@ var BrowserError = class extends Error {
 function messageOf(error2) {
   return error2 instanceof Error ? error2.message : String(error2);
 }
-function normalizeBrowserError(error2) {
+function normalizeBrowserError(error2, context) {
   if (error2 instanceof BrowserError) return error2;
-  const message = messageOf(error2);
-  if (/permission|Allow|remote debugging|chrome:\/\/inspect/i.test(message)) return new BrowserError("browser_permission_required", "\u8BF7\u5728 chrome://inspect/#remote-debugging \u542F\u7528\u8FDC\u7A0B\u8C03\u8BD5\uFF0C\u5E76\u5728 Chrome \u7684\u672C\u6B21\u8FDE\u63A5\u63D0\u793A\u4E2D\u70B9\u51FB Allow", { cause: error2 });
-  if (/disconnected|closed|ECONN|transport|Not connected|TargetClose/i.test(message)) return new BrowserError("browser_disconnected", "Chrome \u8FDE\u63A5\u5DF2\u65AD\u5F00\uFF0C\u8BF7\u91CD\u65B0\u8FDE\u63A5\u540E\u89C2\u5BDF\u9875\u9762", { cause: error2 });
-  return new BrowserError("driver_unavailable", message || "\u6D4F\u89C8\u5668\u9A71\u52A8\u4E0D\u53EF\u7528", { cause: error2 });
+  const message = causeMessages(error2).join("\n");
+  if (/(?:\b(?:EPERM|EACCES)\b|operation not permitted|permission denied)/i.test(message) && /DevToolsActivePort|Chrome/i.test(message)) {
+    return new BrowserError("devtools_active_port_permission_denied", "\u5F53\u524D AI \u5BA2\u6237\u7AEF\u65E0\u6743\u8BFB\u53D6 Chrome \u7684 DevToolsActivePort\uFF1B\u8BF7\u4F7F\u7528 Resume Companion \u4E13\u7528 Profile", { cause: error2 });
+  }
+  if (/DevToolsActivePort/i.test(message) && /invalid|format/i.test(message)) {
+    return new BrowserError("devtools_active_port_invalid", "Chrome \u7684 DevToolsActivePort \u683C\u5F0F\u65E0\u6548\uFF1B\u8BF7\u91CD\u542F Chrome \u540E\u91CD\u8BD5", { cause: error2 });
+  }
+  if (/DevToolsActivePort/i.test(message) && /ENOENT|not found|Could not find/i.test(message)) {
+    return new BrowserError("devtools_active_port_missing", "\u6CA1\u6709\u627E\u5230 Chrome \u7684 DevToolsActivePort\uFF1B\u8BF7\u786E\u8BA4\u8FDC\u7A0B\u8C03\u8BD5\u5DF2\u5F00\u542F\uFF0C\u6216\u4F7F\u7528\u4E13\u7528 Profile", { cause: error2 });
+  }
+  if (/\/json\/version|HTTP Not Found|HTTP 404/i.test(message)) {
+    return new BrowserError("permission_proxy_unsupported", "\u8BE5\u7AEF\u53E3\u662F Chrome \u6743\u9650\u4EE3\u7406\uFF0C\u4E0D\u80FD\u4F5C\u4E3A\u666E\u901A browser URL \u4F7F\u7528\uFF1B\u8BF7\u6539\u7528 auto_connect \u6216\u4E13\u7528 Profile", { cause: error2 });
+  }
+  if (context?.endpointReady && /permission|\bAllow\b|approve|unauthori[sz]ed/i.test(message)) {
+    return new BrowserError("browser_approval_required", "\u8FDC\u7A0B\u8C03\u8BD5\u5DF2\u5F00\u542F\uFF1B\u8BF7\u5728 Chrome \u7684\u672C\u6B21\u8FDE\u63A5\u63D0\u793A\u4E2D\u70B9\u51FB Allow", { cause: error2 });
+  }
+  if (/remote debugging|chrome:\/\/inspect/i.test(message)) {
+    return new BrowserError("remote_debugging_disabled", "\u5F53\u524D\u672A\u53D1\u73B0\u53EF\u8FDE\u63A5\u7684\u8FDC\u7A0B\u8C03\u8BD5\u7AEF\u70B9\uFF1B\u8BF7\u5F00\u542F Chrome \u8FDC\u7A0B\u8C03\u8BD5\uFF0C\u6216\u4F7F\u7528\u4E13\u7528 Profile", { cause: error2 });
+  }
+  if (/disconnected|closed|ECONN|transport|Not connected|TargetClose|Could not connect/i.test(message)) {
+    return new BrowserError("browser_disconnected", "Chrome transport \u5DF2\u65AD\u5F00\uFF1B\u4E0B\u4E00\u6B21\u8C03\u7528\u4F1A\u521B\u5EFA\u65B0\u7684\u8FDE\u63A5", { cause: error2 });
+  }
+  return new BrowserError("driver_unavailable", safeFallbackMessage(message), { cause: error2 });
+}
+function isConnectionError(code) {
+  return [
+    "browser_approval_required",
+    "browser_disconnected",
+    "browser_permission_required",
+    "devtools_active_port_invalid",
+    "devtools_active_port_missing",
+    "devtools_active_port_permission_denied",
+    "driver_unavailable",
+    "permission_proxy_unsupported",
+    "remote_debugging_disabled"
+  ].includes(code);
+}
+function causeMessages(error2) {
+  const messages = [];
+  const seen = /* @__PURE__ */ new Set();
+  let current = error2;
+  while (current !== void 0 && current !== null && !seen.has(current) && messages.length < 6) {
+    seen.add(current);
+    if (current instanceof Error) {
+      messages.push(current.message);
+      current = current.cause;
+    } else {
+      messages.push(String(current));
+      break;
+    }
+  }
+  return messages;
+}
+function safeFallbackMessage(message) {
+  if (!message) return "\u6D4F\u89C8\u5668\u9A71\u52A8\u4E0D\u53EF\u7528";
+  return "\u6D4F\u89C8\u5668\u9A71\u52A8\u8FD4\u56DE\u4E86\u672A\u5206\u7C7B\u9519\u8BEF\uFF1B\u539F\u59CB\u5185\u5BB9\u672A\u5411 MCP \u54CD\u5E94\u516C\u5F00\uFF0C\u8BF7\u67E5\u770B\u5B89\u5168\u8BCA\u65AD\u7801\u6216\u91CD\u65B0\u8FDE\u63A5";
 }
 
 // src/browser/operation-journal.ts
@@ -23139,11 +23298,16 @@ var DevToolsDriver = class {
   runtimePath;
   profileMode;
   dataDir;
+  dependencies;
   client = null;
   transport = null;
   connecting = null;
   connected = false;
   permissionState;
+  lastConnectionError = null;
+  lastDiagnostic = null;
+  lastRawStderrCause = null;
+  stderrDiagnostics = [];
   seededStartPage = false;
   sessions = /* @__PURE__ */ new Map();
   pageSessions = /* @__PURE__ */ new Map();
@@ -23152,9 +23316,18 @@ var DevToolsDriver = class {
     this.profileMode = options.profileMode ?? parseProfileMode(process.env.RESUME_COMPANION_CHROME_PROFILE_MODE);
     this.dataDir = options.dataDir;
     this.permissionState = this.profileMode === "auto_connect" ? "unknown" : "not_required";
+    this.dependencies = {
+      createClient: () => new Client({ name: "resume-companion-browser-driver", version: "0.6.1" }),
+      createTransport: (parameters) => new StdioClientTransport(parameters),
+      probeAutoConnect,
+      probeBrowserUrl,
+      ...options.dependencies
+    };
   }
   async status() {
     const runtimeReady = existsSync(this.runtimePath);
+    if (runtimeReady && !this.connected) await this.refreshConnectionDiagnostic();
+    const connectionError = this.lastConnectionError;
     return {
       kind: this.kind,
       ready: runtimeReady,
@@ -23162,21 +23335,26 @@ var DevToolsDriver = class {
       compatible: runtimeReady,
       profile_mode: this.profileMode,
       permission_state: this.permissionState,
+      ...connectionError ? { connection_error_code: connectionError.code, connection_error_message: connectionError.message } : {},
       runtime_version: "1.9.0",
       capabilities: {
         coreProtocol: "2.1",
         continuousForms: true,
         finalSubmit: false,
         trustedEvents: true,
-        chromeSetupUrl: "chrome://inspect/#remote-debugging",
-        manualChromeAuthorization: true,
+        chromeSetupUrl: this.profileMode === "auto_connect" ? "chrome://inspect/#remote-debugging" : void 0,
+        manualChromeAuthorization: this.profileMode === "auto_connect",
+        dedicatedProfile: true,
+        explicitBrowserUrl: true,
+        explicitWebSocketEndpoint: true,
         verticalScroll: true,
         horizontalScroll: false,
         frames: "accessibility-tree",
         shadowDOM: "accessibility-tree",
         activateTab: true
       },
-      message: !runtimeReady ? "Chrome DevTools MCP \u8FD0\u884C\u5305\u7F3A\u5931\uFF0C\u8BF7\u91CD\u65B0\u6784\u5EFA\u6216\u5B89\u88C5\u5B8C\u6574\u53D1\u884C\u5305" : this.connected ? "Chrome DevTools \u9A71\u52A8\u5DF2\u8FDE\u63A5" : this.profileMode === "auto_connect" ? "\u8BF7\u5148\u5728 chrome://inspect/#remote-debugging \u542F\u7528\u8FDC\u7A0B\u8C03\u8BD5\uFF1B\u7F51\u9875\u5DE5\u5177\u9996\u6B21\u8C03\u7528\u4F1A\u8FDE\u63A5\u5F53\u524D Chrome\uFF0C\u5E76\u7531\u7528\u6237\u5728 Chrome \u4E2D\u70B9\u51FB Allow" : "\u7F51\u9875\u5DE5\u5177\u9996\u6B21\u8C03\u7528\u65F6\u542F\u52A8 Chrome"
+      message: !runtimeReady ? "Chrome DevTools MCP \u8FD0\u884C\u5305\u7F3A\u5931\uFF0C\u8BF7\u91CD\u65B0\u6784\u5EFA\u6216\u5B89\u88C5\u5B8C\u6574\u53D1\u884C\u5305" : this.connected ? "Chrome DevTools \u9A71\u52A8\u5DF2\u8FDE\u63A5" : connectionError ? connectionError.message : this.profileMode === "auto_connect" ? "\u8FDC\u7A0B\u8C03\u8BD5\u7AEF\u70B9\u5DF2\u5C31\u7EEA\uFF1B\u7F51\u9875\u5DE5\u5177\u9996\u6B21\u8C03\u7528\u4F1A\u8FDE\u63A5\u5F53\u524D Chrome\uFF0C\u5E76\u7531\u7528\u6237\u5728 Chrome \u4E2D\u70B9\u51FB Allow" : this.profileMode === "dedicated" ? "\u7F51\u9875\u5DE5\u5177\u9996\u6B21\u8C03\u7528\u5C06\u542F\u52A8 Resume Companion \u4E13\u7528\u7684\u6301\u4E45 Chrome Profile\uFF1B\u9996\u6B21\u4F7F\u7528\u9700\u8981\u5728\u5176\u4E2D\u767B\u5F55\u62DB\u8058\u7F51\u7AD9" : "\u7F51\u9875\u5DE5\u5177\u9996\u6B21\u8C03\u7528\u65F6\u542F\u52A8\u4E34\u65F6\u9694\u79BB Chrome",
+      ...this.stderrDiagnostics.length > 0 ? { diagnostics: { stderr: [...this.stderrDiagnostics] } } : {}
     };
   }
   async listTabs(input, signal) {
@@ -23314,14 +23492,10 @@ ${page.url}`.toLocaleLowerCase().includes(needle)));
     });
   }
   async close() {
-    this.sessions.clear();
-    this.pageSessions.clear();
-    const client = this.client;
-    this.client = null;
-    this.transport = null;
-    this.connecting = null;
-    this.connected = false;
-    await client?.close().catch(() => void 0);
+    await this.resetConnection();
+    this.lastConnectionError = null;
+    this.lastDiagnostic = null;
+    this.lastRawStderrCause = null;
   }
   async ensureClient() {
     if (this.client) return this.client;
@@ -23335,8 +23509,10 @@ ${page.url}`.toLocaleLowerCase().includes(needle)));
   }
   async startClient() {
     if (!existsSync(this.runtimePath)) throw new BrowserError("driver_unavailable", `Chrome DevTools MCP \u8FD0\u884C\u5305\u4E0D\u5B58\u5728\uFF1A${this.runtimePath}`);
-    if (this.profileMode === "dedicated") await mkdir(join(this.dataDir, "chrome-profile"), { recursive: true, mode: 448 });
-    const transport2 = new StdioClientTransport({
+    await this.assertConnectionPrerequisites();
+    this.lastRawStderrCause = null;
+    if (this.profileMode === "dedicated") await mkdir(join2(this.dataDir, "chrome-profile"), { recursive: true, mode: 448 });
+    const transport2 = this.dependencies.createTransport({
       command: process.execPath,
       args: [this.runtimePath, ...this.upstreamArguments()],
       cwd: dirname(this.runtimePath),
@@ -23347,12 +23523,13 @@ ${page.url}`.toLocaleLowerCase().includes(needle)));
       },
       stderr: "pipe"
     });
-    const client = new Client({ name: "resume-companion-browser-driver", version: "0.6.0" });
+    this.captureStderr(transport2);
+    const client = this.dependencies.createClient();
     try {
       await client.connect(transport2);
     } catch (error2) {
       await client.close().catch(() => void 0);
-      throw normalizeBrowserError(error2);
+      throw normalizeBrowserError(this.withStderrCause(error2));
     }
     this.transport = transport2;
     this.client = client;
@@ -23376,10 +23553,13 @@ ${page.url}`.toLocaleLowerCase().includes(needle)));
       "--no-category-pwa"
     ];
     const browserUrl = process.env.RESUME_COMPANION_DEVTOOLS_BROWSER_URL;
-    if (browserUrl) args.push(`--browser-url=${browserUrl}`);
+    const wsEndpoint = process.env.RESUME_COMPANION_DEVTOOLS_WS_ENDPOINT;
+    if (browserUrl && wsEndpoint) throw new BrowserError("invalid_request", "browser URL \u548C WebSocket endpoint \u53EA\u80FD\u914D\u7F6E\u4E00\u4E2A");
+    if (wsEndpoint) args.push(`--ws-endpoint=${wsEndpoint}`);
+    else if (browserUrl) args.push(`--browser-url=${browserUrl}`);
     else if (this.profileMode === "auto_connect") args.push("--auto-connect", "--channel=stable");
     else if (this.profileMode === "isolated") args.push("--isolated");
-    else args.push(`--user-data-dir=${join(this.dataDir, "chrome-profile")}`, "--channel=stable");
+    else args.push(`--user-data-dir=${join2(this.dataDir, "chrome-profile")}`, "--channel=stable");
     if (process.env.RESUME_COMPANION_DEVTOOLS_HEADLESS === "1") args.push("--headless");
     const executable = process.env.RESUME_COMPANION_CHROME_EXECUTABLE;
     if (executable && !browserUrl && this.profileMode !== "auto_connect") args.push(`--executable-path=${executable}`);
@@ -23390,24 +23570,87 @@ ${page.url}`.toLocaleLowerCase().includes(needle)));
     if (name === "new_page" && process.env.RESUME_COMPANION_DEVTOOLS_START_URL) allowed.add("new_page");
     if (!allowed.has(name)) throw new BrowserError("blocked", `\u5185\u90E8\u6D4F\u89C8\u5668\u5DE5\u5177\u4E0D\u5728\u5141\u8BB8\u5217\u8868\uFF1A${name}`);
     this.throwIfAborted(signal);
-    const client = await this.ensureClient();
     let result;
     try {
+      const client = await this.ensureClient();
       result = await client.callTool({ name, arguments: arguments_ }, void 0, signal ? { signal } : void 0);
     } catch (error2) {
-      this.connected = false;
-      throw normalizeBrowserError(error2);
+      const normalized = normalizeBrowserError(this.withStderrCause(error2), { endpointReady: this.lastDiagnostic?.code === "endpoint_ready" });
+      if (isConnectionError(normalized.code)) await this.failConnection(normalized);
+      throw normalized;
     }
     if (result.isError) {
       const text2 = result.content?.map((item) => item.text ?? "").filter(Boolean).join("\n") || `${name} \u6267\u884C\u5931\u8D25`;
-      if (/permission|Allow|remote debugging|chrome:\/\/inspect/i.test(text2)) this.permissionState = "required";
-      throw normalizeBrowserError(new Error(text2));
+      const normalized = normalizeBrowserError(this.withStderrCause(new Error(text2)), { endpointReady: this.lastDiagnostic?.code === "endpoint_ready" });
+      if (isConnectionError(normalized.code)) await this.failConnection(normalized);
+      throw normalized;
     }
     this.connected = true;
+    this.lastConnectionError = null;
+    this.lastRawStderrCause = null;
     if (this.profileMode === "auto_connect") this.permissionState = "granted";
     const structured = isRecord(result.structuredContent) ? result.structuredContent : {};
     if (structured.reconnected === true) this.invalidateSessions();
     return structured;
+  }
+  async refreshConnectionDiagnostic() {
+    if (process.env.RESUME_COMPANION_DEVTOOLS_WS_ENDPOINT) {
+      this.lastConnectionError = null;
+      this.permissionState = "unknown";
+      return;
+    }
+    let diagnostic2 = null;
+    const browserUrl = process.env.RESUME_COMPANION_DEVTOOLS_BROWSER_URL;
+    if (browserUrl) diagnostic2 = await this.dependencies.probeBrowserUrl(browserUrl);
+    else if (this.profileMode === "auto_connect") diagnostic2 = await this.dependencies.probeAutoConnect();
+    if (!diagnostic2) return;
+    this.lastDiagnostic = diagnostic2;
+    this.permissionState = diagnostic2.permission_state;
+    if (diagnostic2.code === "endpoint_ready" || diagnostic2.code === "explicit_endpoint_ready") {
+      this.lastConnectionError = null;
+      return;
+    }
+    this.lastConnectionError = { code: diagnostic2.code, message: diagnostic2.message };
+  }
+  async assertConnectionPrerequisites() {
+    await this.refreshConnectionDiagnostic();
+    const browserUrl = process.env.RESUME_COMPANION_DEVTOOLS_BROWSER_URL;
+    const usesDiscoverableEndpoint = this.profileMode === "auto_connect" || Boolean(browserUrl);
+    const endpointReady = this.lastDiagnostic?.code === "endpoint_ready" || this.lastDiagnostic?.code === "explicit_endpoint_ready";
+    if (!usesDiscoverableEndpoint || endpointReady || !this.lastConnectionError) return;
+    throw new BrowserError(this.lastConnectionError.code, this.lastConnectionError.message);
+  }
+  async failConnection(error2) {
+    this.lastConnectionError = { code: error2.code, message: error2.message.replace(/^[a-z_]+:\s*/, "") };
+    this.permissionState = permissionStateForError(error2.code, this.profileMode);
+    await this.resetConnection();
+  }
+  async resetConnection() {
+    const client = this.client;
+    this.client = null;
+    this.transport = null;
+    this.connecting = null;
+    this.connected = false;
+    this.invalidateSessions();
+    await client?.close().catch(() => void 0);
+  }
+  captureStderr(transport2) {
+    transport2.stderr?.on("data", (chunk) => {
+      for (const line of String(chunk).split(/\r?\n/)) {
+        const diagnostic2 = safeDiagnosticFromText(line);
+        if (!diagnostic2) continue;
+        this.lastRawStderrCause = new Error(line.slice(0, 4096));
+        if (this.stderrDiagnostics.at(-1) === diagnostic2) continue;
+        this.stderrDiagnostics.push(diagnostic2);
+        if (this.stderrDiagnostics.length > 8) this.stderrDiagnostics.shift();
+      }
+    });
+  }
+  withStderrCause(error2) {
+    if (!this.lastRawStderrCause) return error2;
+    return new Error(messageOf(error2), {
+      cause: new Error(this.lastRawStderrCause.message, { cause: error2 })
+    });
   }
   async pages(signal) {
     let structured = await this.call("list_pages", {}, signal);
@@ -23674,9 +23917,15 @@ ${page.url}`.toLocaleLowerCase().includes(needle)));
   }
 };
 function parseProfileMode(value) {
-  if (!value) return "auto_connect";
+  if (!value) return "dedicated";
   if (value === "auto_connect" || value === "dedicated" || value === "isolated") return value;
   throw new Error("RESUME_COMPANION_CHROME_PROFILE_MODE \u5FC5\u987B\u662F auto_connect\u3001dedicated \u6216 isolated");
+}
+function permissionStateForError(code, profileMode) {
+  if (profileMode !== "auto_connect") return "not_required";
+  if (code === "browser_approval_required" || code === "remote_debugging_disabled") return "required";
+  if (["devtools_active_port_invalid", "devtools_active_port_missing", "devtools_active_port_permission_denied", "permission_proxy_unsupported"].includes(code)) return "blocked";
+  return "unknown";
 }
 function stringEnvironment() {
   return Object.fromEntries(Object.entries(process.env).filter((entry) => typeof entry[1] === "string"));
@@ -23751,9 +24000,9 @@ function createBrowserDriver(dataDir) {
 
 // src/profile-store.ts
 import { randomUUID as randomUUID2 } from "node:crypto";
-import { chmod, copyFile, mkdir as mkdir2, open, readFile, readdir, rename, stat, writeFile } from "node:fs/promises";
-import { homedir } from "node:os";
-import { dirname as dirname2, isAbsolute, join as join2, resolve as resolve3 } from "node:path";
+import { chmod, copyFile, mkdir as mkdir2, open, readFile as readFile2, readdir, rename, stat, writeFile } from "node:fs/promises";
+import { homedir as homedir2 } from "node:os";
+import { dirname as dirname2, isAbsolute, join as join3, resolve as resolve3 } from "node:path";
 var ID_PATTERN = /^[A-Za-z0-9_-]{1,100}$/;
 var id = external_exports.string().regex(ID_PATTERN);
 var optionalId = id.optional();
@@ -23934,13 +24183,13 @@ function mergeChanges(profile, changes, revision) {
   return ProfileSchema.parse(next);
 }
 function defaultDataDir() {
-  if (process.platform === "darwin") return join2(homedir(), "Library", "Application Support", "Resume Companion");
-  if (process.platform === "win32") return join2(process.env.APPDATA || join2(homedir(), "AppData", "Roaming"), "Resume Companion");
-  return join2(process.env.XDG_DATA_HOME || join2(homedir(), ".local", "share"), "resume-companion");
+  if (process.platform === "darwin") return join3(homedir2(), "Library", "Application Support", "Resume Companion");
+  if (process.platform === "win32") return join3(process.env.APPDATA || join3(homedir2(), "AppData", "Roaming"), "Resume Companion");
+  return join3(process.env.XDG_DATA_HOME || join3(homedir2(), ".local", "share"), "resume-companion");
 }
 function resolveDataDir(value = process.env.RESUME_COMPANION_DATA_DIR) {
   if (!value) return defaultDataDir();
-  const expanded = value === "~" ? homedir() : value.startsWith("~/") ? join2(homedir(), value.slice(2)) : value;
+  const expanded = value === "~" ? homedir2() : value.startsWith("~/") ? join3(homedir2(), value.slice(2)) : value;
   return isAbsolute(expanded) ? resolve3(expanded) : resolve3(process.cwd(), expanded);
 }
 async function syncDirectory(path) {
@@ -23968,7 +24217,7 @@ function storageError(code, message) {
   error2.code = code;
   return error2;
 }
-function fileErrorCode(error2) {
+function fileErrorCode2(error2) {
   return typeof error2 === "object" && error2 !== null && "code" in error2 && typeof error2.code === "string" ? error2.code : void 0;
 }
 function entryFor(stored) {
@@ -24029,15 +24278,15 @@ var ProfileStore = class {
   queue = Promise.resolve();
   constructor(dataDir = resolveDataDir()) {
     this.dataDir = dataDir;
-    this.indexPath = join2(dataDir, "index.json");
+    this.indexPath = join3(dataDir, "index.json");
   }
   async initialize() {
-    for (const folder of ["", "profiles", "history", "backups"]) await mkdir2(join2(this.dataDir, folder), { recursive: true, mode: 448 });
+    for (const folder of ["", "profiles", "history", "backups"]) await mkdir2(join3(this.dataDir, folder), { recursive: true, mode: 448 });
     await chmod(this.dataDir, 448).catch(() => void 0);
     try {
       await stat(this.indexPath);
     } catch (error2) {
-      if (fileErrorCode(error2) !== "ENOENT") throw error2;
+      if (fileErrorCode2(error2) !== "ENOENT") throw error2;
       await atomicWrite(this.indexPath, { format: "resume-companion-index", storage_version: 1, profiles: [] });
     }
     await this.readIndex();
@@ -24051,7 +24300,7 @@ var ProfileStore = class {
   async readIndex() {
     let raw;
     try {
-      raw = await readFile(this.indexPath, "utf8");
+      raw = await readFile2(this.indexPath, "utf8");
     } catch (error2) {
       throw storageError("storage_unavailable", `\u65E0\u6CD5\u8BFB\u53D6\u8D44\u6599\u7D22\u5F15\uFF1A${error2 instanceof Error ? error2.message : String(error2)}`);
     }
@@ -24068,9 +24317,9 @@ var ProfileStore = class {
   async readStored(profileId) {
     let raw;
     try {
-      raw = await readFile(join2(this.dataDir, "profiles", `${profileId}.json`), "utf8");
+      raw = await readFile2(join3(this.dataDir, "profiles", `${profileId}.json`), "utf8");
     } catch (error2) {
-      if (fileErrorCode(error2) === "ENOENT") throw storageError("profile_missing", "\u6307\u5B9A\u7684\u672C\u5730\u8D44\u6599\u4E0D\u5B58\u5728");
+      if (fileErrorCode2(error2) === "ENOENT") throw storageError("profile_missing", "\u6307\u5B9A\u7684\u672C\u5730\u8D44\u6599\u4E0D\u5B58\u5728");
       throw storageError("storage_unavailable", `\u65E0\u6CD5\u8BFB\u53D6\u8D44\u6599\uFF1A${error2 instanceof Error ? error2.message : String(error2)}`);
     }
     let value;
@@ -24137,11 +24386,11 @@ var ProfileStore = class {
       const serialized = JSON.stringify(stored);
       if (Buffer.byteLength(serialized, "utf8") > 1048576) throw storageError("profile_too_large", "\u5355\u4EFD\u8D44\u6599\u8D85\u8FC7 1 MiB\uFF0C\u8BF7\u7CBE\u7B80\u540E\u518D\u4FDD\u5B58");
       if (previous) {
-        const historyDir = join2(this.dataDir, "history", previous.id);
+        const historyDir = join3(this.dataDir, "history", previous.id);
         await mkdir2(historyDir, { recursive: true, mode: 448 });
-        await atomicWrite(join2(historyDir, `${previous.revision}.json`), previous);
+        await atomicWrite(join3(historyDir, `${previous.revision}.json`), previous);
       }
-      await atomicWrite(join2(this.dataDir, "profiles", `${stored.id}.json`), stored);
+      await atomicWrite(join3(this.dataDir, "profiles", `${stored.id}.json`), stored);
       const nextEntries = index.profiles.filter((item) => item.id !== stored.id);
       nextEntries.push(entryFor(stored));
       await atomicWrite(this.indexPath, { ...index, profiles: nextEntries });
@@ -24195,8 +24444,8 @@ var ProfileStore = class {
   }
   async rebuildIndex() {
     return this.exclusive(async () => {
-      await mkdir2(join2(this.dataDir, "profiles"), { recursive: true, mode: 448 });
-      const names = (await readdir(join2(this.dataDir, "profiles"))).filter((name) => name.endsWith(".json"));
+      await mkdir2(join3(this.dataDir, "profiles"), { recursive: true, mode: 448 });
+      const names = (await readdir(join3(this.dataDir, "profiles"))).filter((name) => name.endsWith(".json"));
       const profiles = [];
       for (const name of names) {
         const profileId = name.slice(0, -5);
@@ -24208,7 +24457,7 @@ var ProfileStore = class {
       }
       let backup;
       try {
-        backup = join2(this.dataDir, "backups", `index-${(/* @__PURE__ */ new Date()).toISOString().replaceAll(":", "-")}.json`);
+        backup = join3(this.dataDir, "backups", `index-${(/* @__PURE__ */ new Date()).toISOString().replaceAll(":", "-")}.json`);
         await copyFile(this.indexPath, backup);
       } catch {
         backup = null;
@@ -24274,7 +24523,7 @@ async function resolveActionSources(params) {
   for (const write of writes) if (write.kind === "set_value") write.value = await resolveValue(write.value);
   return wireSchemas.act.parse(resolved);
 }
-var server = new McpServer({ name: "resume-companion", version: "0.6.0" });
+var server = new McpServer({ name: "resume-companion", version: "0.6.1" });
 server.registerTool("resume_status", {
   title: "\u68C0\u67E5\u7B80\u5386\u968F\u884C\u72B6\u6001",
   description: "\u8FD4\u56DE MCP \u672C\u5730\u8D44\u6599\u5E93\u3001\u5DF2\u4FDD\u5B58\u7B80\u5386\u548C\u6D4F\u89C8\u5668\u9A71\u52A8\u72B6\u6001\u3002\u6D4F\u89C8\u5668\u5C1A\u672A\u8FDE\u63A5\u65F6\u8D44\u6599\u7BA1\u7406\u4ECD\u53EF\u6B63\u5E38\u4F7F\u7528\uFF1B\u7F51\u9875\u5DE5\u5177\u9996\u6B21\u8C03\u7528\u4F1A\u6309\u9700\u8FDE\u63A5 Chrome\u3002",
@@ -24302,7 +24551,7 @@ server.registerTool("resume_profile_save", {
 }, async (input) => runLocal(() => store.save(ProfileSaveSchema.parse(input))));
 server.registerTool("resume_list_tabs", {
   title: "\u5217\u51FA\u53EF\u5904\u7406\u7684 Chrome \u6807\u7B7E\u9875",
-  description: "\u6309\u9700\u8FDE\u63A5\u5F53\u524D Chrome\uFF0C\u5217\u51FA\u666E\u901A HTTP/HTTPS \u6807\u7B7E\u9875\uFF0C\u53EA\u8FD4\u56DE\u6807\u9898\u3001\u7F51\u5740\u548C\u6807\u7B7E\u9875 ID\uFF0C\u4E0D\u8BFB\u53D6\u9875\u9762\u6B63\u6587\u3002",
+  description: "\u6309\u9700\u8FDE\u63A5\u5DF2\u914D\u7F6E\u7684 Chrome \u4E0A\u4E0B\u6587\uFF0C\u5217\u51FA\u666E\u901A HTTP/HTTPS \u6807\u7B7E\u9875\uFF0C\u53EA\u8FD4\u56DE\u6807\u9898\u3001\u7F51\u5740\u548C\u6807\u7B7E\u9875 ID\uFF0C\u4E0D\u8BFB\u53D6\u9875\u9762\u6B63\u6587\u3002",
   inputSchema: {
     current_window_only: external_exports.boolean().optional().describe("DevTools \u9A71\u52A8\u679A\u4E3E\u5DF2\u6388\u6743\u6D4F\u89C8\u5668\u4E0A\u4E0B\u6587\uFF1B\u5F53\u524D\u7248\u672C\u4E0D\u533A\u5206 Chrome \u7A97\u53E3"),
     url_contains: external_exports.string().trim().max(500).optional().describe("\u53EF\u9009\u7684\u6807\u9898\u6216\u7F51\u5740\u8FC7\u6EE4\u6587\u672C")

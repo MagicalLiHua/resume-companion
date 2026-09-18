@@ -7,7 +7,7 @@
 
 简历随行是一个本地 MCP 插件。用户在 Codex、Claude Desktop 或其他 MCP 客户端中发送简历或补充信息，AI 把明确事实保存到本地资料库；填写时，AI 读取所选资料、观察 Chrome 的无障碍树，并组合输入、选择、点击、等待和核对等基础动作。
 
-0.9.0 通过官方 [Chrome DevTools MCP](https://github.com/ChromeDevTools/chrome-devtools-mcp) 连接当前已经登录的 Chrome，所以不需要安装浏览器扩展，也不需要为招聘网站重新登录。最终申请提交、声明、验证码、密码、附件上传和删除始终由用户操作。
+0.9.1 内置固定版本的官方 [Chrome DevTools MCP](https://github.com/ChromeDevTools/chrome-devtools-mcp)，默认启动一个持久的 Resume Companion 专用 Chrome Profile。它不需要浏览器扩展或远程调试开关；首次在专用 Profile 登录招聘网站后，后续会保留登录状态。最终申请提交、声明、验证码、密码、附件上传和删除始终由用户操作。
 
 [安装与使用](docs/getting-started.md) · [MCP 工具](docs/mcp-tools.md) · [验证范围](docs/validation.md) · [参与开发](CONTRIBUTING.md)
 
@@ -23,7 +23,7 @@ Resume Companion MCP
   ├─ 安全策略、快照、回读、撤销
   └─ Chrome DevTools 驱动
             ↓
-当前已登录的 Chrome → 招聘网站
+专用 Chrome Profile → 招聘网站
 ~~~
 
 模型负责理解不同网站的字段含义和规划步骤，MCP 只提供稳定、有限、可组合的工具。网站改字段名称时无需发布整套站点脚本；AI 可以根据当前页面重新匹配。
@@ -34,7 +34,7 @@ Resume Companion MCP
 | --- | --- |
 | 多份本地资料 | 创建、列出、分栏目读取和更新多版本简历资料 |
 | 并发保护 | 更新必须携带最近修订号，拒绝静默覆盖 |
-| 当前 Chrome | 首次网页调用连接现有 Chrome；保留登录态与 Cookie |
+| 持久浏览器会话 | 首次网页调用启动专用 Chrome；登录一次后保留该 Profile 的会话 |
 | 连续填写 | AI 组合观察、输入、选择、等待、保存经历和普通下一步 |
 | 复杂控件 | 使用真实浏览器输入事件和无障碍树处理动态控件；遇到新结构可重新观察 |
 | 可靠停止 | 页面变化、用户手改、旧快照和未知保存结果会阻止盲目继续 |
@@ -58,8 +58,9 @@ Resume Companion MCP
 3. 如果当前客户端是 Codex，使用仓库提供的 Codex marketplace/plugin 安装方式；其他客户端则按其官方方法注册本地 stdio MCP，入口为发布包内 plugins/resume-companion/server.mjs，必须使用绝对路径。
 4. 保留现有 MCP 配置，不覆盖无关条目，不写入简历、Cookie、密钥或真实个人信息做测试。
 5. 启动后确认 resume_status 可调用、工具总数为 10、browser.kind 为 devtools，并用虚构资料测试一次本地资料的创建和读取。
-6. 引导我在 Chrome 打开 chrome://inspect/#remote-debugging 并手动启用远程调试；连接提示出现时由我点击 Allow。不要尝试绕过 Chrome 的授权。
-7. 如果客户端需要重启或新建会话才能加载 MCP，请完成可自动完成的步骤后明确告诉我。最后汇报安装目录、修改的配置文件、验证结果和下一条可直接使用的指令。
+6. 保持默认的 dedicated Profile 模式。第一次使用网页工具时让 Resume Companion 启动专用 Chrome，并提示我在该窗口登录招聘网站一次；不要要求我开启默认 Chrome 的远程调试。
+7. 如果我明确要求连接日常 Chrome，才配置 auto_connect，并先用 resume_status 检查 connection_error_code；遇到 devtools_active_port_permission_denied 或 permission_proxy_unsupported 时恢复 dedicated，不要循环提示我重开开关。
+8. 如果客户端需要重启或新建会话才能加载 MCP，请完成可自动完成的步骤后明确告诉我。最后汇报安装目录、修改的配置文件、验证结果和下一条可直接使用的指令。
 ~~~
 
 ### 手动安装
@@ -86,7 +87,9 @@ codex plugin add resume-companion@resume-companion
 
 > 用“测试开发版”连续完成当前网申。可以保存经历和进入普通下一步，最终提交交给我。
 
-首次使用前，需要在 Chrome 打开 `chrome://inspect/#remote-debugging` 并启用远程调试。每次建立新的调试会话时，Chrome 会显示授权窗口；点击 **Allow** 后即可沿用现有登录状态。这个开关和授权窗口是 [Chrome 为当前 Profile 连接设置的安全边界](https://developer.chrome.com/blog/chrome-devtools-mcp-debug-your-browser-session)，不能由工具静默代点。简历随行不会修改 Chrome 应用文件，不需要授予 ChatGPT“修改当前 Mac 上的 App”权限。
+第一次调用网页工具时会打开 Resume Companion 专用 Chrome。请在这个窗口登录招聘网站一次；Profile 保存在本地数据目录，关闭或重启后仍会继续使用。简历随行不会修改 Chrome 应用文件，不需要授予 ChatGPT“修改当前 Mac 上的 App”权限。
+
+如明确选择连接日常 Chrome，可设置 `RESUME_COMPANION_CHROME_PROFILE_MODE=auto_connect`。Chrome 150+ 的默认 Profile 使用权限代理：9222 监听但 `/json/version` 返回 404 是正常行为，连接方必须读取 `DevToolsActivePort`。部分 macOS 沙箱会阻止该文件；Resume Companion 会返回明确诊断并建议专用 Profile，而不会把它误报为普通断线或反复要求开启远程调试。
 
 ## 十个 MCP 工具
 
@@ -109,4 +112,4 @@ codex plugin add resume-companion@resume-companion
 
 本地存储不代表离线推理：当前 AI 客户端会接触任务需要的简历字段和网页片段。浏览器驱动只开放项目内部允许的少量 DevTools 工具，不开放任意脚本执行、网络抓包或文件上传。完整说明见 [SECURITY.md](SECURITY.md)。
 
-0.9.0 已通过 TypeScript 检查、MCP 契约测试、发布包自检，以及真实 MCP → Chrome DevTools 集成测试。真实招聘网站仍需逐站试用；详见 [验证范围](docs/validation.md)。
+0.9.1 已通过 TypeScript 检查、MCP 契约测试、连接故障回归、发布包自检，以及隔离与持久 Profile 的真实 MCP → Chrome DevTools 集成测试。真实招聘网站仍需逐站试用；详见 [验证范围](docs/validation.md)。
