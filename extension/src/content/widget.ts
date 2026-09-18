@@ -21,6 +21,8 @@ export function installWidget(){
     creating=true;
     try{
       const registration=await chrome.runtime.sendMessage({type:'WIDGET_REGISTER'});if(!registration?.ok)return;if(!registration.data.enabled){enabled=false;return;}
+      // Reloading an unpacked extension leaves the old isolated world's DOM behind.
+      document.querySelectorAll('#resume-companion-widget').forEach(node=>node.remove());
       widgetToken=registration.data.token;host=document.createElement('div');host.id='resume-companion-widget';
       host.style.cssText='all:initial;position:fixed;right:24px;bottom:24px;z-index:2147483646;display:block;width:54px;height:54px;';
       const shadow=host.attachShadow({mode:'closed'}),style=document.createElement('style');

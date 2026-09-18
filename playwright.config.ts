@@ -10,7 +10,7 @@ if(!process.env.RESUME_TEST_BROWSER&&process.platform==='darwin'){
   }
 }
 export default defineConfig({
-  testDir: './tests/e2e', timeout: 45000, workers: 1,
+  testDir: './tests/e2e', outputDir: 'test-results/playwright', timeout: 45000, workers: 1,
   reporter: [['list'], ['json', { outputFile: 'test-results/results.json' }]],
   use: { baseURL: 'http://127.0.0.1:4174', headless: true, launchOptions: { executablePath: process.env.RESUME_TEST_BROWSER }, trace: 'retain-on-failure' },
   webServer: { command: 'node scripts/lab-server.mjs', url: 'http://127.0.0.1:4174', reuseExistingServer: !process.env.CI },

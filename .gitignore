@@ -21,3 +21,21 @@ backend/.data/
 backend/.backups/
 backend/.rollbacks/
 backend/web/
+research/third-party/
+
+.evaluation/
+
+# Local development material is not part of the public release tree.
+/research/
+/backend/
+/web/
+/contracts/
+/tests/web/
+/docs/*
+!/docs/getting-started.md
+!/docs/mcp-tools.md
+!/docs/development.md
+!/docs/validation.md
+!/docs/images/
+/plugins/resume-companion/scripts/debug-client.mjs
+/plugins/resume-companion/scripts/model-eval-client.mjs

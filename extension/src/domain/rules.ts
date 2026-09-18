@@ -110,6 +110,7 @@ export function proposedValue(field: Field, source?: Source): { value: Value | n
     ? { value: true, reason: '来自已保存的技能列表' } : { value: null, reason: '不是已确认的技能，请手动处理' };
   if (field.kind === 'date' && !/^\d{4}-\d{2}-\d{2}$/.test(value)) return { value: null, reason: '此处需要完整日期；不会自动补造日' };
   if (field.kind === 'month' && !/^\d{4}-\d{2}$/.test(value)) return { value: null, reason: '此处需要年月' };
+  if (field.kind === 'ant-cascader' && value.split(/\s*\/\s*/).length < 2) return { value: null, reason: '此处需要完整的地区层级；不能只凭城市补造省区' };
   if (field.maxLength >= 0 && value.length > field.maxLength) return { value: null, reason: `超过网页的 ${field.maxLength} 字符限制` };
   if (field.kind === 'select-one' || field.kind === 'radio') {
     const exact = field.options.filter(o => normalize(o.label) === normalize(value));

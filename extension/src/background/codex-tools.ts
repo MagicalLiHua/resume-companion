@@ -1,8 +1,10 @@
+import {AutomationTools, type BridgeContext} from './automation-tools';
 import { z } from 'zod';
 import { proposedValue, sourceCompatible, sources, suggestSource, type Source } from '../domain/rules';
 import type { Profile } from '../domain/profile';
 import type { Field, FieldResult, Snapshot, Value } from '../domain/types';
 import type { LocalState } from '../domain/state';
+import {bankcommSections} from '../content/bankcomm-actions';
 
 const MAX_BATCH_TABS = 20;
 const MAX_SESSIONS = 50;
@@ -14,6 +16,8 @@ const ListTabsParams = z.strictObject({
   url_contains: z.string().trim().max(500).optional(),
 });
 const ScanParams = z.strictObject({ version_id: VersionId });
+const InspectParams = z.strictObject({ tab_id: z.number().int().positive() });
+const OpenSectionParams = z.strictObject({ tab_id: z.number().int().positive(), label: z.enum(bankcommSections) });
 const ScanTabsParams = z.strictObject({
   tab_ids: z.array(z.number().int().positive()).min(1).max(MAX_BATCH_TABS),
   version_id: VersionId,
@@ -33,6 +37,7 @@ const FillParams = z.strictObject({
 });
 const FillBatchParams = z.strictObject({ plans: z.array(FillParams).min(1).max(MAX_BATCH_TABS) });
 const SessionParams = z.strictObject({ session_id: z.string().min(1).max(100) });
+const OptionsParams = SessionParams.extend({ field_id: z.string().min(1).max(100), query: z.string().max(120).optional(), path: z.array(z.string().trim().min(1).max(120)).min(1).max(6).optional() });
 const SessionBatchParams = z.strictObject({
   session_ids: z.array(z.string().min(1).max(100)).min(1).max(MAX_BATCH_TABS),
 });
@@ -59,26 +64,46 @@ const unique = <T>(items: T[], label: string) => {
   if (new Set(items).size !== items.length) throw new Error(`${label}包含重复项`);
 };
 const send = async <T>(tabId: number, documentId: string, message: Record<string, unknown>): Promise<T> => {
-  const response = await chrome.tabs.sendMessage(tabId, { ...message, codexBridge: true }, { documentId });
-  if (!response?.ok) throw new Error(response?.error ?? '网页没有响应，请重新扫描');
-  return response.data as T;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    const response = await Promise.race([
+      chrome.tabs.sendMessage(tabId, { ...message, codexBridge: true }, { documentId }),
+      new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error('页面响应中断或超时，请检查页面后重新扫描；不要直接重试旧填写计划')), ['FILL','UNDO'].includes(String(message.type)) ? 30_000 : message.type === 'OPTIONS' ? 16_000 : 5_000); }),
+    ]);
+    if (!response?.ok) throw new Error(response?.error ?? '网页没有响应，请重新扫描');
+    return response.data as T;
+  } finally { if (timer !== undefined) clearTimeout(timer); }
 };
 
 export class CodexTools {
   private readonly sessions = new Map<string, ActiveSession>();
 
-  constructor(private readonly loadState: LoadState) {}
+  private readonly automation: AutomationTools;
+  constructor(private readonly loadState: LoadState) {this.automation = new AutomationTools(loadState);}
 
-  async handle(method: string, raw: unknown) {
+  async handle(method: string, raw: unknown, context?: BridgeContext) {
     if (method === 'status') return this.status();
     const state = await this.loadState();
     if (!state.preferences.codexBridgeEnabled) throw new Error('Codex 桥接尚未开启。请在简历随行设置页中显式开启后重试。');
+    if (['read_profile','observe','act','wait','undo_operations'].includes(method)) { if (!context) throw new Error('缺少桥接连接身份'); return this.automation.handle(method,raw,context); }
     if (method === 'tabs') return this.listTabs(ListTabsParams.parse(raw));
+    if (method === 'activate_tab') return this.activateTab(InspectParams.parse(raw));
+    if (method === 'inspect') return this.inspect(InspectParams.parse(raw));
+    if (method === 'open_section') {
+      const params = OpenSectionParams.parse(raw);
+      this.forgetTab(params.tab_id);
+      return this.inspect(params, { type: 'OPEN_SECTION', label: params.label });
+    }
     if (method === 'scan') return this.scanCurrent(state, ScanParams.parse(raw));
     if (method === 'scan_batch') return this.scanBatch(state, ScanTabsParams.parse(raw));
     if (method === 'fill') return this.fill(FillParams.parse(raw));
     if (method === 'fill_batch') return this.fillBatch(FillBatchParams.parse(raw));
     if (method === 'verify') return this.verify(SessionParams.parse(raw));
+    if (method === 'options') {
+      const params = OptionsParams.parse(raw), session = this.assertSession(params.session_id);
+      await this.assertPage(session);
+      return send(session.tabId, session.documentId, { type: 'OPTIONS', sessionId: params.session_id, pageToken: session.snapshot.pageToken, fieldId: params.field_id, query: params.query, path: params.path });
+    }
     if (method === 'verify_batch') return this.verifyBatch(SessionBatchParams.parse(raw));
     if (method === 'undo') return this.undo(SessionParams.parse(raw));
     if (method === 'undo_batch') return this.undoBatch(SessionBatchParams.parse(raw));
@@ -86,7 +111,41 @@ export class CodexTools {
   }
 
   forgetTab(tabId: number) {
+    this.automation.forgetTab(tabId);
     for (const [sessionId, session] of this.sessions) if (session.tabId === tabId) this.sessions.delete(sessionId);
+  }
+
+  private async activateTab(params: z.infer<typeof InspectParams>) {
+    const tab = await chrome.tabs.get(params.tab_id);
+    if (!tab.id || !/^https?:\/\//.test(tab.url ?? '')) throw new Error('指定标签页不是普通网页');
+    const window = await chrome.windows.get(tab.windowId);
+    if (window.state === 'minimized') await chrome.windows.update(tab.windowId, { state: 'normal' });
+    await chrome.tabs.update(tab.id, { active: true });
+    await chrome.windows.update(tab.windowId, { focused: true });
+    // Activation is a request to Chrome, not proof that the OS made the page visible.
+    const injected = await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['content.js'] });
+    const documentId = injected.find(result => result.frameId === 0)?.documentId;
+    if (!documentId) throw new Error('无法确认目标页面');
+    const deadline = Date.now() + 1800;
+    let pageState: { visibility: string; focused: boolean };
+    do {
+      const current = await chrome.tabs.get(tab.id);
+      if (current.url !== tab.url || current.windowId !== tab.windowId) throw new Error('激活期间目标页面已变化，请重新枚举标签页');
+      pageState = await send(tab.id, documentId, { type: 'PAGE_STATE' });
+      if (pageState.visibility === 'visible') break;
+      await new Promise(resolve => setTimeout(resolve, 100));
+    } while (Date.now() < deadline);
+    return { tabId: tab.id, windowId: tab.windowId, status: pageState.visibility === 'visible' ? 'visible' : 'hidden', pageState,
+      note: pageState.visibility === 'visible' ? '页面已可见，可以继续查询控件' : '已请求激活，但页面仍不可见；请检查所在桌面、遮挡或锁屏状态' };
+  }
+
+  private async inspect(params: z.infer<typeof InspectParams>, message: Record<string, unknown> = { type: 'INSPECT' }) {
+    const tab = await chrome.tabs.get(params.tab_id);
+    if (!tab.id || !/^https?:\/\//.test(tab.url ?? '')) throw new Error('指定标签页不是普通网页');
+    const injected = await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['content.js'] });
+    const documentId = injected.find(result => result.frameId === 0)?.documentId;
+    if (!documentId) throw new Error('无法确认目标页面');
+    return send(tab.id, documentId, message);
   }
 
   private pruneSessions() {
@@ -107,7 +166,9 @@ export class CodexTools {
       enabled: true,
       extensionVersion: chrome.runtime.getManifest().version,
       batchSupported: true,
+      capabilities: { coreProtocol:'1.0', coreTools:true, continuousForms:true, finalSubmit:false, trustedEvents:false, frames:'top-only', shadowDOM:false, activateTab: true, dynamicOptions: { search: true, cascadePath: true, statuses: ['ready', 'empty', 'timeout'] } },
       activeSessions: this.sessions.size,
+      recentUnconfirmedOperations: await this.automation.pendingMetadata(),
       activeTab: tab?.id && /^https?:\/\//.test(tab.url ?? '') ? { tabId: tab.id, title: tab.title ?? '', url: tab.url } : null,
       versions: state.versions.map(version => ({ id: version.id, name: version.name, active: version.id === state.activeVersionId })),
       hasProfile: Boolean(state.current),

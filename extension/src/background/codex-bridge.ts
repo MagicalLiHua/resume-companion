@@ -1,14 +1,18 @@
+import type {BridgeContext} from './automation-tools';
 const BRIDGE_URL = 'ws://127.0.0.1:43117';
 const RECONNECT_MS = 1500;
 const KEEPALIVE_MS = 20_000;
 
-type BridgeRequest = { id: string; method: string; params?: unknown };
-type Handler = (method: string, params: unknown) => Promise<unknown>;
+type BridgeRequest = { id: string; method: string; params?: unknown; type?: string };
+type Handler = (method: string, params: unknown, context: BridgeContext) => Promise<unknown>;
 
-export function startCodexBridge(handler: Handler) {
+export function startCodexBridge(handler: Handler, enabled: () => Promise<boolean>) {
   let socket: WebSocket | null = null;
+  let generation = 0;
   let retry: number | null = null;
   let keepalive: number | null = null;
+  const active = new Map<string, AbortController>();
+  const cancelAll = () => { for (const controller of active.values()) controller.abort(); active.clear(); };
 
   const clearTimers = () => {
     if (retry !== null) clearTimeout(retry);
@@ -21,30 +25,44 @@ export function startCodexBridge(handler: Handler) {
     if (retry === null) retry = setTimeout(connect, RECONNECT_MS) as unknown as number;
   };
 
-  const connect = () => {
+  const connect = async () => {
+    const current = ++generation;
+    if (retry !== null) { clearTimeout(retry); retry = null; }
+    let allowed = false;
+    try { allowed = await enabled(); } catch { /* Invalid storage never enables access. */ }
+    if (current !== generation) return;
+    if (!allowed) { cancelAll(); clearTimers(); const old = socket; socket = null; old?.close(); return; }
+    if (socket && (socket.readyState === WebSocket.CONNECTING || socket.readyState === WebSocket.OPEN)) return;
     clearTimers();
-    try { socket = new WebSocket(BRIDGE_URL); } catch { reconnect(); return; }
+    let channel: WebSocket;
+    try { channel = new WebSocket(BRIDGE_URL); socket = channel; } catch { reconnect(); return; }
 
-    socket.addEventListener('open', () => {
-      socket?.send(JSON.stringify({ type: 'hello', extensionId: chrome.runtime.id, version: chrome.runtime.getManifest().version }));
+    const epoch = crypto.randomUUID();
+    channel.addEventListener('open', () => {
+      if (socket !== channel) { channel.close(); return; }
+      channel.send(JSON.stringify({ type: 'hello', epoch, protocolVersion:'1.0', extensionId: chrome.runtime.id, version: chrome.runtime.getManifest().version }));
       keepalive = setInterval(() => {
-        if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: 'ping' }));
+        if (channel.readyState === WebSocket.OPEN) channel.send(JSON.stringify({ type: 'ping' }));
       }, KEEPALIVE_MS) as unknown as number;
     });
 
-    socket.addEventListener('message', event => {
+    channel.addEventListener('message', event => {
+      if (socket !== channel) return;
       let request: BridgeRequest;
       try { request = JSON.parse(String(event.data)) as BridgeRequest; } catch { return; }
-      if (!request || typeof request.id !== 'string' || typeof request.method !== 'string') return;
-      void handler(request.method, request.params ?? {}).then(
-        result => socket?.readyState === WebSocket.OPEN && socket.send(JSON.stringify({ id: request.id, ok: true, result })),
-        error => socket?.readyState === WebSocket.OPEN && socket.send(JSON.stringify({ id: request.id, ok: false, error: error instanceof Error ? error.message : '插件执行失败' })),
-      );
+      if (request?.type === 'cancel' && typeof request.id === 'string') { active.get(request.id)?.abort(); return; }
+      if (!request || typeof request.id !== 'string' || typeof request.method !== 'string' || active.has(request.id)) return;
+      const controller = new AbortController(); active.set(request.id,controller);
+      void handler(request.method, request.params ?? {}, {epoch,requestId:request.id,signal:controller.signal}).then(
+        result => channel.readyState === WebSocket.OPEN && channel.send(JSON.stringify({ id: request.id, ok: true, result })),
+        error => channel.readyState === WebSocket.OPEN && channel.send(JSON.stringify({ id: request.id, ok: false, error: error instanceof Error ? error.message : '插件执行失败' })),
+      ).finally(()=>active.delete(request.id));
     });
 
-    socket.addEventListener('close', () => { clearTimers(); reconnect(); });
-    socket.addEventListener('error', () => socket?.close());
+    channel.addEventListener('close', () => { if (socket === channel) { cancelAll(); socket = null; clearTimers(); reconnect(); } });
+    channel.addEventListener('error', () => channel.close());
   };
 
-  connect();
+  void connect();
+  return () => { void connect(); };
 }

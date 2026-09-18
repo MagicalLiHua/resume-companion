@@ -1,0 +1,34 @@
+<!doctype html><meta charset="utf-8"><title>合成异步候选</title>
+<style>.ant-select{display:block;width:260px;padding:10px;border:1px solid}.ant-select-selector{min-height:25px}.ant-select-selection-search-input{opacity:0;width:5px}.ant-select-dropdown{border:1px solid;padding:10px}.ant-cascader-menu{display:inline-block}.ant-select-item-option,.ant-cascader-menu-item{padding:6px}</style>
+<form onsubmit="event.preventDefault();window.submits++"></form>
+<script>
+window.mode='normal';window.selected={};window.clicks=[];window.submits=0;window.branchClicks=[];
+for(const [id,label,cascade] of [['school','学校名称',false],['path','学校完整路径',true]]){
+ const item=document.createElement('div');item.className='ant-form-item';
+ item.innerHTML=`<div class="ant-form-item-label"><label for="${id}">${label}</label></div><div class="ant-select ant-select-single ${cascade?'ant-cascader':''}"><div class="ant-select-selector"><input id="${id}" class="ant-select-selection-search-input" role="combobox" type="search" aria-controls="${id}_list" aria-expanded="false" ${cascade?'readonly':''}><span class="ant-select-selection-item"></span></div><span class="ant-select-clear">清空</span></div>`;
+ document.querySelector('form').append(item);
+ const input=item.querySelector('input'),value=item.querySelector('.ant-select-selection-item');let popup,revision=0;
+ const close=()=>{popup?.remove();popup=null;input.setAttribute('aria-expanded','false')};
+ const choose=text=>{window.clicks.push(text);setTimeout(()=>{value.textContent=text;window.selected[id]=text;close()},90)};
+ function shell(){popup?.remove();popup=document.createElement('div');popup.className='ant-select-dropdown';popup.innerHTML=`<div id="${id}_list"></div>`;document.body.append(popup);input.setAttribute('aria-expanded','true');return popup}
+ function options(labels){const p=shell();if(!labels.length){p.insertAdjacentHTML('beforeend','<div class="ant-empty">暂无数据</div>');return}for(const label of labels){const option=document.createElement('div');option.className='ant-select-item-option';option.textContent=label;option.onclick=()=>choose(label);p.append(option)}}
+ function columns(path){const p=shell();for(let level=0;level<=path.length;level++){
+   const menu=document.createElement('ul');menu.className='ant-cascader-menu';p.append(menu);
+   const label=['国内','江苏省','示例大学'][level];const option=document.createElement('li');option.className='ant-cascader-menu-item'+(level<2?' ant-cascader-menu-item-expand':'')+(level<path.length?' ant-cascader-menu-item-active':'');option.textContent=label;menu.append(option);
+   option.onclick=()=>{const next=path.slice(0,level).concat(label);if(level===2||window.mode==='parent-select'){choose(next.join(' / '));return}if(level<path.length)return;window.branchClicks.push(label);p.setAttribute('aria-busy','true');setTimeout(()=>columns(next),330)};
+ }}
+ item.querySelector('.ant-select-clear').addEventListener('mousedown',()=>{value.textContent='';window.selected[id]='';close()});
+ item.querySelector('.ant-select-selector').addEventListener('mousedown',()=>{
+  if(cascade){columns([]);return}
+  if(window.mode==='never'){shell().setAttribute('aria-busy','true');return}
+  if(window.mode==='delayed'){shell().setAttribute('aria-busy','true');setTimeout(()=>options(['示例大学']),380);return}
+  if(window.mode==='duplicate'){input.readOnly=true;options(['示例大学']);setTimeout(()=>options(['示例大学','示例大学']),140);return}
+  if(window.mode==='many'){options(Array.from({length:105},(_,i)=>'候选'+i));return}
+  options(['旧学校']);
+ });
+ input.addEventListener('input',()=>{
+  const query=input.value,request=++revision;popup?.setAttribute('aria-busy','true');
+  setTimeout(()=>{if(request!==revision)return;options(query==='不存在'?[]:query?['示例大学','示例大学作为我的学校']:['旧学校'])},380);
+ });
+}
+</script>

@@ -1,21 +1,25 @@
 {
   "name": "resume-companion",
-  "version": "0.2.0",
-  "description": "Inspect and fill selected job-application tabs through the local Resume Companion Chrome extension.",
+  "version": "0.3.0",
+  "description": "Core form observation and actions for continuous resume filling through the local Chrome bridge.",
   "author": {
     "name": "Resume Companion"
   },
   "skills": "./skills/",
   "interface": {
     "displayName": "简历随行",
-    "shortDescription": "从 Codex 批量预览并填写网申标签页",
-    "longDescription": "通过本地 Chrome 扩展枚举并扫描选中的网申标签页，预览本地资料匹配，批量填写指定字段、验证结果并撤销。不会提交申请。",
+    "shortDescription": "由 Codex 组合基础工具，连续完成复杂网申",
+    "longDescription": "读取指定本地简历，观察页面并组合基础动作，填写动态字段、保存经历与草稿、进入普通下一步。最终申请提交交给用户。",
     "developerName": "Resume Companion",
     "category": "Productivity",
-    "capabilities": ["Interactive", "Read", "Write"],
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
     "defaultPrompt": [
-      "列出当前窗口的网申标签页，批量扫描后给我填写预览，不要提交。",
-      "用简历随行填写选中的表单，先汇总让我确认字段。"
+      "用指定的简历版本连续完成这个网申页面，保存经历和草稿，完成普通下一步，最终提交交给我。",
+      "查看当前招聘表单和我的简历版本，汇总缺少的信息。"
     ]
   },
   "mcpServers": "./.mcp.json"

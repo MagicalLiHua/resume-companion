@@ -35,3 +35,12 @@ test('悬浮窗口：伪造网页 iframe 不具备读取资料的会话',async()
   await expect.poll(()=>page.frames().some(f=>f.url().includes('#forged'))).toBe(true);const frame=page.frames().find(f=>f.url().includes('#forged'))!;
   const response=await frame.evaluate(async()=>chrome.runtime.sendMessage({type:'PROFILE_LOAD',widgetToken:'forged'}));expect(response.ok).toBe(false);expect(JSON.stringify(response)).not.toContain('版本甲');
 });
+test('悬浮窗口：扩展重载后清理旧环境留下的重复入口',async()=>{
+ const url='http://127.0.0.1:4174/widget-reload';
+ await context.route(url,route=>route.fulfill({contentType:'text/html',body:'<!doctype html><meta charset="utf-8"><title>招聘申请表</title><div id="resume-companion-widget">失效入口一</div><div id="resume-companion-widget">失效入口二</div>'}));
+ const page=await context.newPage();await page.goto(url);
+ await expect(page.locator('#resume-companion-widget')).toHaveCount(1);
+ expect(await page.locator('#resume-companion-widget').textContent()).toBe('');
+ await page.locator('#resume-companion-widget').click();
+ await expect.poll(()=>page.frames().filter(f=>f.url().includes('sidepanel.html?widget=')).length).toBe(1);
+});

@@ -8,6 +8,7 @@ createServer(async (req, res) => {
     const url = new URL(req.url, 'http://127.0.0.1');
     let file;
     if (url.pathname === '/test-engine.js') file = resolve('test-results/test-engine.js');
+    else if (url.pathname === '/agent-controlled.js') file = resolve('test-results/agent-controlled.js');
     else if (url.pathname === '/controlled.js') file = resolve('test-results/controlled.js');
     else if (url.pathname.startsWith('/preview/')) {
       const root = resolve('dist'); file = resolve(root, '.' + url.pathname.slice('/preview'.length));

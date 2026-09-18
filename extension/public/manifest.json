@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "简历随行 · 简历填写助手",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "minimum_chrome_version": "116",
   "description": "本地维护简历与补充资料，导入 Markdown，使用自己的模型辅助匹配，预览后填写网页。",
   "permissions": [
@@ -14,16 +14,43 @@
     "default_title": "简历随行"
   },
   "background": {
-    "service_worker": "background-0.5.0.js",
+    "service_worker": "background-0.6.0.js",
     "type": "module"
   },
   "side_panel": {
     "default_path": "sidepanel.html"
   },
   "options_page": "options.html",
-  "host_permissions": ["http://*/*","https://*/*"],
-  "content_scripts": [{"matches":["http://*/*","https://*/*"],"js":["content.js"],"run_at":"document_idle","all_frames":false}],
-  "web_accessible_resources": [{"resources":["sidepanel.html","assets/*.js","assets/*.css"],"matches":["http://*/*","https://*/*"]}],
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "sidepanel.html",
+        "assets/*.js",
+        "assets/*.css"
+      ],
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ]
+    }
+  ],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'none'; connect-src https: ws://127.0.0.1:43117"
   },

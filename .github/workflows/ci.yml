@@ -18,11 +18,24 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
-      - run: npm run check
       - run: npm ci
         working-directory: plugins/resume-companion
+      - run: npx playwright install --with-deps chromium
+      - name: Use full Chromium for extension tests
+        run: node -e "console.log('RESUME_TEST_BROWSER=' + require('@playwright/test').chromium.executablePath())" >> "$GITHUB_ENV"
+      - run: npm run check
       - run: npm run build
         working-directory: plugins/resume-companion
       - run: npm test
         working-directory: plugins/resume-companion
+      - run: npm run test:core
+        working-directory: plugins/resume-companion
+      - run: npm run test:live
+        working-directory: plugins/resume-companion
+      - run: npm run package
+      - uses: actions/upload-artifact@v4
+        with:
+          name: resume-companion-preview
+          path: |
+            artifacts/resume-companion-*.zip
+            artifacts/resume-companion-*.zip.sha256

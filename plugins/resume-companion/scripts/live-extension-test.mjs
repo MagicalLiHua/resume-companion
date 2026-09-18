@@ -12,6 +12,7 @@ const pluginRoot = resolve(import.meta.dirname, '..');
 const projectRoot = resolve(pluginRoot, '../..');
 const extensionPath = resolve(projectRoot, 'test-results/codex-bridge-extension');
 const extensionId = 'feifaflnkjdihpbbhnihidjjkeapamnh';
+const port = 45000 + process.pid % 1000;
 let lab = null;
 let context = null;
 let client = null;
@@ -56,9 +57,12 @@ try {
   const manifestPath = resolve(extensionPath, 'manifest.json');
   const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
   manifest.host_permissions = ['http://127.0.0.1/*'];
+  manifest.content_security_policy.extension_pages = manifest.content_security_policy.extension_pages.replace('127.0.0.1:43117',`127.0.0.1:${port}`);
+  const backgroundPath = resolve(extensionPath,manifest.background.service_worker);
+  await writeFile(backgroundPath,(await readFile(backgroundPath,'utf8')).replaceAll('127.0.0.1:43117',`127.0.0.1:${port}`));
   await writeFile(manifestPath, JSON.stringify(manifest));
 
-  const transport = new StdioClientTransport({ command: process.execPath, args: ['./server.bundle.mjs'], cwd: pluginRoot, stderr: 'pipe' });
+  const transport = new StdioClientTransport({ command: process.execPath, args: ['./server.bundle.mjs'], cwd: pluginRoot, env:{...Object.fromEntries(Object.entries(process.env).filter(([,v])=>typeof v==='string')),RESUME_COMPANION_BRIDGE_PORT:String(port),RESUME_COMPANION_TOOLSET:'all'}, stderr: 'pipe' });
   client = new Client({ name: 'resume-companion-live-test', version: '0.2.0' });
   await client.connect(transport);
 
@@ -70,15 +74,8 @@ try {
   const worker = context.serviceWorkers()[0] ?? await context.waitForEvent('serviceworker');
   assert.equal(new URL(worker.url()).hostname, extensionId);
 
-  let status;
-  for (let attempt = 0; attempt < 60; attempt++) {
-    const result = await client.callTool({ name: 'resume_status', arguments: {} });
-    status = result.structuredContent;
-    if (status?.connected) break;
-    await new Promise(resolveDelay => setTimeout(resolveDelay, 100));
-  }
-  assert.equal(status.connected, true);
-  assert.equal(status.enabled, false);
+  let status = await call('resume_status');
+  assert.equal(status.connected,false);
 
   const options = await context.newPage();
   await options.goto(`chrome-extension://${extensionId}/options.html`);
@@ -169,7 +166,31 @@ try {
   assert.equal(batchUndo.results.find(result => result.sessionId === betaSession).results[0].status, 'skipped');
   for (const form of forms) assert.equal(await form.evaluate(() => globalThis.__submitted), 0);
 
-  console.log('Resume Companion live Codex-to-Chrome single and three-tab batch test: OK');
+  const corePage = await context.newPage();
+  await corePage.goto('http://127.0.0.1:4174/agent-lab.html?run=live-'+Date.now());
+  const coreTab = (await call('resume_list_tabs',{url_contains:'agent-lab.html'})).tabs[0];
+  const observed = await call('resume_observe',{tab_id:coreTab.tabId});
+  const coreName = observed.elements.find(e=>e.kind==='text' && e.name==='姓名 *');
+  const version = (await call('resume_status')).versions.find(v=>v.active);
+  const profile = await call('resume_read_profile',{version_id:version.id,section:'basic'});
+  assert.equal(profile.entries.find(e=>e.source_ref==='basic/full_name').value,'示例同学');
+  const operationId = crypto.randomUUID();
+  const parameters = {session_id:observed.session_id,snapshot_id:observed.snapshot_id,operation_id:operationId,action:{kind:'set_value',ref:coreName.ref,expected_value_token:coreName.expected_value_token,value:{source:{version_id:version.id,profile_revision:profile.profile_revision,source_ref:'basic/full_name'}}}};
+  const written = await call('resume_act',parameters);
+  assert.equal(written.status,'applied',JSON.stringify(written));
+  assert.equal(await corePage.locator('[name=full_name]').inputValue(),'示例同学');
+  assert.deepEqual(await call('resume_act',parameters),written);
+  await call('resume_observe',{session_id:observed.session_id});
+  const checked = await call('resume_observe',{session_id:observed.session_id,mode:'verify',operation_ids:[operationId]});
+  assert.equal(checked.operations[0].values[0].value_retained,true);
+  const undone = await call('resume_undo_operations',{session_id:observed.session_id,operation_ids:[operationId],operation_id:crypto.randomUUID()});
+  assert.equal(undone.status,'applied');
+  assert.equal(await corePage.locator('[name=full_name]').inputValue(),'');
+  await corePage.reload();
+  const stale = await client.callTool({name:'resume_act',arguments:{...parameters,operation_id:crypto.randomUUID()}});
+  assert.equal(stale.isError===true || stale.structuredContent?.status==='unknown',true);
+  assert.equal(await corePage.evaluate(()=>window.Lab.read().finalSubmits),0);
+  console.log('Resume Companion live MCP-to-Chrome legacy + core/source/verify/undo/reload test: OK');
 } finally {
   await context?.close();
   await client?.close();

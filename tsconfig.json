@@ -25,8 +25,9 @@
     "tests",
     "vite.config.ts",
     "vitest.config.ts",
-    "playwright.config.ts",
-    "web/src",
-    "vite.web.config.ts"
+    "playwright.config.ts"
+  ],
+  "exclude": [
+    "tests/web"
   ]
 }

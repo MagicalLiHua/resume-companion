@@ -1,0 +1,35 @@
+<!doctype html><meta charset="utf-8"><title>合成银行控件回归</title>
+<style>body{font:16px sans-serif} .ant-form-item{margin:15px}.ant-select{display:inline-block;min-width:220px;border:1px solid #888;padding:8px;position:relative}.ant-select-selector{min-height:25px}.ant-select-selection-search-input{opacity:0;width:5px;position:absolute}.ant-select-clear{cursor:pointer;margin-left:15px}.ant-radio-input,.ant-checkbox-input{opacity:0}.ant-radio-wrapper,.ant-checkbox-wrapper{display:inline-block}.ant-select-dropdown{border:1px solid;background:white;padding:8px}.ant-select-item-option,.ant-cascader-menu-item{padding:8px;cursor:pointer}.ant-cascader-menu{display:inline-block;list-style:none}</style>
+<form onsubmit="event.preventDefault();window.__submitted++">
+<div class="ant-form-item"><div class="ant-form-item-label"><label>手机号码</label></div><input disabled placeholder="19999999999"></div>
+<div class="ant-form-item"><div class="ant-form-item-label"><label>邮箱</label></div><input disabled placeholder="private-fixture@example.invalid"></div>
+<div class="ant-form-item"><label for="name">姓名</label><input id="name"></div>
+<div id="select-host"></div>
+<div class="ant-form-item"><div class="ant-form-item-label"><label>是否为社招应聘者</label></div><div class="ant-radio-group" id="duplicate"><label class="ant-radio-wrapper"><input class="ant-radio-input" type="radio" value="yes">是</label><label class="ant-radio-wrapper"><input class="ant-radio-input" type="radio" value="no">否</label></div></div>
+<div class="ant-form-item"><div class="ant-form-item-label"><label>另一独立问题</label></div><div class="ant-radio-group" id="duplicate"><label class="ant-radio-wrapper"><input class="ant-radio-input" type="radio" value="yes">是</label><label class="ant-radio-wrapper"><input class="ant-radio-input" type="radio" value="no">否</label></div></div>
+<label class="ant-checkbox-wrapper"><input class="ant-checkbox-input" type="checkbox">本人承诺信息真实</label>
+<button type="button">添加教育信息</button><button type="submit">提交申请</button>
+</form>
+<script>
+window.__submitted=0; window.__model={};
+const spec=[['nationality','民族',['汉族','白族']],['marriage','婚姻状况',['未婚','已婚']],['home','户口所在地',null]];
+for(const [id,label,options] of spec){
+ const item=document.createElement('div'); item.className='ant-form-item';
+ item.innerHTML=`<div class="ant-form-item-label"><label for="${id}">${label}</label></div><div class="ant-select ant-select-single ${options?'':'ant-cascader'}"><div class="ant-select-selector"><span><input id="${id}" role="combobox" class="ant-select-selection-search-input" type="search" readonly aria-controls="${id}_list" aria-expanded="false"></span><span class="ant-select-selection-item"></span></div><span class="ant-select-clear">×</span></div>`;
+ document.querySelector('#select-host').append(item);
+ const input=item.querySelector('input'), root=item.querySelector('.ant-select'), selection=item.querySelector('.ant-select-selection-item');
+ let popup;
+ const close=()=>{popup?.remove();popup=null;input.setAttribute('aria-expanded','false')};
+ const choose=value=>{selection.textContent=value;window.__model[id]=value;close()};
+ root.querySelector('.ant-select-clear').addEventListener('mousedown',e=>{e.stopPropagation();choose('')});
+ root.querySelector('.ant-select-selector').addEventListener('mousedown',()=>{
+  document.querySelectorAll('.ant-select-dropdown').forEach(p=>p.remove());
+  popup=document.createElement('div');popup.className='ant-select-dropdown';popup.innerHTML=`<div role="listbox" id="${id}_list"></div>`;document.body.append(popup);input.setAttribute('aria-expanded','true');
+  if(options){for(const value of options){const option=document.createElement('div');option.className='ant-select-item-option';option.innerHTML=`<div class="ant-select-item-option-content">${value}</div>`;option.addEventListener('click',()=>choose(value));popup.append(option)}}
+  else {const menus=document.createElement('div');menus.className='ant-cascader-menus';popup.append(menus);
+    const add=(values,level,path)=>{[...menus.children].slice(level).forEach(e=>e.remove());const menu=document.createElement('ul');menu.className='ant-cascader-menu';menus.append(menu);for(const value of values){const li=document.createElement('li');li.className='ant-cascader-menu-item';li.innerHTML=`<span class="ant-cascader-menu-item-content">${value}</span>`;li.onclick=()=>{const next=[...path,value];if(level===2)choose(next.join(' / '));else add(level===0?['南京市']:['玄武区'],level+1,next)};menu.append(li)}};add(['江苏省'],0,[]);
+  }
+ });
+}
+document.querySelectorAll('.ant-radio-group').forEach((group,index)=>group.addEventListener('change',e=>{group.querySelectorAll('input').forEach(r=>{if(r!==e.target)r.checked=false});window.__model['radio'+index]=e.target.value}));
+</script>

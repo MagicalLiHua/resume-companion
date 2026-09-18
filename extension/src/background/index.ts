@@ -38,7 +38,11 @@ async function load():Promise<LocalState>{
   await cleanupLegacy(values);return state;
 }
 const codexTools=new CodexTools(load);
-startCodexBridge((method,params)=>serialized(()=>codexTools.handle(method,params)));
+const refreshCodexBridge=startCodexBridge((method,params,context)=>codexTools.handle(method,params,context),async()=>{
+  await ready;const stored=(await chrome.storage.local.get(STATE_KEY))[STATE_KEY];
+  return StateSchema.safeParse(stored).data?.preferences.codexBridgeEnabled===true;
+});
+chrome.storage.onChanged.addListener((changes,area)=>{if(area==='local'&&changes[STATE_KEY])refreshCodexBridge();});
 function owns(state:LocalState,message:Record<string,unknown>){
   if(state.draft&&(state.draft.ownerId!==message.ownerId||state.draft.revision!==message.draftRevision))throw new Error('草稿已在另一窗口编辑，请恢复或接管最新草稿后再操作');
 }

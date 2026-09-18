@@ -2,10 +2,15 @@
   "mcpServers": {
     "resume_companion": {
       "command": "node",
-      "args": ["./server.bundle.mjs"],
+      "args": [
+        "./server.bundle.mjs"
+      ],
       "cwd": ".",
       "enabled": true,
-      "startup_timeout_sec": 20
+      "startup_timeout_sec": 20,
+      "env": {
+        "RESUME_COMPANION_TOOLSET": "core"
+      }
     }
   }
 }

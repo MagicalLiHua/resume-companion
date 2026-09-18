@@ -1,6 +1,6 @@
 {
   "name": "resume-companion",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -8,15 +8,14 @@
   },
   "scripts": {
     "dev": "vite --config vite.config.ts --host 127.0.0.1",
+    "dev:extension": "node scripts/dev-extension.mjs",
     "build": "node scripts/build.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
     "check": "npm run typecheck && npm run test && npm run build && npm run test:e2e",
     "lab": "node scripts/lab-server.mjs",
-    "package": "node scripts/package.mjs",
-    "web:build": "node scripts/build-web.mjs",
-    "test:web": "playwright test --config playwright.web.config.ts"
+    "package": "node scripts/package.mjs"
   },
   "dependencies": {
     "react": "19.3.0",

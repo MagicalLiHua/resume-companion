@@ -1,0 +1,20 @@
+{
+  "name": "resume-companion",
+  "interface": {
+    "displayName": "Resume Companion"
+  },
+  "plugins": [
+    {
+      "name": "resume-companion",
+      "source": {
+        "source": "local",
+        "path": "./plugins/resume-companion"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

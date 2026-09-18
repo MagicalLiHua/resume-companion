@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs';
 import {parseMarkdown,exportMarkdown} from '../../extension/src/domain/markdown';
 import {AI_PROMPT,EMPTY_MARKDOWN} from '../../extension/src/domain/markdown-template';
 import {demoProfile} from '../../extension/src/domain/profile';
-const template=readFileSync('docs/Markdown简历模板与解析规范.md','utf8').match(/```markdown\n([\s\S]*?)\n```/)![1];
+const template=readFileSync('tests/fixtures/resume-template.md','utf8');
 const basic='# 简历\n模板版本：resume-md/1\n## 基本信息\n- 姓名：张三\n- 邮箱：student@example.com\n';
 describe('Markdown 导入的独立事实核对',()=>{
   it('标准模板字段、分组及状态准确，不丢多行事实',()=>{
