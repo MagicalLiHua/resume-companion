@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "简历随行 · 浏览器执行器",
+  "version": "0.1.0",
+  "minimum_chrome_version": "116",
+  "description": "让 Resume Companion MCP 在当前 Chrome Profile 中观察和填写招聘表单。",
+  "permissions": ["alarms", "debugger", "nativeMessaging", "scripting", "storage", "tabs"],
+  "host_permissions": ["http://*/*", "https://*/*"],
+  "background": { "service_worker": "background.js", "type": "module" },
+  "action": { "default_title": "简历随行：连接本地 MCP", "default_popup": "popup.html" },
+  "content_scripts": [{ "matches": ["http://*/*", "https://*/*"], "js": ["wake.js"], "run_at": "document_start" }],
+  "content_security_policy": { "extension_pages": "script-src 'self'; object-src 'none'" },
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAmfbexjgcJ+juXNtINT+VsnmXJeOpFvt8IV6HV9bbhMgQWIGpv2yLn6lGJKcmcyBHvk9x+jNonbbdjzxQ5ATHMhVvdFnoAtnfoO+Uilar7Sz11lUUYqAVpBYeeNnOVNjfllWlkpFg9BwtDFV8g0KQF6dpOSOhHKh+j0HucH1kiYiO8xc3rt+73TC6YtF98zbqgQYNF6V2YqKMGIVRBsJBXaP20NfwLMEXhiWEYYsv1OTcMiaZp94LpNfFhcG7hjdEPQc4DY4Lyyz4XaaYv8AaDKQHsAHHbSZTA9bHAHsuY5eSpkqnkoYkfZn/ZDaC6zGh6BnFEU4yCkfiHhS50Yp4ewIDAQAB"
+}

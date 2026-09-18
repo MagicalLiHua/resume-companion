@@ -17,15 +17,18 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
-          cache-dependency-path: plugins/resume-companion/package-lock.json
+          cache-dependency-path: |
+            package-lock.json
+            plugins/resume-companion/package-lock.json
+      - run: npm ci
       - run: npm ci
         working-directory: plugins/resume-companion
-      - run: npm test
-        working-directory: plugins/resume-companion
+      - run: npx playwright install --with-deps chromium
+      - run: npm run typecheck
       - run: npm run build
-        working-directory: plugins/resume-companion
+      - run: npm test
+      - run: npm run test:e2e
       - run: npm run test:core
-        working-directory: plugins/resume-companion
       - run: npm run test:devtools
         working-directory: plugins/resume-companion
       - run: npm run package

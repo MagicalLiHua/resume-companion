@@ -1,5 +1,16 @@
 # 更新记录
 
+## 0.10.0 · 当前 Chrome Profile 的扩展主驱动
+
+- 默认驱动改为精简 Chrome 扩展，直接复用日常 Profile 的登录、Cookie 和已打开页面。
+- 新增 Chrome Native Messaging Host，通过 0600 描述符、短期随机 token 和私有 Unix socket / Named Pipe 连接 MCP，不开放固定 localhost 端口。
+- 恢复并重构为 TypeScript 的通用页面引擎，覆盖批量写入、搜索下拉、级联、日期、虚拟列表、快照、回读、去重和条件撤销。
+- 需要可信用户输入时仅对目标标签页按需使用 `chrome.debugger`；暂停或断线后分离。
+- 扩展界面只保留连接状态、重连和暂停，不包含简历、模型配置、悬浮球或投递记录。
+- 官方 Chrome DevTools MCP 1.9.0 保留为显式备用和 CI 驱动，不再承担日常 Profile 连接。
+- 在 Chrome 153 当前 Profile 实测列出、激活并观察交通银行简历页，不需要远程调试或新 Profile。
+- 发布包加入扩展、Native Host、安装器与完整公开文档，生成的 JavaScript 在 GitHub Linguist 中标记为 generated。
+
 ## 0.9.1 · Chrome 153 连接诊断与安全回退
 
 - 确认 Chrome 153 权限代理的 9222 返回 404 属于预期行为；`auto_connect` 仍依赖可读的 `DevToolsActivePort`。

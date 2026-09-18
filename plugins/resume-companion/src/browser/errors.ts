@@ -1,4 +1,5 @@
 export type ErrorCode = 'blocked' | 'browser_approval_required' | 'browser_disconnected' | 'browser_permission_required' | 'cancelled'
+  | 'bridge_disconnected' | 'debugger_attach_conflict' | 'debugger_permission_denied' | 'extension_disabled' | 'extension_not_installed' | 'native_host_missing'
   | 'devtools_active_port_invalid' | 'devtools_active_port_missing' | 'devtools_active_port_permission_denied'
   | 'driver_unavailable' | 'internal_error' | 'invalid_request' | 'operation_conflict'
   | 'permission_proxy_unsupported' | 'remote_debugging_disabled' | 'stale' | 'timeout' | 'unknown' | 'unsupported_capability';

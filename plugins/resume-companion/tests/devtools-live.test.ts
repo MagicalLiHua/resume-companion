@@ -48,6 +48,7 @@ beforeAll(async () => {
     env: {
       ...environment,
       RESUME_COMPANION_DATA_DIR: dataDir,
+      RESUME_COMPANION_BROWSER_DRIVER: 'devtools',
       RESUME_COMPANION_CHROME_PROFILE_MODE: 'isolated',
       RESUME_COMPANION_DEVTOOLS_HEADLESS: '1',
       RESUME_COMPANION_DEVTOOLS_START_URL: `http://127.0.0.1:4174/agent-lab.html?run=devtools-${Date.now()}`,
@@ -153,6 +154,7 @@ describe('DevTools MCP browser driver', () => {
       env: {
         ...environment,
         RESUME_COMPANION_DATA_DIR: dedicatedDataDir,
+        RESUME_COMPANION_BROWSER_DRIVER: 'devtools',
         RESUME_COMPANION_CHROME_PROFILE_MODE: 'dedicated',
         RESUME_COMPANION_DEVTOOLS_HEADLESS: '1',
         RESUME_COMPANION_DEVTOOLS_START_URL: `http://127.0.0.1:4174/agent-lab.html?run=dedicated-${Date.now()}`,

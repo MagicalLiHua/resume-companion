@@ -29,7 +29,7 @@ try {
 
   const initial = await call('resume_status');
   assert.equal(initial.structuredContent.storage.profile_count, 0);
-  assert.equal(initial.structuredContent.browser.kind, 'devtools');
+  assert.equal(initial.structuredContent.browser.kind, 'extension');
   assert.equal(initial.structuredContent.browser.ready, true);
   assert.equal(initial.structuredContent.browser.connected, false);
 
@@ -73,4 +73,4 @@ try {
   await client.close();
   await rm(dataDir, { recursive: true, force: true });
 }
-console.log('MCP tool catalog, DevTools readiness, local storage, source resolution and revision conflicts: OK');
+console.log('MCP tool catalog, browser-driver readiness, local storage, source resolution and revision conflicts: OK');

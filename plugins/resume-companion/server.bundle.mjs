@@ -2991,7 +2991,7 @@ var require_compile = __commonJS({
       const schOrFunc = root.refs[ref];
       if (schOrFunc)
         return schOrFunc;
-      let _sch = resolve4.call(this, root, ref);
+      let _sch = resolve5.call(this, root, ref);
       if (_sch === void 0) {
         const schema = (_a = root.localRefs) === null || _a === void 0 ? void 0 : _a[ref];
         const { schemaId } = this.opts;
@@ -3018,7 +3018,7 @@ var require_compile = __commonJS({
     function sameSchemaEnv(s1, s2) {
       return s1.schema === s2.schema && s1.root === s2.root && s1.baseId === s2.baseId;
     }
-    function resolve4(root, ref) {
+    function resolve5(root, ref) {
       let sch;
       while (typeof (sch = this.refs[ref]) == "string")
         ref = sch;
@@ -3848,7 +3848,7 @@ var require_fast_uri = __commonJS({
       }
       return uri;
     }
-    function resolve4(baseURI, relativeURI, options) {
+    function resolve5(baseURI, relativeURI, options) {
       const schemelessOptions = options ? Object.assign({ scheme: "null" }, options) : { scheme: "null" };
       const {
         parsed: baseParsed,
@@ -4216,7 +4216,7 @@ var require_fast_uri = __commonJS({
     var fastUri = {
       SCHEMES,
       normalize: normalize2,
-      resolve: resolve4,
+      resolve: resolve5,
       resolveComponent,
       equal,
       serialize,
@@ -7299,12 +7299,12 @@ var require_isexe = __commonJS({
         if (typeof Promise !== "function") {
           throw new TypeError("callback not provided");
         }
-        return new Promise(function(resolve4, reject) {
+        return new Promise(function(resolve5, reject) {
           isexe(path, options || {}, function(er, is) {
             if (er) {
               reject(er);
             } else {
-              resolve4(is);
+              resolve5(is);
             }
           });
         });
@@ -7370,27 +7370,27 @@ var require_which = __commonJS({
         opt = {};
       const { pathEnv, pathExt, pathExtExe } = getPathInfo(cmd, opt);
       const found = [];
-      const step = (i) => new Promise((resolve4, reject) => {
+      const step = (i) => new Promise((resolve5, reject) => {
         if (i === pathEnv.length)
-          return opt.all && found.length ? resolve4(found) : reject(getNotFoundError(cmd));
+          return opt.all && found.length ? resolve5(found) : reject(getNotFoundError(cmd));
         const ppRaw = pathEnv[i];
         const pathPart = /^".*"$/.test(ppRaw) ? ppRaw.slice(1, -1) : ppRaw;
         const pCmd = path.join(pathPart, cmd);
         const p = !pathPart && /^\.[\\\/]/.test(cmd) ? cmd.slice(0, 2) + pCmd : pCmd;
-        resolve4(subStep(p, i, 0));
+        resolve5(subStep(p, i, 0));
       });
-      const subStep = (p, i, ii) => new Promise((resolve4, reject) => {
+      const subStep = (p, i, ii) => new Promise((resolve5, reject) => {
         if (ii === pathExt.length)
-          return resolve4(step(i + 1));
+          return resolve5(step(i + 1));
         const ext = pathExt[ii];
         isexe(p + ext, { pathExt: pathExtExe }, (er, is) => {
           if (!er && is) {
             if (opt.all)
               found.push(p + ext);
             else
-              return resolve4(p + ext);
+              return resolve5(p + ext);
           }
-          return resolve4(subStep(p, i, ii + 1));
+          return resolve5(subStep(p, i, ii + 1));
         });
       });
       return cb ? step(0).then((res) => cb(null, res), cb) : step(0);
@@ -19809,7 +19809,7 @@ var Protocol = class {
           return;
         }
         const pollInterval = task2.pollInterval ?? this._options?.defaultTaskPollInterval ?? 1e3;
-        await new Promise((resolve4) => setTimeout(resolve4, pollInterval));
+        await new Promise((resolve5) => setTimeout(resolve5, pollInterval));
         options?.signal?.throwIfAborted();
       }
     } catch (error2) {
@@ -19826,7 +19826,7 @@ var Protocol = class {
    */
   request(request, resultSchema, options) {
     const { relatedRequestId, resumptionToken, onresumptiontoken, task, relatedTask } = options ?? {};
-    return new Promise((resolve4, reject) => {
+    return new Promise((resolve5, reject) => {
       const earlyReject = (error2) => {
         reject(error2);
       };
@@ -19904,7 +19904,7 @@ var Protocol = class {
           if (!parseResult.success) {
             reject(parseResult.error);
           } else {
-            resolve4(parseResult.data);
+            resolve5(parseResult.data);
           }
         } catch (error2) {
           reject(error2);
@@ -20165,12 +20165,12 @@ var Protocol = class {
       }
     } catch {
     }
-    return new Promise((resolve4, reject) => {
+    return new Promise((resolve5, reject) => {
       if (signal.aborted) {
         reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
         return;
       }
-      const timeoutId = setTimeout(resolve4, interval);
+      const timeoutId = setTimeout(resolve5, interval);
       signal.addEventListener("abort", () => {
         clearTimeout(timeoutId);
         reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
@@ -21261,7 +21261,7 @@ var McpServer = class {
     let task = createTaskResult.task;
     const pollInterval = task.pollInterval ?? 5e3;
     while (task.status !== "completed" && task.status !== "failed" && task.status !== "cancelled") {
-      await new Promise((resolve4) => setTimeout(resolve4, pollInterval));
+      await new Promise((resolve5) => setTimeout(resolve5, pollInterval));
       const updatedTask = await extra.taskStore.getTask(taskId);
       if (!updatedTask) {
         throw new McpError(ErrorCode.InternalError, `Task ${taskId} not found during polling`);
@@ -21925,20 +21925,20 @@ var StdioServerTransport = class {
     this.onclose?.();
   }
   send(message) {
-    return new Promise((resolve4) => {
+    return new Promise((resolve5) => {
       const json = serializeMessage(message);
       if (this._stdout.write(json)) {
-        resolve4();
+        resolve5();
       } else {
-        this._stdout.once("drain", resolve4);
+        this._stdout.once("drain", resolve5);
       }
     });
   }
 };
 
 // src/browser/driver-factory.ts
-import { existsSync as existsSync2 } from "node:fs";
-import { resolve as resolve2 } from "node:path";
+import { existsSync as existsSync3 } from "node:fs";
+import { resolve as resolve3 } from "node:path";
 
 // src/browser/devtools-driver.ts
 import { existsSync } from "node:fs";
@@ -22662,7 +22662,7 @@ var StdioClientTransport = class {
     if (this._process) {
       throw new Error("StdioClientTransport already started! If using Client class, note that connect() calls start() automatically.");
     }
-    return new Promise((resolve4, reject) => {
+    return new Promise((resolve5, reject) => {
       this._process = (0, import_cross_spawn.default)(this._serverParams.command, this._serverParams.args ?? [], {
         // merge default env with server env because mcp server needs some env vars
         env: {
@@ -22679,7 +22679,7 @@ var StdioClientTransport = class {
         this.onerror?.(error2);
       });
       this._process.on("spawn", () => {
-        resolve4();
+        resolve5();
       });
       this._process.on("close", (_code) => {
         this._process = void 0;
@@ -22744,22 +22744,22 @@ var StdioClientTransport = class {
     if (this._process) {
       const processToClose = this._process;
       this._process = void 0;
-      const closePromise = new Promise((resolve4) => {
+      const closePromise = new Promise((resolve5) => {
         processToClose.once("close", () => {
-          resolve4();
+          resolve5();
         });
       });
       try {
         processToClose.stdin?.end();
       } catch {
       }
-      await Promise.race([closePromise, new Promise((resolve4) => setTimeout(resolve4, 2e3).unref())]);
+      await Promise.race([closePromise, new Promise((resolve5) => setTimeout(resolve5, 2e3).unref())]);
       if (processToClose.exitCode === null) {
         try {
           processToClose.kill("SIGTERM");
         } catch {
         }
-        await Promise.race([closePromise, new Promise((resolve4) => setTimeout(resolve4, 2e3).unref())]);
+        await Promise.race([closePromise, new Promise((resolve5) => setTimeout(resolve5, 2e3).unref())]);
       }
       if (processToClose.exitCode === null) {
         try {
@@ -22771,21 +22771,22 @@ var StdioClientTransport = class {
     this._readBuffer.clear();
   }
   send(message) {
-    return new Promise((resolve4) => {
+    return new Promise((resolve5) => {
       if (!this._process?.stdin) {
         throw new Error("Not connected");
       }
       const json = serializeMessage(message);
       if (this._process.stdin.write(json)) {
-        resolve4();
+        resolve5();
       } else {
-        this._process.stdin.once("drain", resolve4);
+        this._process.stdin.once("drain", resolve5);
       }
     });
   }
 };
 
 // src/protocol.ts
+var PROTOCOL_VERSION = "2.1";
 function createAutomationSchemas(z, options = {}) {
   const id2 = z.string().min(1).max(160);
   const scalar = z.union([z.string().max(1e4), z.boolean()]);
@@ -23317,7 +23318,7 @@ var DevToolsDriver = class {
     this.dataDir = options.dataDir;
     this.permissionState = this.profileMode === "auto_connect" ? "unknown" : "not_required";
     this.dependencies = {
-      createClient: () => new Client({ name: "resume-companion-browser-driver", version: "0.6.1" }),
+      createClient: () => new Client({ name: "resume-companion-browser-driver", version: "0.7.0" }),
       createTransport: (parameters) => new StdioClientTransport(parameters),
       probeAutoConnect,
       probeBrowserUrl,
@@ -23987,22 +23988,338 @@ function evaluateCondition(condition, source, current) {
   }
 }
 
+// src/browser/extension-driver.ts
+import { existsSync as existsSync2 } from "node:fs";
+import { homedir as homedir2 } from "node:os";
+import { join as join4, resolve as resolve2 } from "node:path";
+
+// src/browser/native-bridge-server.ts
+import { randomBytes, randomUUID as randomUUID2 } from "node:crypto";
+import { chmod, mkdir as mkdir2, readFile as readFile2, rm, writeFile } from "node:fs/promises";
+import { join as join3 } from "node:path";
+import { createServer } from "node:net";
+
+// ../../shared/browser-bridge.ts
+var BRIDGE_PROTOCOL_VERSION = "1.0";
+var BRIDGE_MAX_MESSAGE_BYTES = 512 * 1024;
+var RESUME_COMPANION_EXTENSION_ID = "feifaflnkjdihpbbhnihidjjkeapamnh";
+function isRecord2(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function byteSize2(value) {
+  return new TextEncoder().encode(JSON.stringify(value)).byteLength;
+}
+function assertBridgeMessage(value) {
+  if (!isRecord2(value) || value.protocol !== BRIDGE_PROTOCOL_VERSION || typeof value.kind !== "string") throw new Error("invalid bridge message");
+  if (byteSize2(value) > BRIDGE_MAX_MESSAGE_BYTES) throw new Error("bridge message exceeds 512 KiB");
+  if (value.kind === "request" && !(typeof value.id === "string" && value.id.length <= 160 && typeof value.method === "string" && ["status", "tabs", "activate_tab", "observe", "act", "wait", "undo_operations"].includes(value.method) && typeof value.deadline === "number")) throw new Error("invalid bridge request");
+  if (value.kind === "cancel" && !(typeof value.id === "string" && value.id.length <= 160)) throw new Error("invalid bridge cancel");
+  if (value.kind === "response" && !(typeof value.id === "string" && typeof value.ok === "boolean" && (value.ok || isRecord2(value.error)))) throw new Error("invalid bridge response");
+  if (value.kind === "hello" && !(typeof value.token === "string" && typeof value.extension_origin === "string" && typeof value.extension_version === "string" && typeof value.host_pid === "number")) throw new Error("invalid bridge hello");
+  if (value.kind === "extension_hello" && typeof value.extension_version !== "string") throw new Error("invalid extension hello");
+  if (!["request", "cancel", "response", "hello", "extension_hello", "bridge_ready"].includes(value.kind)) throw new Error("unknown bridge message");
+}
+
+// src/browser/native-bridge-server.ts
+var socketSequence = 0;
+var NativeBridgeServer = class {
+  constructor(dataDir, timeoutMs = 6e4) {
+    this.dataDir = dataDir;
+    this.timeoutMs = timeoutMs;
+    this.bridgeDir = join3(dataDir, "bridge");
+    const sequence = socketSequence++;
+    this.socketPath = process.platform === "win32" ? `\\\\.\\pipe\\resume-companion-${process.pid}-${randomUUID2()}` : join3(this.bridgeDir, `mcp-${process.pid}-${sequence.toString(36)}.sock`);
+    this.descriptorPath = join3(this.bridgeDir, "active.json");
+  }
+  dataDir;
+  timeoutMs;
+  bridgeDir;
+  socketPath;
+  descriptorPath;
+  token = randomBytes(32).toString("base64url");
+  server = null;
+  starting = null;
+  socket = null;
+  extensionVersion;
+  pending = /* @__PURE__ */ new Map();
+  async ensureStarted() {
+    if (this.server) {
+      await this.writeDescriptor();
+      return;
+    }
+    if (this.starting) return this.starting;
+    this.starting = this.start();
+    try {
+      await this.starting;
+    } finally {
+      this.starting = null;
+    }
+  }
+  state() {
+    return { started: Boolean(this.server), connected: Boolean(this.socket?.writable), ...this.extensionVersion ? { extension_version: this.extensionVersion } : {}, protocol: BRIDGE_PROTOCOL_VERSION, descriptor_path: this.descriptorPath };
+  }
+  async request(method, params, signal) {
+    try {
+      await this.ensureStarted();
+    } catch {
+      throw new BrowserError("bridge_disconnected", "\u5F53\u524D AI \u5BBF\u4E3B\u65E0\u6CD5\u542F\u52A8\u672C\u5730\u6269\u5C55 IPC\uFF1B\u53EF\u68C0\u67E5\u5BBF\u4E3B\u6743\u9650\u6216\u6539\u7528 DevTools \u4E13\u7528 Profile");
+    }
+    const socket = await this.waitForConnection(signal);
+    const id2 = randomUUID2();
+    const deadline = Date.now() + this.timeoutMs;
+    const message = { kind: "request", protocol: BRIDGE_PROTOCOL_VERSION, id: id2, method, params, deadline };
+    if (Buffer.byteLength(JSON.stringify(message), "utf8") > BRIDGE_MAX_MESSAGE_BYTES) throw new BrowserError("invalid_request", "\u6D4F\u89C8\u5668\u8BF7\u6C42\u8D85\u8FC7 512 KiB \u4E0A\u9650");
+    return new Promise((resolve5, reject) => {
+      const timer = setTimeout(() => {
+        this.pending.delete(id2);
+        socket.write(`${JSON.stringify({ kind: "cancel", protocol: BRIDGE_PROTOCOL_VERSION, id: id2 })}
+`);
+        reject(new BrowserError("timeout", "Chrome \u6269\u5C55\u54CD\u5E94\u8D85\u65F6\uFF1B\u8BF7\u5148\u89C2\u5BDF\u9875\u9762\u7ED3\u679C\u518D\u51B3\u5B9A\u662F\u5426\u91CD\u8BD5"));
+      }, this.timeoutMs);
+      const abort = () => {
+        if (!this.pending.delete(id2)) return;
+        clearTimeout(timer);
+        socket.write(`${JSON.stringify({ kind: "cancel", protocol: BRIDGE_PROTOCOL_VERSION, id: id2 })}
+`);
+        reject(new BrowserError("cancelled", "\u8BF7\u6C42\u5DF2\u53D6\u6D88\uFF1B\u8BF7\u5148\u56DE\u8BFB\u5DF2\u6D3E\u53D1\u52A8\u4F5C\u7684\u7ED3\u679C"));
+      };
+      this.pending.set(id2, { resolve: resolve5, reject, timer, ...signal ? { abort } : {} });
+      signal?.addEventListener("abort", abort, { once: true });
+      if (signal?.aborted) {
+        abort();
+        return;
+      }
+      socket.write(`${JSON.stringify(message)}
+`);
+    });
+  }
+  async close() {
+    const server2 = this.server;
+    this.server = null;
+    this.failPending(new BrowserError("bridge_disconnected", "MCP \u670D\u52A1\u6B63\u5728\u5173\u95ED"));
+    this.socket?.destroy();
+    this.socket = null;
+    if (server2) await new Promise((resolve5) => server2.close(() => resolve5()));
+    await Promise.all([this.removeDescriptorIfOwned(), process.platform === "win32" ? Promise.resolve() : rm(this.socketPath, { force: true })]);
+  }
+  async start() {
+    await mkdir2(this.bridgeDir, { recursive: true, mode: 448 });
+    await chmod(this.bridgeDir, 448).catch(() => void 0);
+    if (process.platform !== "win32") await rm(this.socketPath, { force: true });
+    const server2 = createServer((socket) => this.accept(socket));
+    server2.on("error", () => {
+    });
+    await new Promise((resolve5, reject) => {
+      const onError = (error2) => {
+        reject(error2);
+      };
+      server2.once("error", onError);
+      server2.listen(this.socketPath, () => {
+        server2.off("error", onError);
+        resolve5();
+      });
+    });
+    this.server = server2;
+    if (process.platform !== "win32") await chmod(this.socketPath, 384).catch(() => void 0);
+    await this.writeDescriptor();
+  }
+  async writeDescriptor() {
+    const descriptor = { protocol: BRIDGE_PROTOCOL_VERSION, token: this.token, socket_path: this.socketPath, pid: process.pid, expires_at: Date.now() + 12 * 60 * 60 * 1e3 };
+    await writeFile(this.descriptorPath, `${JSON.stringify(descriptor)}
+`, { mode: 384 });
+    await chmod(this.descriptorPath, 384).catch(() => void 0);
+  }
+  accept(candidate) {
+    let authenticated = false;
+    let localBuffer = "";
+    const reject = () => {
+      candidate.destroy();
+    };
+    candidate.on("data", (chunk) => {
+      localBuffer += chunk.toString("utf8");
+      if (Buffer.byteLength(localBuffer, "utf8") > BRIDGE_MAX_MESSAGE_BYTES * 2) {
+        reject();
+        return;
+      }
+      for (; ; ) {
+        const newline = localBuffer.indexOf("\n");
+        if (newline < 0) return;
+        const line = localBuffer.slice(0, newline);
+        localBuffer = localBuffer.slice(newline + 1);
+        if (!line) continue;
+        let message;
+        try {
+          message = JSON.parse(line);
+          assertBridgeMessage(message);
+        } catch {
+          reject();
+          return;
+        }
+        if (!authenticated) {
+          if (message.kind !== "hello" || message.token !== this.token || message.protocol !== BRIDGE_PROTOCOL_VERSION || message.extension_origin !== `chrome-extension://${RESUME_COMPANION_EXTENSION_ID}/`) {
+            reject();
+            return;
+          }
+          authenticated = true;
+          this.socket?.destroy();
+          this.socket = candidate;
+          this.extensionVersion = message.extension_version;
+          candidate.write(`${JSON.stringify({ kind: "bridge_ready", protocol: BRIDGE_PROTOCOL_VERSION })}
+`);
+          continue;
+        }
+        this.handle(message);
+      }
+    });
+    candidate.on("error", () => candidate.destroy());
+    candidate.on("close", () => {
+      if (this.socket !== candidate) return;
+      this.socket = null;
+      this.extensionVersion = void 0;
+      this.failPending(new BrowserError("bridge_disconnected", "Chrome \u6269\u5C55\u4E0E MCP \u7684\u672C\u5730\u6865\u63A5\u5DF2\u65AD\u5F00"));
+    });
+  }
+  handle(message) {
+    if (!isRecord2(message) || message.kind !== "response" || typeof message.id !== "string") return;
+    const pending = this.pending.get(message.id);
+    if (!pending) return;
+    this.pending.delete(message.id);
+    clearTimeout(pending.timer);
+    if (message.ok === true) pending.resolve(message.result);
+    else {
+      const remote = isRecord2(message.error) ? message.error : {};
+      pending.reject(new BrowserError(errorCode(remote.code), typeof remote.message === "string" ? remote.message : "Chrome \u6269\u5C55\u6267\u884C\u5931\u8D25"));
+    }
+  }
+  async waitForConnection(signal) {
+    const deadline = Date.now() + Math.min(35e3, this.timeoutMs);
+    while (!this.socket?.writable && Date.now() < deadline) {
+      if (signal?.aborted) throw new BrowserError("cancelled", "\u8BF7\u6C42\u5DF2\u53D6\u6D88");
+      await new Promise((resolve5) => setTimeout(resolve5, 100));
+    }
+    if (!this.socket?.writable) throw new BrowserError("bridge_disconnected", "Chrome \u6269\u5C55\u5C1A\u672A\u8FDE\u63A5\u3002\u8BF7\u786E\u8BA4\u6269\u5C55\u548C Native Host \u5DF2\u5B89\u88C5\uFF0C\u7136\u540E\u70B9\u51FB\u6269\u5C55\u56FE\u6807\u91CD\u8FDE");
+    return this.socket;
+  }
+  failPending(error2) {
+    for (const pending of this.pending.values()) {
+      clearTimeout(pending.timer);
+      pending.reject(error2);
+    }
+    this.pending.clear();
+  }
+  async removeDescriptorIfOwned() {
+    try {
+      const descriptor = JSON.parse(await readFile2(this.descriptorPath, "utf8"));
+      if (descriptor.token === this.token && descriptor.socket_path === this.socketPath) await rm(this.descriptorPath, { force: true });
+    } catch {
+    }
+  }
+};
+function errorCode(value) {
+  const known = /* @__PURE__ */ new Set(["blocked", "browser_disconnected", "bridge_disconnected", "cancelled", "debugger_attach_conflict", "debugger_permission_denied", "driver_unavailable", "extension_disabled", "extension_not_installed", "invalid_request", "native_host_missing", "operation_conflict", "stale", "timeout", "unknown", "unsupported_capability"]);
+  return typeof value === "string" && known.has(value) ? value : "unknown";
+}
+
+// src/browser/extension-driver.ts
+var ExtensionDriver = class {
+  kind = "extension";
+  bridge;
+  extensionPath;
+  installerPath;
+  constructor(options) {
+    this.bridge = new NativeBridgeServer(options.dataDir, options.timeoutMs);
+    this.extensionPath = [resolve2(import.meta.dirname, "browser-assets/extension"), resolve2(import.meta.dirname, "../../browser-assets/extension")].find(existsSync2) ?? resolve2(import.meta.dirname, "browser-assets/extension");
+    this.installerPath = [resolve2(import.meta.dirname, "browser-assets/native-host/install.bundle.mjs"), resolve2(import.meta.dirname, "../../browser-assets/native-host/install.bundle.mjs")].find(existsSync2) ?? resolve2(import.meta.dirname, "browser-assets/native-host/install.bundle.mjs");
+  }
+  async status(signal) {
+    let bridgeStartError = false;
+    try {
+      await this.bridge.ensureStarted();
+    } catch {
+      bridgeStartError = true;
+    }
+    const state = this.bridge.state();
+    let remote = {};
+    if (state.connected) {
+      try {
+        remote = await this.bridge.request("status", {}, signal);
+      } catch {
+        remote = {};
+      }
+    }
+    const assetsReady = existsSync2(this.extensionPath) && existsSync2(this.installerPath);
+    const nativeHostInstalled = existsSync2(nativeHostManifestPath());
+    const remoteCapabilities = isRecord3(remote.capabilities) ? remote.capabilities : {};
+    const protocolCompatible = !state.connected || remoteCapabilities.coreProtocol === PROTOCOL_VERSION;
+    return {
+      kind: this.kind,
+      ready: assetsReady,
+      connected: state.connected,
+      compatible: assetsReady && protocolCompatible,
+      profile_mode: "extension",
+      permission_state: state.connected ? "granted" : "unknown",
+      protocol_version: PROTOCOL_VERSION,
+      bridge_protocol_version: state.protocol,
+      ...state.extension_version ? { extension_version: state.extension_version } : {},
+      setup: { extension_path: this.extensionPath, native_host_installer: this.installerPath, native_host_installed: nativeHostInstalled },
+      capabilities: Object.keys(remoteCapabilities).length ? remoteCapabilities : { coreProtocol: PROTOCOL_VERSION, continuousForms: true, finalSubmit: false, trustedEvents: true, activateTab: true },
+      ...Array.isArray(remote.recentUnconfirmedOperations) ? { recent_unconfirmed_operations: remote.recentUnconfirmedOperations } : {},
+      ...!assetsReady ? { connection_error_code: "extension_not_installed" } : !nativeHostInstalled ? { connection_error_code: "native_host_missing" } : bridgeStartError ? { connection_error_code: "bridge_disconnected", connection_error_message: "\u5F53\u524D AI \u5BBF\u4E3B\u65E0\u6CD5\u521B\u5EFA\u672C\u5730\u6269\u5C55 IPC" } : !state.connected ? { connection_error_code: "bridge_disconnected" } : !protocolCompatible ? { connection_error_code: "unsupported_capability" } : {},
+      message: !assetsReady ? "\u6D4F\u89C8\u5668\u6269\u5C55\u53D1\u884C\u8D44\u6E90\u7F3A\u5931\uFF0C\u8BF7\u91CD\u65B0\u6784\u5EFA\u6216\u5B89\u88C5\u5B8C\u6574\u53D1\u884C\u5305" : !nativeHostInstalled ? "Native Host \u5C1A\u672A\u5B89\u88C5\uFF1B\u8BF7\u8FD0\u884C setup \u4E2D\u7684\u5B89\u88C5\u5668\uFF0C\u7136\u540E\u91CD\u65B0\u52A0\u8F7D\u6269\u5C55" : bridgeStartError ? "\u5F53\u524D AI \u5BBF\u4E3B\u65E0\u6CD5\u521B\u5EFA\u672C\u5730\u6269\u5C55 IPC\uFF1B\u672C\u5730\u8D44\u6599\u5DE5\u5177\u4ECD\u53EF\u4F7F\u7528\uFF0C\u53EF\u6539\u7528 DevTools \u4E13\u7528 Profile" : state.connected && protocolCompatible ? "\u5DF2\u8FDE\u63A5\u65E5\u5E38 Chrome Profile \u4E2D\u7684\u7B80\u5386\u968F\u884C\u6269\u5C55" : state.connected ? "\u6269\u5C55\u4E0E MCP \u5DE5\u5177\u534F\u8BAE\u4E0D\u517C\u5BB9\uFF0C\u8BF7\u540C\u6B65\u5347\u7EA7" : "\u7B49\u5F85 Chrome \u6269\u5C55\u8FDE\u63A5\uFF1B\u8BF7\u786E\u8BA4\u6269\u5C55\u5DF2\u542F\u7528\uFF0C\u5FC5\u8981\u65F6\u70B9\u51FB\u6269\u5C55\u56FE\u6807\u91CD\u8FDE",
+      recommended_fallback: state.connected ? void 0 : "devtools"
+    };
+  }
+  listTabs(input, signal) {
+    return this.bridge.request("tabs", input, signal);
+  }
+  activateTab(input, signal) {
+    return this.bridge.request("activate_tab", input, signal);
+  }
+  observe(input, signal) {
+    return this.bridge.request("observe", input, signal);
+  }
+  act(input, signal) {
+    if (input.action.kind === "click" && input.action.effect_kind === "final_submit") throw new BrowserError("blocked", "\u6700\u7EC8\u7533\u8BF7\u63D0\u4EA4\u5FC5\u987B\u7531\u7528\u6237\u5B8C\u6210");
+    return this.bridge.request("act", input, signal);
+  }
+  wait(input, signal) {
+    return this.bridge.request("wait", input, signal);
+  }
+  undo(input, signal) {
+    return this.bridge.request("undo_operations", input, signal);
+  }
+  close() {
+    return this.bridge.close();
+  }
+};
+function isRecord3(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function nativeHostManifestPath() {
+  if (process.platform === "darwin") return join4(homedir2(), "Library", "Application Support", "Google", "Chrome", "NativeMessagingHosts", "com.resume_companion.bridge.json");
+  if (process.platform === "win32") return join4(process.env.APPDATA || join4(homedir2(), "AppData", "Roaming"), "Resume Companion", "com.resume_companion.bridge.json");
+  return join4(homedir2(), ".config", "google-chrome", "NativeMessagingHosts", "com.resume_companion.bridge.json");
+}
+
 // src/browser/driver-factory.ts
 function createBrowserDriver(dataDir) {
+  const selected = process.env.RESUME_COMPANION_BROWSER_DRIVER ?? "extension";
+  if (!["extension", "devtools", "auto"].includes(selected)) throw new Error("RESUME_COMPANION_BROWSER_DRIVER \u5FC5\u987B\u662F extension\u3001devtools \u6216 auto");
+  if (selected !== "devtools") return new ExtensionDriver({ dataDir });
   const runtimePath = process.env.RESUME_COMPANION_DEVTOOLS_RUNTIME ?? [
-    resolve2(import.meta.dirname, "runtime/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js"),
-    resolve2(import.meta.dirname, "node_modules/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js"),
-    resolve2(import.meta.dirname, "../../runtime/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js"),
-    resolve2(import.meta.dirname, "../../node_modules/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js")
-  ].find(existsSync2) ?? resolve2(import.meta.dirname, "runtime/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js");
+    resolve3(import.meta.dirname, "runtime/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js"),
+    resolve3(import.meta.dirname, "node_modules/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js"),
+    resolve3(import.meta.dirname, "../../runtime/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js"),
+    resolve3(import.meta.dirname, "../../node_modules/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js")
+  ].find(existsSync3) ?? resolve3(import.meta.dirname, "runtime/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js");
   return new DevToolsDriver({ dataDir, runtimePath });
 }
 
 // src/profile-store.ts
-import { randomUUID as randomUUID2 } from "node:crypto";
-import { chmod, copyFile, mkdir as mkdir2, open, readFile as readFile2, readdir, rename, stat, writeFile } from "node:fs/promises";
-import { homedir as homedir2 } from "node:os";
-import { dirname as dirname2, isAbsolute, join as join3, resolve as resolve3 } from "node:path";
+import { randomUUID as randomUUID3 } from "node:crypto";
+import { chmod as chmod2, copyFile, mkdir as mkdir3, open, readFile as readFile3, readdir, rename, stat, writeFile as writeFile2 } from "node:fs/promises";
+import { homedir as homedir3 } from "node:os";
+import { dirname as dirname2, isAbsolute, join as join5, resolve as resolve4 } from "node:path";
 var ID_PATTERN = /^[A-Za-z0-9_-]{1,100}$/;
 var id = external_exports.string().regex(ID_PATTERN);
 var optionalId = id.optional();
@@ -24168,7 +24485,7 @@ var emptyProfile = (profileId, revision) => ({
   custom_answers: [],
   supplemental_fields: []
 });
-var ensureId = (value) => value ?? randomUUID2();
+var ensureId = (value) => value ?? randomUUID3();
 function mergeChanges(profile, changes, revision) {
   const next = structuredClone(profile);
   if (changes.basic) next.basic = basic.parse({ ...next.basic, ...changes.basic });
@@ -24183,14 +24500,14 @@ function mergeChanges(profile, changes, revision) {
   return ProfileSchema.parse(next);
 }
 function defaultDataDir() {
-  if (process.platform === "darwin") return join3(homedir2(), "Library", "Application Support", "Resume Companion");
-  if (process.platform === "win32") return join3(process.env.APPDATA || join3(homedir2(), "AppData", "Roaming"), "Resume Companion");
-  return join3(process.env.XDG_DATA_HOME || join3(homedir2(), ".local", "share"), "resume-companion");
+  if (process.platform === "darwin") return join5(homedir3(), "Library", "Application Support", "Resume Companion");
+  if (process.platform === "win32") return join5(process.env.APPDATA || join5(homedir3(), "AppData", "Roaming"), "Resume Companion");
+  return join5(process.env.XDG_DATA_HOME || join5(homedir3(), ".local", "share"), "resume-companion");
 }
 function resolveDataDir(value = process.env.RESUME_COMPANION_DATA_DIR) {
   if (!value) return defaultDataDir();
-  const expanded = value === "~" ? homedir2() : value.startsWith("~/") ? join3(homedir2(), value.slice(2)) : value;
-  return isAbsolute(expanded) ? resolve3(expanded) : resolve3(process.cwd(), expanded);
+  const expanded = value === "~" ? homedir3() : value.startsWith("~/") ? join5(homedir3(), value.slice(2)) : value;
+  return isAbsolute(expanded) ? resolve4(expanded) : resolve4(process.cwd(), expanded);
 }
 async function syncDirectory(path) {
   try {
@@ -24201,15 +24518,15 @@ async function syncDirectory(path) {
   }
 }
 async function atomicWrite(path, value) {
-  await mkdir2(dirname2(path), { recursive: true, mode: 448 });
-  const temporary = `${path}.tmp-${process.pid}-${randomUUID2()}`;
-  await writeFile(temporary, `${JSON.stringify(value, null, 2)}
+  await mkdir3(dirname2(path), { recursive: true, mode: 448 });
+  const temporary = `${path}.tmp-${process.pid}-${randomUUID3()}`;
+  await writeFile2(temporary, `${JSON.stringify(value, null, 2)}
 `, { encoding: "utf8", mode: 384 });
   const handle = await open(temporary, "r");
   await handle.sync();
   await handle.close();
   await rename(temporary, path);
-  await chmod(path, 384).catch(() => void 0);
+  await chmod2(path, 384).catch(() => void 0);
   await syncDirectory(dirname2(path));
 }
 function storageError(code, message) {
@@ -24278,11 +24595,11 @@ var ProfileStore = class {
   queue = Promise.resolve();
   constructor(dataDir = resolveDataDir()) {
     this.dataDir = dataDir;
-    this.indexPath = join3(dataDir, "index.json");
+    this.indexPath = join5(dataDir, "index.json");
   }
   async initialize() {
-    for (const folder of ["", "profiles", "history", "backups"]) await mkdir2(join3(this.dataDir, folder), { recursive: true, mode: 448 });
-    await chmod(this.dataDir, 448).catch(() => void 0);
+    for (const folder of ["", "profiles", "history", "backups"]) await mkdir3(join5(this.dataDir, folder), { recursive: true, mode: 448 });
+    await chmod2(this.dataDir, 448).catch(() => void 0);
     try {
       await stat(this.indexPath);
     } catch (error2) {
@@ -24300,7 +24617,7 @@ var ProfileStore = class {
   async readIndex() {
     let raw;
     try {
-      raw = await readFile2(this.indexPath, "utf8");
+      raw = await readFile3(this.indexPath, "utf8");
     } catch (error2) {
       throw storageError("storage_unavailable", `\u65E0\u6CD5\u8BFB\u53D6\u8D44\u6599\u7D22\u5F15\uFF1A${error2 instanceof Error ? error2.message : String(error2)}`);
     }
@@ -24317,7 +24634,7 @@ var ProfileStore = class {
   async readStored(profileId) {
     let raw;
     try {
-      raw = await readFile2(join3(this.dataDir, "profiles", `${profileId}.json`), "utf8");
+      raw = await readFile3(join5(this.dataDir, "profiles", `${profileId}.json`), "utf8");
     } catch (error2) {
       if (fileErrorCode2(error2) === "ENOENT") throw storageError("profile_missing", "\u6307\u5B9A\u7684\u672C\u5730\u8D44\u6599\u4E0D\u5B58\u5728");
       throw storageError("storage_unavailable", `\u65E0\u6CD5\u8BFB\u53D6\u8D44\u6599\uFF1A${error2 instanceof Error ? error2.message : String(error2)}`);
@@ -24370,7 +24687,7 @@ var ProfileStore = class {
       } else {
         if (index.profiles.length >= 100) throw storageError("profile_limit", "\u672C\u5730\u8D44\u6599\u5DF2\u8FBE\u5230 100 \u4EFD\u4E0A\u9650");
         if (index.profiles.some((item) => item.name === input.name)) throw storageError("name_conflict", "\u5DF2\u6709\u540C\u540D\u8D44\u6599\uFF0C\u8BF7\u6362\u4E00\u4E2A\u540D\u79F0");
-        const profileId = randomUUID2();
+        const profileId = randomUUID3();
         stored = StoredProfileSchema.parse({
           format: "resume-companion-profile",
           storage_version: 1,
@@ -24386,11 +24703,11 @@ var ProfileStore = class {
       const serialized = JSON.stringify(stored);
       if (Buffer.byteLength(serialized, "utf8") > 1048576) throw storageError("profile_too_large", "\u5355\u4EFD\u8D44\u6599\u8D85\u8FC7 1 MiB\uFF0C\u8BF7\u7CBE\u7B80\u540E\u518D\u4FDD\u5B58");
       if (previous) {
-        const historyDir = join3(this.dataDir, "history", previous.id);
-        await mkdir2(historyDir, { recursive: true, mode: 448 });
-        await atomicWrite(join3(historyDir, `${previous.revision}.json`), previous);
+        const historyDir = join5(this.dataDir, "history", previous.id);
+        await mkdir3(historyDir, { recursive: true, mode: 448 });
+        await atomicWrite(join5(historyDir, `${previous.revision}.json`), previous);
       }
-      await atomicWrite(join3(this.dataDir, "profiles", `${stored.id}.json`), stored);
+      await atomicWrite(join5(this.dataDir, "profiles", `${stored.id}.json`), stored);
       const nextEntries = index.profiles.filter((item) => item.id !== stored.id);
       nextEntries.push(entryFor(stored));
       await atomicWrite(this.indexPath, { ...index, profiles: nextEntries });
@@ -24444,8 +24761,8 @@ var ProfileStore = class {
   }
   async rebuildIndex() {
     return this.exclusive(async () => {
-      await mkdir2(join3(this.dataDir, "profiles"), { recursive: true, mode: 448 });
-      const names = (await readdir(join3(this.dataDir, "profiles"))).filter((name) => name.endsWith(".json"));
+      await mkdir3(join5(this.dataDir, "profiles"), { recursive: true, mode: 448 });
+      const names = (await readdir(join5(this.dataDir, "profiles"))).filter((name) => name.endsWith(".json"));
       const profiles = [];
       for (const name of names) {
         const profileId = name.slice(0, -5);
@@ -24457,7 +24774,7 @@ var ProfileStore = class {
       }
       let backup;
       try {
-        backup = join3(this.dataDir, "backups", `index-${(/* @__PURE__ */ new Date()).toISOString().replaceAll(":", "-")}.json`);
+        backup = join5(this.dataDir, "backups", `index-${(/* @__PURE__ */ new Date()).toISOString().replaceAll(":", "-")}.json`);
         await copyFile(this.indexPath, backup);
       } catch {
         backup = null;
@@ -24485,7 +24802,7 @@ var profileReadSchema = external_exports.object({
   include_source_markdown: external_exports.boolean().optional()
 }).strict();
 function toolResult(data) {
-  const structuredContent = isRecord2(data) ? data : { value: data };
+  const structuredContent = isRecord4(data) ? data : { value: data };
   return { content: [{ type: "text", text: JSON.stringify(data) }], structuredContent };
 }
 function errorResult(error2, sideEffects = "none") {
@@ -24523,7 +24840,7 @@ async function resolveActionSources(params) {
   for (const write of writes) if (write.kind === "set_value") write.value = await resolveValue(write.value);
   return wireSchemas.act.parse(resolved);
 }
-var server = new McpServer({ name: "resume-companion", version: "0.6.1" });
+var server = new McpServer({ name: "resume-companion", version: "0.7.0" });
 server.registerTool("resume_status", {
   title: "\u68C0\u67E5\u7B80\u5386\u968F\u884C\u72B6\u6001",
   description: "\u8FD4\u56DE MCP \u672C\u5730\u8D44\u6599\u5E93\u3001\u5DF2\u4FDD\u5B58\u7B80\u5386\u548C\u6D4F\u89C8\u5668\u9A71\u52A8\u72B6\u6001\u3002\u6D4F\u89C8\u5668\u5C1A\u672A\u8FDE\u63A5\u65F6\u8D44\u6599\u7BA1\u7406\u4ECD\u53EF\u6B63\u5E38\u4F7F\u7528\uFF1B\u7F51\u9875\u5DE5\u5177\u9996\u6B21\u8C03\u7528\u4F1A\u6309\u9700\u8FDE\u63A5 Chrome\u3002",
@@ -24601,6 +24918,6 @@ process.once("SIGINT", () => {
 process.once("SIGTERM", () => {
   void shutdown().finally(() => process.exit(0));
 });
-function isRecord2(value) {
+function isRecord4(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }

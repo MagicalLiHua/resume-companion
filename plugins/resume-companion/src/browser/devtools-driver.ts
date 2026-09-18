@@ -72,7 +72,7 @@ export class DevToolsDriver implements BrowserDriver {
     this.dataDir = options.dataDir;
     this.permissionState = this.profileMode === 'auto_connect' ? 'unknown' : 'not_required';
     this.dependencies = {
-      createClient: () => new Client({ name: 'resume-companion-browser-driver', version: '0.6.1' }) as unknown as UpstreamClient,
+      createClient: () => new Client({ name: 'resume-companion-browser-driver', version: '0.7.0' }) as unknown as UpstreamClient,
       createTransport: parameters => new StdioClientTransport(parameters),
       probeAutoConnect,
       probeBrowserUrl,

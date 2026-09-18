@@ -7,7 +7,7 @@ const root = resolve(import.meta.dirname, '..');
 const pluginRoot = resolve(root, 'plugins/resume-companion');
 const pkg = JSON.parse(await readFile(resolve(root, 'package.json'), 'utf8'));
 if (!/^\d+\.\d+\.\d+$/.test(pkg.version)) throw new Error('Invalid version');
-execFileSync(process.platform === 'win32' ? 'npm.cmd' : 'npm', ['run', 'build'], { cwd: pluginRoot, stdio: 'inherit' });
+execFileSync(process.platform === 'win32' ? 'npm.cmd' : 'npm', ['run', 'build'], { cwd: root, stdio: 'inherit' });
 const name = `resume-companion-${pkg.version}`;
 const staging = resolve(root, 'artifacts', name);
 const archive = resolve(root, 'artifacts', `${name}.zip`);
@@ -15,7 +15,7 @@ await rm(staging, { recursive: true, force: true });
 await mkdir(staging, { recursive: true });
 const packagedPlugin = resolve(staging, 'plugins/resume-companion');
 await mkdir(packagedPlugin, { recursive: true });
-for (const item of ['.codex-plugin', '.mcp.json', 'package.json', 'server.mjs', 'server.bundle.mjs', 'runtime', 'skills']) {
+for (const item of ['.codex-plugin', '.mcp.json', 'package.json', 'server.mjs', 'server.bundle.mjs', 'browser-assets', 'runtime', 'skills']) {
   await cp(resolve(pluginRoot, item), resolve(packagedPlugin, item), { recursive: true });
 }
 await cp(resolve(root, 'LICENSE'), resolve(staging, 'LICENSE'));
@@ -32,9 +32,9 @@ execFileSync(process.execPath, [resolve(pluginRoot, 'scripts/package-smoke-test.
 await writeFile(resolve(staging, 'README.txt'), `简历随行 ${pkg.version} 开发预览版
 
 Codex：按 docs/getting-started.md 安装插件，或直接注册 plugins/resume-companion/server.mjs。
-Chrome：默认启动持久的 Resume Companion 专用 Profile；首次在该窗口登录招聘网站后会保留会话，无需开启远程调试。
+Chrome：运行 plugins/resume-companion/browser-assets/native-host/install.bundle.mjs，再把 browser-assets/extension 作为未打包扩展加载。扩展直接使用当前 Chrome Profile 的登录状态，无需开启远程调试。
 
-需要 Node.js 24 和 Chrome 144+。MCP 在本机管理多份简历，通过 Chrome DevTools 执行受限网页动作；最终申请提交由用户完成。
+需要 Node.js 24 和 Chrome 116+。MCP 在本机管理多份简历，通过扩展执行受限网页动作；最终申请提交由用户完成。DevTools 专用 Profile 仍作为显式备用和 CI 驱动。
 无需授予 ChatGPT 修改 macOS App 的权限。
 
 发布包只包含程序和公开文档，不包含用户资料、密钥或内部调试记录。

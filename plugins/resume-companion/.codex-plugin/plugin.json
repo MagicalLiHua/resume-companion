@@ -1,7 +1,7 @@
 {
   "name": "resume-companion",
-  "version": "0.6.1",
-  "description": "Local resume storage plus safe recruitment-form automation through Chrome DevTools.",
+  "version": "0.7.0",
+  "description": "Local resume storage plus safe recruitment-form automation in the user's current Chrome profile.",
   "author": {
     "name": "Resume Companion"
   },

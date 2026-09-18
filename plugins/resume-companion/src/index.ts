@@ -76,7 +76,7 @@ async function resolveActionSources(params: ActParams): Promise<ResolvedActParam
   return wireSchemas.act.parse(resolved) as ResolvedActParams;
 }
 
-const server = new McpServer({ name: 'resume-companion', version: '0.6.1' });
+const server = new McpServer({ name: 'resume-companion', version: '0.7.0' });
 
 server.registerTool('resume_status', {
   title: '检查简历随行状态',

@@ -24,4 +24,4 @@ await rm(runtimeRoot, { recursive: true, force: true });
 await mkdir(runtimeRoot, { recursive: true });
 await cp(resolve(root, 'node_modules/chrome-devtools-mcp'), resolve(runtimeRoot, 'chrome-devtools-mcp'), { recursive: true });
 
-console.log('Self-contained MCP server and pinned Chrome DevTools runtime generated.');
+console.log('Self-contained MCP server, extension assets and pinned DevTools fallback generated.');

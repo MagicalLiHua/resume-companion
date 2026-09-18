@@ -21,13 +21,13 @@ try {
   const tools = await client.listTools();
   if (tools.tools.length !== 10) throw new Error(`Expected 10 tools, received ${tools.tools.length}`);
   const status = await client.callTool({ name: 'resume_status', arguments: {} });
-  if (status.isError || status.structuredContent?.browser?.kind !== 'devtools') throw new Error('Packaged DevTools driver is not ready');
+  if (status.isError || status.structuredContent?.browser?.kind !== 'extension') throw new Error('Packaged extension driver is not ready');
   const saved = await client.callTool({
     name: 'resume_profile_save',
     arguments: { name: 'Package smoke profile', changes: { basic: { full_name: 'Synthetic User' } } },
   });
   if (saved.isError || saved.structuredContent?.profile?.revision !== 1) throw new Error('Packaged profile store failed');
-  console.log('Packaged MCP starts with 10 tools, DevTools driver and local profile storage: OK');
+  console.log('Packaged MCP starts with 10 tools, extension driver assets and local profile storage: OK');
 } finally {
   await client.close().catch(() => undefined);
   await rm(dataDir, { recursive: true, force: true });
