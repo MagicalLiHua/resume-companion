@@ -7,7 +7,7 @@
 
 简历随行由一个本地 MCP 服务和一个精简的 Chrome 扩展组成。用户在 Codex、Claude Desktop 或其他支持 MCP 的 AI 客户端中发送简历或补充信息；AI 提取明确事实并调用 MCP 保存。填写时，AI 读取所选资料、观察网页并组合基础动作。Chrome 扩展只执行网页操作，不保存简历，也不内置模型 API。
 
-当前 0.7.0 是开发预览版，重点是 MCP 与 Codex 使用体验。最终申请提交、声明、验证码、密码和附件上传始终交给用户。
+当前 0.7.1 是开发预览版，重点是 MCP 与 Codex 使用体验。最终申请提交、声明、验证码、密码和附件上传始终交给用户。
 
 [安装与使用](docs/getting-started.md) · [MCP 工具](docs/mcp-tools.md) · [验证范围](docs/validation.md) · [参与开发](CONTRIBUTING.md)
 
@@ -97,6 +97,6 @@ codex plugin add resume-companion@resume-companion
 
 ## 验证与限制
 
-0.7.0 本地通过 19 项单元测试、21 项浏览器回归、MCP 契约测试和真实 MCP→隔离 Chrome 集成测试。虚构银行多步骤流程会保存多段经历并断言最终提交次数为 0。
+0.7.1 本地通过 19 项单元测试、21 项浏览器回归、MCP 契约测试和真实 MCP→隔离 Chrome 集成测试。虚构银行多步骤流程会保存多段经历并断言最终提交次数为 0。
 
 目前仅支持主文档；iframe、Shadow DOM 和要求可信用户事件的控件可能需要人工处理。真实网站仍需逐站试用。详见 [验证范围](docs/validation.md)。

@@ -1,6 +1,6 @@
 # 安装与使用
 
-本版由 Chrome 扩展 0.7.0 和 MCP 插件 0.4.0 组成。简历保存在 MCP 本地资料库中，扩展只负责网页操作。
+本版由 Chrome 扩展 0.7.1 和 MCP 插件 0.4.1 组成。简历保存在 MCP 本地资料库中，扩展只负责网页操作。
 
 ## 安装
 
@@ -17,6 +17,8 @@ codex plugin add resume-companion@resume-companion
 ~~~
 
 安装后新开一个 Codex 任务，让新工具和 skill 生效。不要同时运行两个 Resume Companion MCP 实例，它们会争用本地桥端口。
+
+Resume Companion 是必需 MCP：Codex 创建或恢复任务时会等待最多 30 秒让它初始化，不会在没有资料工具的情况下静默继续。skill 执行资料或填写任务前会先调用 `resume_status`。如果当前任务的工具目录中完全没有该工具，当前 agent 无法靠调用一个不存在的工具启动自身；可在本地执行 `codex mcp get resume_companion --json` 诊断，再重载 MCP 配置或新开任务。不要单独后台运行 `server.bundle.mjs`，那个进程不会把工具注册到当前任务。
 
 ## 直接注册 MCP
 
@@ -58,7 +60,7 @@ AI 会列出标签页、读取资料目录、观察网页并组合操作。最�
 
 ## 更新与旧数据
 
-0.7.0 不再读取旧版扩展中的简历、草稿、模型设置和投递记录，但升级不会主动删除 resume_state。确认 MCP 资料库已经包含所需资料后，可以自行保留备份或清理旧扩展数据。
+0.7.1 不再读取旧版扩展中的简历、草稿、模型设置和投递记录，但升级不会主动删除 resume_state。确认 MCP 资料库已经包含所需资料后，可以自行保留备份或清理旧扩展数据。
 
 更新扩展文件后，在 chrome://extensions 点击扩展卡片上的重新加载图标。MCP 和扩展必须使用相同协议版本。
 
@@ -68,6 +70,7 @@ AI 会列出标签页、读取资料目录、观察网页并组合操作。最�
 | --- | --- |
 | 无法加载扩展 | 选择包含 manifest.json 的 extension 或 dist 目录 |
 | AI 找不到工具 | 检查 Node 24、MCP 配置，并新开 AI 任务 |
+| resume_status 不在工具目录 | 运行 `codex mcp get resume_companion --json`；确认 enabled 后重载 MCP 或新开任务 |
 | 资料工具可用但网页工具不可用 | MCP 正常；开启扩展桥接并保持 Chrome 运行 |
 | 一直显示等待 MCP | 检查是否启动了 MCP，确认没有旧实例占用 43117 |
 | 协议版本不一致 | 使用同一版本的 MCP 与扩展并重新加载扩展 |

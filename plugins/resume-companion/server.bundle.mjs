@@ -25775,7 +25775,7 @@ async function resolveActionSources(params) {
   for (const write of writes) if (write.kind === "set_value") write.value = await resolveValue(write.value);
   return wireSchemas.act.parse(resolved);
 }
-var server = new McpServer({ name: "resume-companion", version: "0.4.0" });
+var server = new McpServer({ name: "resume-companion", version: "0.4.1" });
 server.registerTool("resume_status", {
   title: "\u68C0\u67E5\u7B80\u5386\u968F\u884C\u72B6\u6001",
   description: "\u8FD4\u56DE MCP \u672C\u5730\u8D44\u6599\u5E93\u4F4D\u7F6E\u3001\u7B80\u5386\u76EE\u5F55\u4EE5\u53CA Chrome \u6267\u884C\u6865\u72B6\u6001\u3002Chrome \u672A\u8FDE\u63A5\u65F6\u8D44\u6599\u7BA1\u7406\u4ECD\u53EF\u6B63\u5E38\u4F7F\u7528\u3002",

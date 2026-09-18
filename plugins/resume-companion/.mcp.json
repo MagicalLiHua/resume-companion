@@ -7,7 +7,8 @@
       ],
       "cwd": ".",
       "enabled": true,
-      "startup_timeout_sec": 20
+      "required": true,
+      "startup_timeout_sec": 30
     }
   }
 }

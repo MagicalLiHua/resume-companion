@@ -169,7 +169,7 @@ async function resolveActionSources(params) {
   return wireSchemas.act.parse(resolved);
 }
 
-const server = new McpServer({ name: 'resume-companion', version: '0.4.0' });
+const server = new McpServer({ name: 'resume-companion', version: '0.4.1' });
 
 server.registerTool('resume_status', {
   title: '检查简历随行状态',

@@ -7,6 +7,14 @@ description: Store resume information in Resume Companion's local MCP profile li
 
 Resume Companion has two independent parts: the MCP process owns the local profile library; the Chrome extension only observes and operates webpages. Profile tools work without Chrome. A separate model API or business backend is unnecessary.
 
+## Check availability before work
+
+Before saving profile information or filling a form, confirm that the `resume_status` tool is present and call it once. A successful result proves that the MCP process is active. Use its `storage` and `profiles` fields for local-library readiness, then inspect `browser.connected` and `browser.compatible` only when webpage work is needed. The browser may be disconnected while profile operations remain available.
+
+If a Resume Companion tool returns a transient transport or startup error, retry `resume_status` once. Do not launch `server.bundle.mjs` as an independent background process: the Codex host owns the stdio MCP lifecycle, and a separately launched process does not register tools in the current task.
+
+If `resume_status` is absent from the task's tool catalog, do not continue as though the profile library were empty. On a local Codex host, use the read-only command `codex mcp get resume_companion --json` when shell access is available to distinguish an uninstalled, disabled or failed server. Ask the host to reload MCP configuration or start a new task after installation or enablement. Never silently replace an intentionally disabled user setting.
+
 ## Save information supplied by the user
 
 When the user attaches a resume, pastes Markdown, or provides corrections, extract only explicit facts. Use resume_profile_list to identify existing profiles. Use resume_profile_save without profile_id to create a profile; provide a short user-recognizable name and only the sections supported by the source. Unknown values remain null. Do not infer dates, credentials, degrees, employers, identity data or answers from surrounding context.

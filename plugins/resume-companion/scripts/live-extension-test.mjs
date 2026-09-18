@@ -69,7 +69,7 @@ try {
     },
     stderr: 'pipe',
   });
-  client = new Client({ name: 'resume-companion-live-test', version: '0.4.0' });
+  client = new Client({ name: 'resume-companion-live-test', version: '0.4.1' });
   await client.connect(transport);
 
   let status = await call('resume_status');

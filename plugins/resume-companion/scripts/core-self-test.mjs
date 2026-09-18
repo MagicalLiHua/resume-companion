@@ -69,7 +69,7 @@ try {
     value.once('open', () => resolveSocket(value));
     value.once('error', rejectSocket);
   });
-  socket.send(JSON.stringify({ type: 'hello', extensionId, version: '0.7.0', epoch: 'test-epoch', protocolVersion: '2.0' }));
+  socket.send(JSON.stringify({ type: 'hello', extensionId, version: '0.7.1', epoch: 'test-epoch', protocolVersion: '2.0' }));
   const forwarded = [];
   let cancelled = false;
   socket.on('message', raw => {

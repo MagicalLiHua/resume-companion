@@ -1,6 +1,6 @@
 {
   "name": "resume-companion",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Local resume storage plus core form observation and actions through the Chrome bridge.",
   "author": {
     "name": "Resume Companion"
