@@ -1,4 +1,4 @@
-/** One document-wide execution lane, shared by the widget, legacy API and core tools. */
+/** One document-wide execution lane for MCP browser operations. */
 export class ExecutionLock {
   persistenceRevision = 0;
   persistenceBoundary() { this.persistenceRevision++; }

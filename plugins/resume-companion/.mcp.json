@@ -7,10 +7,7 @@
       ],
       "cwd": ".",
       "enabled": true,
-      "startup_timeout_sec": 20,
-      "env": {
-        "RESUME_COMPANION_TOOLSET": "core"
-      }
+      "startup_timeout_sec": 20
     }
   }
 }

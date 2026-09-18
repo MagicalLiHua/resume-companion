@@ -14,7 +14,7 @@ export function visible(node: HTMLElement) {
 export function plainText(el: Element | null, max = 240) {
   if (!el) return '';
   const clone = el.cloneNode(true) as Element;
-  clone.querySelectorAll('script,style,input,textarea,select,[hidden],[aria-hidden="true"],#resume-companion-widget').forEach(n => n.remove());
+  clone.querySelectorAll('script,style,input,textarea,select,[hidden],[aria-hidden="true"]').forEach(n => n.remove());
   return compact(clone.textContent, max);
 }
 export function nameOf(el: HTMLElement) {

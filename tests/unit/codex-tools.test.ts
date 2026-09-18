@@ -1,17 +1,18 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { CodexTools } from '../../extension/src/background/codex-tools';
-import type { LocalState } from '../../extension/src/domain/state';
 
 const tab = { id: 11, windowId: 22, url: 'https://jobs.example/apply' };
 let api: any;
-const tools = (enabled = true) => new CodexTools(async () => ({ preferences: { codexBridgeEnabled: enabled } }) as LocalState);
+const tools = () => new CodexTools();
 beforeEach(() => {
   vi.useFakeTimers();
   api = {
-    tabs: { get: vi.fn().mockResolvedValue(tab), update: vi.fn().mockResolvedValue(tab),
+    tabs: { get: vi.fn().mockResolvedValue(tab), update: vi.fn().mockResolvedValue(tab), query: vi.fn().mockResolvedValue([tab]),
       sendMessage: vi.fn().mockResolvedValue({ ok: true, data: { visibility: 'visible', focused: true } }) },
     windows: { get: vi.fn().mockResolvedValue({ state: 'normal' }), update: vi.fn().mockResolvedValue({}) },
     scripting: { executeScript: vi.fn().mockResolvedValue([{ frameId: 0, documentId: 'document-1' }]) },
+    storage: { session: { get: vi.fn().mockResolvedValue({}), remove: vi.fn().mockResolvedValue(undefined) } },
+    runtime: { getManifest: () => ({ version: '0.7.0' }) },
   };
   vi.stubGlobal('chrome', api);
 });
@@ -37,8 +38,7 @@ it('激活过程中页面导航时停止，不向新的文档发送操作', asyn
   await expect(tools().handle('activate_tab', { tab_id: 11 })).rejects.toThrow('页面已变化');
   expect(api.tabs.sendMessage).not.toHaveBeenCalled();
 });
-it('桥接关闭、无效 ID 和非网页标签不会激活窗口', async () => {
-  await expect(tools(false).handle('activate_tab', { tab_id: 11 })).rejects.toThrow('桥接尚未开启');
+it('无效 ID 和非网页标签不会激活窗口', async () => {
   await expect(tools().handle('activate_tab', { tab_id: -1 })).rejects.toThrow();
   api.tabs.get.mockResolvedValue({ ...tab, url: 'chrome://extensions/' });
   await expect(tools().handle('activate_tab', { tab_id: 11 })).rejects.toThrow('不是普通网页');

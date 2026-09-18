@@ -7,8 +7,6 @@ export default defineConfig({
     outDir: '../dist', emptyOutDir: true,
     rollupOptions: { input: {
       options: resolve('extension/options.html'),
-      sidepanel: resolve('extension/sidepanel.html'),
-      journal: resolve('extension/journal.html'),
     } },
   },
 });

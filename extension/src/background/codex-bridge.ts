@@ -1,4 +1,5 @@
 import type {BridgeContext} from './automation-tools';
+import {PROTOCOL_VERSION} from '../../../plugins/resume-companion/protocol';
 const BRIDGE_URL = 'ws://127.0.0.1:43117';
 const RECONNECT_MS = 1500;
 const KEEPALIVE_MS = 20_000;
@@ -6,7 +7,8 @@ const KEEPALIVE_MS = 20_000;
 type BridgeRequest = { id: string; method: string; params?: unknown; type?: string };
 type Handler = (method: string, params: unknown, context: BridgeContext) => Promise<unknown>;
 
-export function startCodexBridge(handler: Handler, enabled: () => Promise<boolean>) {
+export type BridgeStatus = 'disabled' | 'connecting' | 'connected' | 'disconnected';
+export function startCodexBridge(handler: Handler, enabled: () => Promise<boolean>, onStatus: (status: BridgeStatus) => void = () => {}) {
   let socket: WebSocket | null = null;
   let generation = 0;
   let retry: number | null = null;
@@ -31,16 +33,17 @@ export function startCodexBridge(handler: Handler, enabled: () => Promise<boolea
     let allowed = false;
     try { allowed = await enabled(); } catch { /* Invalid storage never enables access. */ }
     if (current !== generation) return;
-    if (!allowed) { cancelAll(); clearTimers(); const old = socket; socket = null; old?.close(); return; }
+    if (!allowed) { onStatus('disabled'); cancelAll(); clearTimers(); const old = socket; socket = null; old?.close(); return; }
     if (socket && (socket.readyState === WebSocket.CONNECTING || socket.readyState === WebSocket.OPEN)) return;
     clearTimers();
     let channel: WebSocket;
-    try { channel = new WebSocket(BRIDGE_URL); socket = channel; } catch { reconnect(); return; }
+    try { channel = new WebSocket(BRIDGE_URL); socket = channel; onStatus('connecting'); } catch { onStatus('disconnected'); reconnect(); return; }
 
     const epoch = crypto.randomUUID();
     channel.addEventListener('open', () => {
       if (socket !== channel) { channel.close(); return; }
-      channel.send(JSON.stringify({ type: 'hello', epoch, protocolVersion:'1.0', extensionId: chrome.runtime.id, version: chrome.runtime.getManifest().version }));
+      onStatus('connected');
+      channel.send(JSON.stringify({ type: 'hello', epoch, protocolVersion:PROTOCOL_VERSION, extensionId: chrome.runtime.id, version: chrome.runtime.getManifest().version }));
       keepalive = setInterval(() => {
         if (channel.readyState === WebSocket.OPEN) channel.send(JSON.stringify({ type: 'ping' }));
       }, KEEPALIVE_MS) as unknown as number;
@@ -59,7 +62,7 @@ export function startCodexBridge(handler: Handler, enabled: () => Promise<boolea
       ).finally(()=>active.delete(request.id));
     });
 
-    channel.addEventListener('close', () => { if (socket === channel) { cancelAll(); socket = null; clearTimers(); reconnect(); } });
+    channel.addEventListener('close', () => { if (socket === channel) { onStatus('disconnected'); cancelAll(); socket = null; clearTimers(); reconnect(); } });
     channel.addEventListener('error', () => channel.close());
   };
 

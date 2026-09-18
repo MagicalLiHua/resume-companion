@@ -77,7 +77,7 @@ export class Observer {
     if (!root.isConnected) throw new AutomationError('stale', '观察范围已被替换');
     const nodes = new Set<HTMLElement>([root]);
     const add = (node: HTMLElement) => {
-      if (!visible(node) || node.closest('#resume-companion-widget,[data-resume-companion]')) return;
+      if (!visible(node)) return;
       nodes.add(node);
       for (let p = this.scope(node); p !== document.body; p = this.scope(p)) { nodes.add(p); if (nodes.size > 5000) break; }
       nodes.add(document.body);

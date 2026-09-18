@@ -1,8 +1,8 @@
-/** Version-neutral wire contract. The factory accepts Zod 3 (MCP) or Zod 4 (extension). */
-export const PROTOCOL_VERSION = '1.0';
+/** Version-neutral contract. The factory accepts Zod 3 (MCP) or Zod 4 (extension). */
+export const PROTOCOL_VERSION = '2.0';
 export type Scalar = string | boolean;
 export type Effect = 'interaction' | 'save_record' | 'save_draft' | 'advance_step' | 'final_submit' | 'unknown';
-export type SourceValue = { literal: Scalar } | { source: { version_id: string; profile_revision: number; source_ref: string } };
+export type SourceValue = { literal: Scalar } | { source: { profile_id: string; profile_revision: number; source_ref: string } };
 export type Write = { kind: 'set_value'; ref: string; expected_value_token: string; value: SourceValue }
   | { kind: 'set_checked'; ref: string; expected_value_token: string; checked: boolean }
   | { kind: 'select_option'; ref: string; expected_value_token: string; option_ref?: string; option_value?: string };
@@ -17,13 +17,14 @@ export type ObserveParams = { tab_id?: number; session_id?: string; mode?: 'over
 export type ActParams = { session_id: string; snapshot_id: string; operation_id: string; action: Action; wait_for?: Condition; timeout_ms?: number };
 export type WaitParams = { session_id: string; snapshot_id: string; condition: Condition; timeout_ms?: number };
 export type UndoParams = { session_id: string; operation_ids: string[]; operation_id: string };
-export type ProfileParams = { version_id: string; section?: string; record_id?: string; source_refs?: string[]; cursor?: string; limit?: number };
-// This is the sole intentionally untyped Zod boundary; both implementations execute identical schemas.
-export function createAutomationSchemas(z: any) {
+// This is the sole intentionally untyped Zod boundary. MCP accepts local profile
+// references; the browser wire contract only accepts resolved literal values.
+export function createAutomationSchemas(z: any, options: { allowSources?: boolean } = {}) {
   const id = z.string().min(1).max(160), scalar = z.union([z.string().max(10000), z.boolean()]);
   const object = (shape: Record<string, any>) => z.object(shape).strict();
-  const source = object({ version_id: id, profile_revision: z.number().int().nonnegative(), source_ref: z.string().min(1).max(240) });
-  const value = z.union([object({ literal: scalar }), object({ source })]);
+  const source = object({ profile_id: id, profile_revision: z.number().int().positive(), source_ref: z.string().min(1).max(240) });
+  const literal = object({ literal: scalar });
+  const value = options.allowSources === false ? literal : z.union([literal, object({ source })]);
   const effect = z.enum(['interaction', 'save_record', 'save_draft', 'advance_step', 'final_submit', 'unknown']);
   const writes = [object({ kind: z.literal('set_value'), ref: id, expected_value_token: id, value }),
     object({ kind: z.literal('set_checked'), ref: id, expected_value_token: id, checked: z.boolean() }),
@@ -41,7 +42,6 @@ export function createAutomationSchemas(z: any) {
     object({ kind: z.literal('text_present'), ref: id, text: z.string().min(1).max(1000) }),
   ]);
   return {
-    read_profile: object({ version_id: id, section: z.enum(['basic', 'education', 'experience', 'projects', 'skills', 'certificates', 'custom_answers', 'supplemental_fields']).optional(), record_id: id.optional(), source_refs: z.array(z.string().min(1).max(240)).min(1).max(20).optional(), cursor: id.optional(), limit: z.number().int().min(1).max(50).optional() }),
     observe: object({ tab_id: z.number().int().positive().optional(), session_id: id.optional(), mode: z.enum(['overview', 'detail', 'changes', 'verify']).optional(), scope_ref: id.optional(), snapshot_id: id.optional(), operation_ids: z.array(id).min(1).max(20).optional(), limit: z.number().int().min(1).max(80).optional(), cursor: id.optional() }).superRefine((v: any, ctx: any) => {
       if (Number(v.tab_id !== undefined) + Number(v.session_id !== undefined) !== 1) ctx.addIssue({code:'custom',message:'observe requires exactly one tab_id or session_id'});
       if (v.mode === 'verify' && !v.operation_ids?.length) ctx.addIssue({code:'custom',path:['operation_ids'],message:'verify requires operation_ids'});

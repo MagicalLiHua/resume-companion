@@ -1,5 +1,0 @@
-<!doctype html><meta charset="utf-8"><title>虚构资料实验</title><style>body{font:16px system-ui;padding:20px}fieldset{padding:20px;margin:20px}label{display:block;margin:12px}input{font:inherit;padding:6px}</style><h1>虚构基本资料</h1><form></form><script>
-const layout=new URLSearchParams(location.search).get('layout')||'A';const fields=[['姓名','中文姓名','name'],['邮箱','电子邮件','email'],['电话','联系电话','phone'],['城市','现居地','city'],['岗位','求职意向','job'],['学校','毕业院校','school'],['专业','所学专业','major'],['学位','已获学位','degree'],['入学年月','学习开始时间','start'],['毕业年月','学习结束时间','end']];
-const root=document.querySelector('form');let ordered=layout==='B'?[...fields].reverse():fields;root.innerHTML='<fieldset><legend>基本信息</legend>'+ordered.map(([a,b,k])=>`<label>${layout==='B'?b:a}<input data-key="${k}" type="${k==='email'?'email':k==='start'||k==='end'?'month':'text'}"></label>`).join('')+'</fieldset><button type="submit">提交申请</button>';window.submits=0;root.onsubmit=e=>{e.preventDefault();window.submits++};
-window.EvalState=()=>Object.fromEntries([...document.querySelectorAll('input')].map(n=>[n.dataset.key,n.value]));
-</script>

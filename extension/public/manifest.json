@@ -1,61 +1,28 @@
 {
   "manifest_version": 3,
-  "name": "简历随行 · 简历填写助手",
-  "version": "0.6.0",
+  "name": "简历随行 · MCP 浏览器执行桥",
+  "version": "0.7.0",
   "minimum_chrome_version": "116",
-  "description": "本地维护简历与补充资料，导入 Markdown，使用自己的模型辅助匹配，预览后填写网页。",
+  "description": "通过本地 MCP 让 AI 观察并填写招聘网页；简历资料由 MCP 在本机管理。",
   "permissions": [
     "activeTab",
     "scripting",
-    "storage",
-    "sidePanel"
+    "storage"
   ],
   "action": {
     "default_title": "简历随行"
   },
   "background": {
-    "service_worker": "background-0.6.0.js",
+    "service_worker": "background-0.7.0.js",
     "type": "module"
-  },
-  "side_panel": {
-    "default_path": "sidepanel.html"
   },
   "options_page": "options.html",
   "host_permissions": [
     "http://*/*",
     "https://*/*"
   ],
-  "content_scripts": [
-    {
-      "matches": [
-        "http://*/*",
-        "https://*/*"
-      ],
-      "js": [
-        "content.js"
-      ],
-      "run_at": "document_idle",
-      "all_frames": false
-    }
-  ],
-  "web_accessible_resources": [
-    {
-      "resources": [
-        "sidepanel.html",
-        "assets/*.js",
-        "assets/*.css"
-      ],
-      "matches": [
-        "http://*/*",
-        "https://*/*"
-      ]
-    }
-  ],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'none'; connect-src https: ws://127.0.0.1:43117"
   },
-  "optional_host_permissions": [
-    "https://*/*"
-  ],
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAmfbexjgcJ+juXNtINT+VsnmXJeOpFvt8IV6HV9bbhMgQWIGpv2yLn6lGJKcmcyBHvk9x+jNonbbdjzxQ5ATHMhVvdFnoAtnfoO+Uilar7Sz11lUUYqAVpBYeeNnOVNjfllWlkpFg9BwtDFV8g0KQF6dpOSOhHKh+j0HucH1kiYiO8xc3rt+73TC6YtF98zbqgQYNF6V2YqKMGIVRBsJBXaP20NfwLMEXhiWEYYsv1OTcMiaZp94LpNfFhcG7hjdEPQc4DY4Lyyz4XaaYv8AaDKQHsAHHbSZTA9bHAHsuY5eSpkqnkoYkfZn/ZDaC6zGh6BnFEU4yCkfiHhS50Yp4ewIDAQAB"
 }

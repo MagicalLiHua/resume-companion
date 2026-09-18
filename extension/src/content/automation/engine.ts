@@ -4,7 +4,7 @@ import { antRead, antSelect, antWrite } from '../ant-controls';
 import { compact, editable, nameOf, nativeSet, plainText, popupOwner, readSearch, readValue, scopeSelector, validation, visible } from './dom';
 import { documentLock } from './lock';
 import { AutomationError, Observer, type Entry } from './observer';
-const schemas = createAutomationSchemas(z);
+const schemas = createAutomationSchemas(z, { allowSources: false });
 const pause = (ms = 60) => new Promise(resolve => setTimeout(resolve, ms));
 type Status = 'applied' | 'no_change' | 'dispatched' | 'blocked' | 'stale' | 'failed' | 'unknown';
 type Change = { entry: Entry; before: Scalar; written: Scalar; channel: 'value' | 'search'; undone?: boolean; boundary?: boolean };

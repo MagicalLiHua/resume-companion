@@ -1,15 +1,15 @@
 {
   "name": "resume-companion",
-  "version": "0.3.0",
-  "description": "Core form observation and actions for continuous resume filling through the local Chrome bridge.",
+  "version": "0.4.0",
+  "description": "Local resume storage plus core form observation and actions through the Chrome bridge.",
   "author": {
     "name": "Resume Companion"
   },
   "skills": "./skills/",
   "interface": {
-    "displayName": "简历随行",
-    "shortDescription": "由 Codex 组合基础工具，连续完成复杂网申",
-    "longDescription": "读取指定本地简历，观察页面并组合基础动作，填写动态字段、保存经历与草稿、进入普通下一步。最终申请提交交给用户。",
+    "displayName": "\u7b80\u5386\u968f\u884c",
+    "shortDescription": "\u8ba9 AI \u7ba1\u7406\u672c\u5730\u7b80\u5386\u5e76\u8fde\u7eed\u5b8c\u6210\u590d\u6742\u7f51\u7533",
+    "longDescription": "\u5728 MCP \u672c\u5730\u8d44\u6599\u5e93\u7ef4\u62a4\u591a\u4efd\u7b80\u5386\uff0c\u7531 AI \u8bfb\u53d6\u8d44\u6599\u3001\u89c2\u5bdf\u9875\u9762\u5e76\u7ec4\u5408\u57fa\u7840\u52a8\u4f5c\uff0c\u586b\u5199\u52a8\u6001\u5b57\u6bb5\u3001\u4fdd\u5b58\u7ecf\u5386\u4e0e\u8349\u7a3f\u3001\u8fdb\u5165\u666e\u901a\u4e0b\u4e00\u6b65\u3002\u6700\u7ec8\u7533\u8bf7\u63d0\u4ea4\u4ea4\u7ed9\u7528\u6237\u3002",
     "developerName": "Resume Companion",
     "category": "Productivity",
     "capabilities": [
@@ -18,8 +18,8 @@
       "Write"
     ],
     "defaultPrompt": [
-      "用指定的简历版本连续完成这个网申页面，保存经历和草稿，完成普通下一步，最终提交交给我。",
-      "查看当前招聘表单和我的简历版本，汇总缺少的信息。"
+      "\u8bfb\u53d6\u6211\u6307\u5b9a\u7684\u672c\u5730\u7b80\u5386\uff0c\u8fde\u7eed\u5b8c\u6210\u8fd9\u4e2a\u7f51\u7533\u9875\u9762\uff0c\u6700\u7ec8\u63d0\u4ea4\u4ea4\u7ed9\u6211\u3002",
+      "\u628a\u6211\u63d0\u4f9b\u7684\u7b80\u5386\u4fdd\u5b58\u5230\u672c\u5730\u8d44\u6599\u5e93\uff0c\u5e76\u5217\u51fa\u4ecd\u7136\u7f3a\u5c11\u7684\u4fe1\u606f\u3002"
     ]
   },
   "mcpServers": "./.mcp.json"

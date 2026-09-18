@@ -1,7 +1,7 @@
 import type { Effect } from '../../../../plugins/resume-companion/protocol';
-import { blockedLabel } from '../../domain/rules';
 import { antSelect } from '../ant-controls';
 import { editable, kindOf, nameOf, plainText, popupOwner, scrollable, topDialog, visible } from './dom';
+const blockedLabel = (text: string) => /密码|验证码|校验码|身份证|证件号|护照|银行卡|信用卡|银行账户|承诺|声明|同意|隐私|协议|授权|调剂|password|passcode|one.?time|otp|captcha|passport|credit.?card|bank.?account|consent|agreement/i.test(text);
 export function policy(el: HTMLElement) {
   const kind = kindOf(el), name = nameOf(el);
   const scope = el.closest('dialog,[role="dialog"],.ant-modal,form,section,fieldset') ?? document.body;

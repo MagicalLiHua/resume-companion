@@ -1,75 +1,76 @@
 # 安装与使用
 
-本版由 Chrome 扩展 0.6.0 和 Codex MCP 插件 0.3.0 组成。优先使用 Codex 连续填写；不需要部署业务后端。
+本版由 Chrome 扩展 0.7.0 和 MCP 插件 0.4.0 组成。简历保存在 MCP 本地资料库中，扩展只负责网页操作。
 
-## 环境与安装
+## 安装
 
-需要 Chrome 116+、Node.js 24，以及能运行本地 MCP 的 Codex。先运行 `node --version`，确认桌面应用也能找到 Node。
+需要 Chrome 116+、Node.js 24，以及支持本地 MCP 的 AI 客户端。
 
-1. 从 [v0.6.0 Release](https://github.com/MagicalLiHua/resume-companion/releases/tag/v0.6.0) 下载 `resume-companion-0.6.0.zip`，解压到不会随意移动的目录。
-2. 打开 `chrome://extensions`，开启开发者模式，加载包里的 `extension` 目录。不要选择 ZIP 或它的上一级目录。
-3. 打开“我的简历”，维护一份正式简历。可以新建、复制、重命名版本，补充简历原文没有的字段。保存后才能被 MCP 作为正式资料读取。
-4. 在“备份与恢复”中开启“Codex 本地桥接”。
-5. 使用仓库插件安装命令：
+1. 构建或解压发布包，打开 chrome://extensions。
+2. 开启开发者模式，加载 extension 目录；源码构建时加载 dist。
+3. 点击扩展图标，打开“浏览器执行桥”，开启“本地桥接”。
+4. 安装 Codex 插件：
 
-```sh
-codex plugin marketplace add MagicalLiHua/resume-companion --ref v0.6.0
+~~~sh
+codex plugin marketplace add MagicalLiHua/resume-companion --ref main
 codex plugin add resume-companion@resume-companion
-```
+~~~
 
-安装后新开 Codex 任务。插件带有 MCP 服务和 `resume-autofill` skill；Node 24 必须可从运行 Codex 的环境中找到。[官方插件说明](https://developers.openai.com/zh-Hans/plugins/build/plugins)介绍了仓库市场机制；这里使用自定义市场，不是官方目录上架。
+安装后新开一个 Codex 任务，让新工具和 skill 生效。不要同时运行两个 Resume Companion MCP 实例，它们会争用本地桥端口。
 
 ## 直接注册 MCP
 
-如果 Codex 不支持 `plugin` 命令，在已解压的发布目录中打开终端。以下为 macOS / Linux / Git Bash 命令：
+不使用 Codex 插件时，可以在任意支持 stdio MCP 的客户端中配置：
 
-```sh
-codex mcp add resume_companion --env RESUME_COMPANION_TOOLSET=core -- node "$PWD/plugins/resume-companion/server.bundle.mjs"
-```
+~~~json
+{
+  "mcpServers": {
+    "resume_companion": {
+      "command": "node",
+      "args": ["/绝对路径/plugins/resume-companion/server.bundle.mjs"],
+      "env": {
+        "RESUME_COMPANION_DATA_DIR": "/可选的本地资料目录"
+      }
+    }
+  }
+}
+~~~
 
-Windows PowerShell：
+省略 RESUME_COMPANION_DATA_DIR 时，macOS 使用 ~/Library/Application Support/Resume Companion，Windows 使用用户 AppData，Linux 使用 XDG_DATA_HOME 或 ~/.local/share/resume-companion。
 
-```powershell
-codex mcp add resume_companion --env RESUME_COMPANION_TOOLSET=core -- node "$((Get-Location).Path)/plugins/resume-companion/server.bundle.mjs"
-```
+## 保存第一份资料
 
-这种方式只注册 MCP，不自动安装 skill。首次任务让 Codex 读取包内的 `plugins/resume-companion/skills/resume-autofill/SKILL.md`，或按你的 Codex skill 管理方式安装该目录。使用绝对路径注册后不要移动目录。与仓库插件方式二选一，避免重复启动服务。
+在 AI 客户端中上传简历、粘贴 Markdown 或直接提供信息，然后说：
 
-## 准备资料
+> 把这份资料保存为“软件开发版”。只记录原文明确出现的事实，未知内容保持为空。
 
-- 多份简历可以分别维护，各自保存补充字段和固定回答。指定本次填写的版本名称，避免混用。
-- 使用“从 AI 导入”中的模板和提示词，将简历整理为 Markdown，再解析、核对差异并保存。扩展不会自行把 PDF 发送给模型。
-- 未提供的信息保持未知；只有年月的时间不会自动补成某一天。正式填写前补齐你希望提供的事实。
-- JSON 是完整备份；Markdown 适合阅读和编辑，不包含所有版本、投递记录及补充数据。
+AI 应调用 resume_profile_save。资料工具不需要 Chrome 连接。后续补充信息时，AI 先读取当前修订，再更新明确涉及的栏目。
 
-## 交给 Codex 的任务
+每个数组栏目采用整栏目替换。修改某条教育、工作或项目经历前，AI 应先读取该栏目并保留其他记录及记录 ID。修订冲突会返回 profile_changed，必须重新读取和合并。
 
-在 Chrome 中保留目标网申页面，告诉 Codex：
+## 填写网页
 
-> 用“软件开发版”简历填写当前页面。可以保存单条经历、保存草稿并进入普通下一步；缺少事实时先问我。完成后汇总未填项，停在最终提交前。
+打开招聘页面后告诉 AI：
 
-Codex 应先检查连接、目标标签页和正式版本，再按观察组合工具。有多个候选页面时需要明确目标。不要将虚构资料保存到真实招聘账户；本地实验页适合第一次体验。
+> 用“软件开发版”连续填写当前网申。可以保存单条经历、草稿并进入普通下一步；缺少事实时集中问我。最终提交交给我。
 
-填写后核对页面数据、学校完整路径、日期、每段经历归属和未完成项。最终提交、附件上传、验证码及声明由你操作。
+AI 会列出标签页、读取资料目录、观察网页并组合操作。最终提交、声明、验证码、密码、附件上传和删除记录需要手动完成。
+
+## 更新与旧数据
+
+0.7.0 不再读取旧版扩展中的简历、草稿、模型设置和投递记录，但升级不会主动删除 resume_state。确认 MCP 资料库已经包含所需资料后，可以自行保留备份或清理旧扩展数据。
+
+更新扩展文件后，在 chrome://extensions 点击扩展卡片上的重新加载图标。MCP 和扩展必须使用相同协议版本。
 
 ## 常见问题
 
 | 现象 | 检查方式 |
 | --- | --- |
-| “未能加载扩展程序 / 无法加载清单” | 选择含有 `manifest.json` 的 `extension` 或源码构建后的 `dist` 目录 |
-| Codex 找不到工具 | 安装后新开任务；检查插件是否启用，以及 Node 24 能否启动 |
-| 桥接未连接 | 确认扩展已启用、“Codex 本地桥接”已打开，MCP 服务已启动 |
-| 端口占用 / 连到另一浏览器 | 同一时间只保留一套 MCP 桥接实例；关闭旧的任务或停用重复安装，重新连接 |
-| 协议版本不一致 | 使用配套扩展和 MCP，重载扩展并新开任务 |
-| 页面旧引用失效 | 重新观察当前页面，不重放旧的写入请求 |
-| 保存超时或结果未知 | 先检查已保存卡片、页面步骤和错误提示，不重复点击保存 |
-| 无悬浮球 | 检查网站访问权限、页面识别情况及悬浮入口开关；也可用工具栏侧边栏 |
-| 浏览器后台仍是旧版 | 点击扩展卡片开关旁的圆形“重新加载”，重新打开扩展设置页 |
-
-## 更新与卸载
-
-更新前导出完整备份。保留 Chrome 原加载目录，在该目录替换发布文件，再重载扩展，避免卸载造成资料丢失。MCP 和 Chrome 扩展应成套更新，更新后重新观察页面。
-
-仓库安装命令固定在 `v0.6.0`，不会自动切到未来版本。需要更新时按对应 Release 说明修改市场引用并重新安装插件，新开任务。不要同时保留个人开发版和仓库版运行。
-
-卸载会删除该扩展的本地存储；先备份。发布包不包含你的简历、模型 Key 或网页会话。
+| 无法加载扩展 | 选择包含 manifest.json 的 extension 或 dist 目录 |
+| AI 找不到工具 | 检查 Node 24、MCP 配置，并新开 AI 任务 |
+| 资料工具可用但网页工具不可用 | MCP 正常；开启扩展桥接并保持 Chrome 运行 |
+| 一直显示等待 MCP | 检查是否启动了 MCP，确认没有旧实例占用 43117 |
+| 协议版本不一致 | 使用同一版本的 MCP 与扩展并重新加载扩展 |
+| profile_changed | 另一会话已更新资料；重新读取后合并 |
+| 页面引用过期 | 重新观察当前标签页，不重放旧动作 |
+| 保存结果 unknown | 先观察页面卡片、步骤和错误提示，不直接重试保存 |
