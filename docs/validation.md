@@ -1,33 +1,36 @@
-# 验证与兼容范围
+# 验证范围
 
-版本：项目 0.10.0 / MCP 插件 0.7.0 / 扩展 0.1.0 / 工具协议 2.1 / 桥接协议 1.0。定位：开发预览版。
+版本：Resume Companion 0.11.0 / Chrome DevTools MCP 1.9.0 / 资料 schema 1.1。定位：个人使用、有人监督的开发预览版。
+
+迁移基准、长页面成本与路线取舍见 [0.11 迁移决策验证](migration-evaluation.md)。
 
 ## 已验证
 
-2026-09-18，本地 macOS + Google Chrome 153 环境完成：
+- 资料 MCP 只暴露四个工具，创建、列表、按栏目读取、来源读取、更新和冲突返回正常。
+- `resume_profile_read.expected_revision` 在服务器端阻止同一任务混用两个资料 revision。
+- Chrome Profile 路径稳定；实例锁阻止两个任务同时使用同一 Profile，所有者退出后可重新取得。
+- TypeScript 启动器可启动固定的官方 MCP，关闭使用统计、CrUX、Performance 和 Emulation，开启网络头脱敏和截图尺寸限制。
+- 直接上游集成可用 `fill_form(includeSnapshot=true)` 一次填写文本、原生下拉、复选框和多行文本。
+- 20 个普通控件五轮热运行 P50 为 4.429 秒、P95 为 4.461 秒；12 个复选框 P50 为 2.816 秒。
+- 通用 UID 工具完成三级异步学校级联、月份控件和记录保存，最终提交计数保持为 0。
+- 批量后项失败时，前项确实可能保留；重新快照能识别部分成功并支持只补缺失字段。
+- `wait_for` 返回的响应包含可复用快照。
+- 关闭并重新启动浏览器 MCP 后，同一个专用 Profile 保留本地站点状态。
+- 实验性视觉工具未启用；客户端禁用上传和 Lighthouse，默认审批为 `prompt`。
+- Network 合成请求的 Authorization 值被脱敏；Console、局部截图和定点只读脚本回归通过。
+- 发布构建从固定 TypeScript 源码生成自包含资料服务、Chrome 启动器和上游运行时。
 
-- 根项目、MCP、扩展、Native Host 和页面引擎的严格 TypeScript 检查及生产构建。
-- 资料原子写入、记录 ID、来源解析、修订冲突、并发更新和索引重建。
-- MCP 契约：十工具目录、资料引用仅在 MCP 解析、取消信号和结构化错误。
-- Native Messaging 长度帧、固定扩展来源、0600 描述符、随机 token、Unix socket 中继、断线清理和重连。
-- 页面引擎 18 项浏览器回归：两种复杂布局、批量写入、搜索下拉、级联、年月日、虚拟列表、多条经历、用户手改保护、条件撤销和最终提交阻止。
-- 当前 Chrome Profile 实测：`resume_status.connected === true`，`resume_list_tabs` 可列出现有多窗口标签页，`resume_activate_tab` 与 overview `resume_observe` 可读取交通银行人才招聘简历页。此验收未保存或提交表单。
-- 日常驱动不开启 Chrome 远程调试，不读取 `DevToolsActivePort`，不创建新 Profile。
-- DevTools 备用驱动的真实集成：MCP 启动固定 Chrome DevTools MCP 运行时，在隔离与持久专用 Profile 中打开合成页面；隔离模式覆盖资料填写、回读验证和撤销。
-- Chrome 150+/153 DevTools 故障矩阵：9222 的 `/json/version` 返回 404、`DevToolsActivePort` 缺失、EACCES/EPERM、Allow 等待与真实 transport 断开均返回不同错误码。这些回归保留给显式 DevTools 备用模式。
-- 发布包自检：自包含 MCP、扩展、Native Host、备用运行时、skill 与公开文档，不包含用户资料、密钥、浏览器 Profile 或内部调试文档。
+## 安全验证边界
 
-所有自动化测试使用合成资料。测试运行后会关闭隔离 Chrome 并删除临时 Profile。
+自动化测试使用虚构站点和资料，最终提交计数必须保持为 0。输入成功、页面显示、页面报告保存和后台确认保存按不同证据级别处理。Network、Console 和脚本内容被当作不可信数据。
 
-## 当前承诺与限制
+客户端审批是工具名级别，无法从配置层识别一个具体 `click` 是否为最终提交。0.11.0 的停止边界由 skill、页面证据和人工监督共同实现，不构成无人监督环境中的代码级保证。
 
-- Chrome 扩展是日常默认驱动，直接复用当前 Profile。安装 Native Host 和加载扩展各需完成一次。
-- 扩展当前只自动化顶层 frame；跨域 iframe 和封闭 Shadow DOM 尚未覆盖。
-- 用 canvas 完全自绘且不提供可访问语义的控件需要用户处理。
-- 横向滚动当前交给用户；纵向滚动可通过受限动作完成。
-- 页面回显不等于招聘网站后台事务成功；未知保存结果必须重新观察。
-- 上传、验证码、密码、声明、删除和最终申请提交由用户处理。
-- Windows 的 Native Messaging 注册与 Named Pipe 已实现，但尚未在真实 Windows + Edge/Chrome 环境完成复测。
-- 真实招聘网站仍需持续逐站试用；交通银行的只读验收与合成复杂控件回归不代表已覆盖所有边缘情况。
+## 已知限制
 
-问题报告请使用合成资料和匿名控件结构，不要上传真实简历、账号、Cookie 或网页会话。
+- 第一次使用专用 Chrome 需要重新登录招聘网站；第三方登录是否兼容取决于网站策略。
+- 同一时间只支持一个活跃的专用 Chrome 任务。
+- 官方快照没有 Resume Companion 旧协议的分页与 `scope_ref`；长页面依赖上游快照，后续按真实上下文成本决定是否增加裁剪层。
+- 自定义画布、封闭 Shadow DOM、强反自动化、跨域身份验证和只有视觉坐标的控件可能需要人工处理。
+- macOS 已完成主要开发验证；Windows 和 Linux 的真实 Chrome Profile 生命周期仍需更多机器覆盖。
+- 交通银行真实页面需要在专用 Profile 中重新完成一次只读验收；在明确授权前不进行真实资料写入、草稿保存或提交。

@@ -1,5 +1,15 @@
 # 更新记录
 
+## 0.11.0 · 资料 MCP + 官方 Chrome DevTools MCP
+
+- Resume Companion MCP 收缩为四个本地资料工具；浏览器能力直接使用固定的官方 Chrome DevTools MCP 1.9.0。
+- 新增 TypeScript Chrome 启动器、跨平台持久 Profile、保守的单实例锁和脱敏启动诊断。
+- 客户端浏览器工具默认逐次审批，只自动开放审查过的常规观察与填写工具；禁用上传和 Lighthouse。
+- `resume_profile_read` 新增服务器端 `expected_revision` 校验，防止一次任务混用不同版本的资料。
+- 重写 `resume-autofill` skill，覆盖批量填写、部分成功恢复、已有答案保护、四级保存证据和按缺失证据选择诊断能力。
+- 从主线和发布包移除扩展、Native Host 与自研浏览器协议；旧实现保存在 `archive/extension-0.10.0` 标签。
+- 新增直接官方 MCP 的文本、下拉、复选框、部分失败、等待快照和持久 Profile 集成回归。
+
 ## 0.10.0 · 当前 Chrome Profile 的扩展主驱动
 
 - 默认驱动改为精简 Chrome 扩展，直接复用日常 Profile 的登录、Cookie 和已打开页面。

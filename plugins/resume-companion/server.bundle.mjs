@@ -6,13 +6,7 @@ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
-  get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
-}) : x)(function(x) {
-  if (typeof require !== "undefined") return require.apply(this, arguments);
-  throw Error('Dynamic require of "' + x + '" is not supported');
-});
-var __commonJS = (cb, mod) => function __require2() {
+var __commonJS = (cb, mod) => function __require() {
   try {
     return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
   } catch (e) {
@@ -2242,8 +2236,8 @@ var require_resolve = __commonJS({
       }
       return count;
     }
-    function getFullPath(resolver, id2 = "", normalize2) {
-      if (normalize2 !== false)
+    function getFullPath(resolver, id2 = "", normalize) {
+      if (normalize !== false)
         id2 = normalizeId(id2);
       const p = resolver.parse(id2);
       return _getFullPath(resolver, p);
@@ -2801,11 +2795,11 @@ var require_validate = __commonJS({
         jsonPointer = $data;
         data = names_1.default.rootData;
       } else {
-        const matches2 = RELATIVE_JSON_POINTER.exec($data);
-        if (!matches2)
+        const matches = RELATIVE_JSON_POINTER.exec($data);
+        if (!matches)
           throw new Error(`Invalid JSON-pointer: ${$data}`);
-        const up = +matches2[1];
-        jsonPointer = matches2[2];
+        const up = +matches[1];
+        jsonPointer = matches[2];
         if (jsonPointer === "#") {
           if (up >= dataLevel)
             throw new Error(errorMsg("property/index", up));
@@ -2991,7 +2985,7 @@ var require_compile = __commonJS({
       const schOrFunc = root.refs[ref];
       if (schOrFunc)
         return schOrFunc;
-      let _sch = resolve5.call(this, root, ref);
+      let _sch = resolve2.call(this, root, ref);
       if (_sch === void 0) {
         const schema = (_a = root.localRefs) === null || _a === void 0 ? void 0 : _a[ref];
         const { schemaId } = this.opts;
@@ -3018,7 +3012,7 @@ var require_compile = __commonJS({
     function sameSchemaEnv(s1, s2) {
       return s1.schema === s2.schema && s1.root === s2.root && s1.baseId === s2.baseId;
     }
-    function resolve5(root, ref) {
+    function resolve2(root, ref) {
       let sch;
       while (typeof (sch = this.refs[ref]) == "string")
         ref = sch;
@@ -3692,11 +3686,11 @@ var require_schemes = __commonJS({
         urnComponent.error = "URN can not be parsed";
         return urnComponent;
       }
-      const matches2 = urnComponent.path.match(URN_REG);
-      if (matches2 && matches2[0] === urnComponent.path) {
+      const matches = urnComponent.path.match(URN_REG);
+      if (matches && matches[0] === urnComponent.path) {
         const scheme = options.scheme || urnComponent.scheme || "urn";
-        urnComponent.nid = matches2[1].toLowerCase();
-        urnComponent.nss = matches2[2];
+        urnComponent.nid = matches[1].toLowerCase();
+        urnComponent.nss = matches[2];
         const urnScheme = `${scheme}:${options.nid || urnComponent.nid}`;
         const schemeHandler = getSchemeHandler(urnScheme);
         urnComponent.path = void 0;
@@ -3838,7 +3832,7 @@ var require_fast_uri = __commonJS({
       }
       return decodedScheme;
     }
-    function normalize2(uri, options) {
+    function normalize(uri, options) {
       if (typeof uri === "string") {
         uri = /** @type {T} */
         normalizeString(uri, options);
@@ -3848,7 +3842,7 @@ var require_fast_uri = __commonJS({
       }
       return uri;
     }
-    function resolve5(baseURI, relativeURI, options) {
+    function resolve2(baseURI, relativeURI, options) {
       const schemelessOptions = options ? Object.assign({ scheme: "null" }, options) : { scheme: "null" };
       const {
         parsed: baseParsed,
@@ -4010,8 +4004,8 @@ var require_fast_uri = __commonJS({
     var URI_PARSE = /^(?:([^#/:?]+):)?(?:\/\/((?:([^#/?@]*)@)?(\[[^#/?\]]+\]|[^#/:?]*)(?::(\d*))?))?([^#?]*)(?:\?([^#]*))?(?:#((?:.|[\n\r])*))?/u;
     var AUTHORITY_PREFIX = /^(?:[^#/:?]+:)?\/\/([^/?#]*)/;
     var AUTHORITY_INTRODUCER_REGION = /^(?:[^#/:?]+:)?([/\\\t\n\r]*)/;
-    function getParseError(parsed, matches2) {
-      if (matches2[2] !== void 0 && parsed.path && parsed.path[0] !== "/") {
+    function getParseError(parsed, matches) {
+      if (matches[2] !== void 0 && parsed.path && parsed.path[0] !== "/") {
         return 'URI path must start with "/" when authority is present.';
       }
       if (typeof parsed.port === "number" && (parsed.port < 0 || parsed.port > 65535)) {
@@ -4033,9 +4027,9 @@ var require_fast_uri = __commonJS({
     function isIPLiteral(host) {
       return host[0] === "[" && host[host.length - 1] === "]";
     }
-    function hasMalformedComponentPercentEncoding(matches2) {
-      const host = matches2[4];
-      return hasMalformedPercentEncoding(matches2[3]) || host !== void 0 && !isIPLiteral(host) && hasMalformedPercentEncoding(host) || hasMalformedPercentEncoding(matches2[6]) || hasMalformedPercentEncoding(matches2[7]) || hasMalformedPercentEncoding(matches2[8]);
+    function hasMalformedComponentPercentEncoding(matches) {
+      const host = matches[4];
+      return hasMalformedPercentEncoding(matches[3]) || host !== void 0 && !isIPLiteral(host) && hasMalformedPercentEncoding(host) || hasMalformedPercentEncoding(matches[6]) || hasMalformedPercentEncoding(matches[7]) || hasMalformedPercentEncoding(matches[8]);
     }
     function canonicalizeHost(parsed, options, schemeHandler, isIP) {
       if (!options.unicodeSupport && (!schemeHandler || !schemeHandler.unicodeSupport) && parsed.host && !isIPLiteral(parsed.host) && (options.domainHost || schemeHandler && schemeHandler.domainHost) && isIP === false && nonSimpleDomain(parsed.host)) {
@@ -4092,15 +4086,15 @@ var require_fast_uri = __commonJS({
           }
         }
       }
-      const matches2 = uri.match(URI_PARSE);
-      if (matches2) {
-        parsed.scheme = matches2[1];
-        parsed.userinfo = matches2[3];
-        parsed.host = matches2[4];
-        parsed.port = parseInt(matches2[5], 10);
-        parsed.path = matches2[6] || "";
-        parsed.query = matches2[7];
-        parsed.fragment = matches2[8];
+      const matches = uri.match(URI_PARSE);
+      if (matches) {
+        parsed.scheme = matches[1];
+        parsed.userinfo = matches[3];
+        parsed.host = matches[4];
+        parsed.port = parseInt(matches[5], 10);
+        parsed.path = matches[6] || "";
+        parsed.query = matches[7];
+        parsed.fragment = matches[8];
         if (parsed.scheme !== void 0) {
           const decodedScheme = unescape(parsed.scheme);
           if (VALID_SCHEME.test(decodedScheme)) {
@@ -4110,14 +4104,14 @@ var require_fast_uri = __commonJS({
             malformedScheme = true;
           }
         }
-        malformedPercentEncoding = hasMalformedComponentPercentEncoding(matches2);
+        malformedPercentEncoding = hasMalformedComponentPercentEncoding(matches);
         if (malformedPercentEncoding) {
           parsed.error = parsed.error || "URI contains malformed percent-encoding.";
         }
         if (isNaN(parsed.port)) {
-          parsed.port = matches2[5];
+          parsed.port = matches[5];
         }
-        const parseError = getParseError(parsed, matches2);
+        const parseError = getParseError(parsed, matches);
         if (parseError !== void 0) {
           parsed.error = parsed.error || parseError;
           malformedAuthorityOrPort = true;
@@ -4215,8 +4209,8 @@ var require_fast_uri = __commonJS({
     }
     var fastUri = {
       SCHEMES,
-      normalize: normalize2,
-      resolve: resolve5,
+      normalize,
+      resolve: resolve2,
       resolveComponent,
       equal,
       serialize,
@@ -6966,12 +6960,12 @@ var require_formats = __commonJS({
     var DATE = /^(\d\d\d\d)-(\d\d)-(\d\d)$/;
     var DAYS = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
     function date3(str) {
-      const matches2 = DATE.exec(str);
-      if (!matches2)
+      const matches = DATE.exec(str);
+      if (!matches)
         return false;
-      const year = +matches2[1];
-      const month2 = +matches2[2];
-      const day = +matches2[3];
+      const year = +matches[1];
+      const month2 = +matches[2];
+      const day = +matches[3];
       return month2 >= 1 && month2 <= 12 && day >= 1 && day <= (month2 === 2 && isLeapYear(year) ? 29 : DAYS[month2]);
     }
     function compareDate(d1, d2) {
@@ -6986,16 +6980,16 @@ var require_formats = __commonJS({
     var TIME = /^(\d\d):(\d\d):(\d\d(?:\.\d+)?)(z|([+-])(\d\d)(?::?(\d\d))?)?$/i;
     function getTime(strictTimeZone) {
       return function time3(str) {
-        const matches2 = TIME.exec(str);
-        if (!matches2)
+        const matches = TIME.exec(str);
+        if (!matches)
           return false;
-        const hr = +matches2[1];
-        const min = +matches2[2];
-        const sec = +matches2[3];
-        const tz = matches2[4];
-        const tzSign = matches2[5] === "-" ? -1 : 1;
-        const tzH = +(matches2[6] || 0);
-        const tzM = +(matches2[7] || 0);
+        const hr = +matches[1];
+        const min = +matches[2];
+        const sec = +matches[3];
+        const tz = matches[4];
+        const tzSign = matches[5] === "-" ? -1 : 1;
+        const tzH = +(matches[6] || 0);
+        const tzM = +(matches[7] || 0);
         if (tzH > 23 || tzM > 59 || strictTimeZone && !tz)
           return false;
         if (hr <= 23 && min <= 59 && sec < 60)
@@ -7202,503 +7196,6 @@ var require_dist = __commonJS({
     module.exports = exports = formatsPlugin;
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = formatsPlugin;
-  }
-});
-
-// node_modules/isexe/windows.js
-var require_windows = __commonJS({
-  "node_modules/isexe/windows.js"(exports, module) {
-    module.exports = isexe;
-    isexe.sync = sync;
-    var fs = __require("fs");
-    function checkPathExt(path, options) {
-      var pathext = options.pathExt !== void 0 ? options.pathExt : process.env.PATHEXT;
-      if (!pathext) {
-        return true;
-      }
-      pathext = pathext.split(";");
-      if (pathext.indexOf("") !== -1) {
-        return true;
-      }
-      for (var i = 0; i < pathext.length; i++) {
-        var p = pathext[i].toLowerCase();
-        if (p && path.substr(-p.length).toLowerCase() === p) {
-          return true;
-        }
-      }
-      return false;
-    }
-    function checkStat(stat2, path, options) {
-      if (!stat2.isSymbolicLink() && !stat2.isFile()) {
-        return false;
-      }
-      return checkPathExt(path, options);
-    }
-    function isexe(path, options, cb) {
-      fs.stat(path, function(er, stat2) {
-        cb(er, er ? false : checkStat(stat2, path, options));
-      });
-    }
-    function sync(path, options) {
-      return checkStat(fs.statSync(path), path, options);
-    }
-  }
-});
-
-// node_modules/isexe/mode.js
-var require_mode = __commonJS({
-  "node_modules/isexe/mode.js"(exports, module) {
-    module.exports = isexe;
-    isexe.sync = sync;
-    var fs = __require("fs");
-    function isexe(path, options, cb) {
-      fs.stat(path, function(er, stat2) {
-        cb(er, er ? false : checkStat(stat2, options));
-      });
-    }
-    function sync(path, options) {
-      return checkStat(fs.statSync(path), options);
-    }
-    function checkStat(stat2, options) {
-      return stat2.isFile() && checkMode(stat2, options);
-    }
-    function checkMode(stat2, options) {
-      var mod = stat2.mode;
-      var uid = stat2.uid;
-      var gid = stat2.gid;
-      var myUid = options.uid !== void 0 ? options.uid : process.getuid && process.getuid();
-      var myGid = options.gid !== void 0 ? options.gid : process.getgid && process.getgid();
-      var u = parseInt("100", 8);
-      var g = parseInt("010", 8);
-      var o = parseInt("001", 8);
-      var ug = u | g;
-      var ret = mod & o || mod & g && gid === myGid || mod & u && uid === myUid || mod & ug && myUid === 0;
-      return ret;
-    }
-  }
-});
-
-// node_modules/isexe/index.js
-var require_isexe = __commonJS({
-  "node_modules/isexe/index.js"(exports, module) {
-    var fs = __require("fs");
-    var core;
-    if (process.platform === "win32" || global.TESTING_WINDOWS) {
-      core = require_windows();
-    } else {
-      core = require_mode();
-    }
-    module.exports = isexe;
-    isexe.sync = sync;
-    function isexe(path, options, cb) {
-      if (typeof options === "function") {
-        cb = options;
-        options = {};
-      }
-      if (!cb) {
-        if (typeof Promise !== "function") {
-          throw new TypeError("callback not provided");
-        }
-        return new Promise(function(resolve5, reject) {
-          isexe(path, options || {}, function(er, is) {
-            if (er) {
-              reject(er);
-            } else {
-              resolve5(is);
-            }
-          });
-        });
-      }
-      core(path, options || {}, function(er, is) {
-        if (er) {
-          if (er.code === "EACCES" || options && options.ignoreErrors) {
-            er = null;
-            is = false;
-          }
-        }
-        cb(er, is);
-      });
-    }
-    function sync(path, options) {
-      try {
-        return core.sync(path, options || {});
-      } catch (er) {
-        if (options && options.ignoreErrors || er.code === "EACCES") {
-          return false;
-        } else {
-          throw er;
-        }
-      }
-    }
-  }
-});
-
-// node_modules/which/which.js
-var require_which = __commonJS({
-  "node_modules/which/which.js"(exports, module) {
-    var isWindows = process.platform === "win32" || process.env.OSTYPE === "cygwin" || process.env.OSTYPE === "msys";
-    var path = __require("path");
-    var COLON = isWindows ? ";" : ":";
-    var isexe = require_isexe();
-    var getNotFoundError = (cmd) => Object.assign(new Error(`not found: ${cmd}`), { code: "ENOENT" });
-    var getPathInfo = (cmd, opt) => {
-      const colon = opt.colon || COLON;
-      const pathEnv = cmd.match(/\//) || isWindows && cmd.match(/\\/) ? [""] : [
-        // windows always checks the cwd first
-        ...isWindows ? [process.cwd()] : [],
-        ...(opt.path || process.env.PATH || /* istanbul ignore next: very unusual */
-        "").split(colon)
-      ];
-      const pathExtExe = isWindows ? opt.pathExt || process.env.PATHEXT || ".EXE;.CMD;.BAT;.COM" : "";
-      const pathExt = isWindows ? pathExtExe.split(colon) : [""];
-      if (isWindows) {
-        if (cmd.indexOf(".") !== -1 && pathExt[0] !== "")
-          pathExt.unshift("");
-      }
-      return {
-        pathEnv,
-        pathExt,
-        pathExtExe
-      };
-    };
-    var which = (cmd, opt, cb) => {
-      if (typeof opt === "function") {
-        cb = opt;
-        opt = {};
-      }
-      if (!opt)
-        opt = {};
-      const { pathEnv, pathExt, pathExtExe } = getPathInfo(cmd, opt);
-      const found = [];
-      const step = (i) => new Promise((resolve5, reject) => {
-        if (i === pathEnv.length)
-          return opt.all && found.length ? resolve5(found) : reject(getNotFoundError(cmd));
-        const ppRaw = pathEnv[i];
-        const pathPart = /^".*"$/.test(ppRaw) ? ppRaw.slice(1, -1) : ppRaw;
-        const pCmd = path.join(pathPart, cmd);
-        const p = !pathPart && /^\.[\\\/]/.test(cmd) ? cmd.slice(0, 2) + pCmd : pCmd;
-        resolve5(subStep(p, i, 0));
-      });
-      const subStep = (p, i, ii) => new Promise((resolve5, reject) => {
-        if (ii === pathExt.length)
-          return resolve5(step(i + 1));
-        const ext = pathExt[ii];
-        isexe(p + ext, { pathExt: pathExtExe }, (er, is) => {
-          if (!er && is) {
-            if (opt.all)
-              found.push(p + ext);
-            else
-              return resolve5(p + ext);
-          }
-          return resolve5(subStep(p, i, ii + 1));
-        });
-      });
-      return cb ? step(0).then((res) => cb(null, res), cb) : step(0);
-    };
-    var whichSync = (cmd, opt) => {
-      opt = opt || {};
-      const { pathEnv, pathExt, pathExtExe } = getPathInfo(cmd, opt);
-      const found = [];
-      for (let i = 0; i < pathEnv.length; i++) {
-        const ppRaw = pathEnv[i];
-        const pathPart = /^".*"$/.test(ppRaw) ? ppRaw.slice(1, -1) : ppRaw;
-        const pCmd = path.join(pathPart, cmd);
-        const p = !pathPart && /^\.[\\\/]/.test(cmd) ? cmd.slice(0, 2) + pCmd : pCmd;
-        for (let j = 0; j < pathExt.length; j++) {
-          const cur = p + pathExt[j];
-          try {
-            const is = isexe.sync(cur, { pathExt: pathExtExe });
-            if (is) {
-              if (opt.all)
-                found.push(cur);
-              else
-                return cur;
-            }
-          } catch (ex) {
-          }
-        }
-      }
-      if (opt.all && found.length)
-        return found;
-      if (opt.nothrow)
-        return null;
-      throw getNotFoundError(cmd);
-    };
-    module.exports = which;
-    which.sync = whichSync;
-  }
-});
-
-// node_modules/path-key/index.js
-var require_path_key = __commonJS({
-  "node_modules/path-key/index.js"(exports, module) {
-    "use strict";
-    var pathKey = (options = {}) => {
-      const environment = options.env || process.env;
-      const platform = options.platform || process.platform;
-      if (platform !== "win32") {
-        return "PATH";
-      }
-      return Object.keys(environment).reverse().find((key) => key.toUpperCase() === "PATH") || "Path";
-    };
-    module.exports = pathKey;
-    module.exports.default = pathKey;
-  }
-});
-
-// node_modules/cross-spawn/lib/util/resolveCommand.js
-var require_resolveCommand = __commonJS({
-  "node_modules/cross-spawn/lib/util/resolveCommand.js"(exports, module) {
-    "use strict";
-    var path = __require("path");
-    var which = require_which();
-    var getPathKey = require_path_key();
-    function resolveCommandAttempt(parsed, withoutPathExt) {
-      const env = parsed.options.env || process.env;
-      const cwd = process.cwd();
-      const hasCustomCwd = parsed.options.cwd != null;
-      const shouldSwitchCwd = hasCustomCwd && process.chdir !== void 0 && !process.chdir.disabled;
-      if (shouldSwitchCwd) {
-        try {
-          process.chdir(parsed.options.cwd);
-        } catch (err) {
-        }
-      }
-      let resolved;
-      try {
-        resolved = which.sync(parsed.command, {
-          path: env[getPathKey({ env })],
-          pathExt: withoutPathExt ? path.delimiter : void 0
-        });
-      } catch (e) {
-      } finally {
-        if (shouldSwitchCwd) {
-          process.chdir(cwd);
-        }
-      }
-      if (resolved) {
-        resolved = path.resolve(hasCustomCwd ? parsed.options.cwd : "", resolved);
-      }
-      return resolved;
-    }
-    function resolveCommand(parsed) {
-      return resolveCommandAttempt(parsed) || resolveCommandAttempt(parsed, true);
-    }
-    module.exports = resolveCommand;
-  }
-});
-
-// node_modules/cross-spawn/lib/util/escape.js
-var require_escape = __commonJS({
-  "node_modules/cross-spawn/lib/util/escape.js"(exports, module) {
-    "use strict";
-    var metaCharsRegExp = /([()\][%!^"`<>&|;, *?])/g;
-    function escapeCommand(arg) {
-      arg = arg.replace(metaCharsRegExp, "^$1");
-      return arg;
-    }
-    function escapeArgument(arg, doubleEscapeMetaChars) {
-      arg = `${arg}`;
-      arg = arg.replace(/(?=(\\+?)?)\1"/g, '$1$1\\"');
-      arg = arg.replace(/(?=(\\+?)?)\1$/, "$1$1");
-      arg = `"${arg}"`;
-      arg = arg.replace(metaCharsRegExp, "^$1");
-      if (doubleEscapeMetaChars) {
-        arg = arg.replace(metaCharsRegExp, "^$1");
-      }
-      return arg;
-    }
-    module.exports.command = escapeCommand;
-    module.exports.argument = escapeArgument;
-  }
-});
-
-// node_modules/shebang-regex/index.js
-var require_shebang_regex = __commonJS({
-  "node_modules/shebang-regex/index.js"(exports, module) {
-    "use strict";
-    module.exports = /^#!(.*)/;
-  }
-});
-
-// node_modules/shebang-command/index.js
-var require_shebang_command = __commonJS({
-  "node_modules/shebang-command/index.js"(exports, module) {
-    "use strict";
-    var shebangRegex = require_shebang_regex();
-    module.exports = (string3 = "") => {
-      const match = string3.match(shebangRegex);
-      if (!match) {
-        return null;
-      }
-      const [path, argument] = match[0].replace(/#! ?/, "").split(" ");
-      const binary = path.split("/").pop();
-      if (binary === "env") {
-        return argument;
-      }
-      return argument ? `${binary} ${argument}` : binary;
-    };
-  }
-});
-
-// node_modules/cross-spawn/lib/util/readShebang.js
-var require_readShebang = __commonJS({
-  "node_modules/cross-spawn/lib/util/readShebang.js"(exports, module) {
-    "use strict";
-    var fs = __require("fs");
-    var shebangCommand = require_shebang_command();
-    function readShebang(command) {
-      const size = 150;
-      const buffer = Buffer.alloc(size);
-      let fd;
-      try {
-        fd = fs.openSync(command, "r");
-        fs.readSync(fd, buffer, 0, size, 0);
-        fs.closeSync(fd);
-      } catch (e) {
-      }
-      return shebangCommand(buffer.toString());
-    }
-    module.exports = readShebang;
-  }
-});
-
-// node_modules/cross-spawn/lib/parse.js
-var require_parse = __commonJS({
-  "node_modules/cross-spawn/lib/parse.js"(exports, module) {
-    "use strict";
-    var path = __require("path");
-    var resolveCommand = require_resolveCommand();
-    var escape2 = require_escape();
-    var readShebang = require_readShebang();
-    var isWin = process.platform === "win32";
-    var isExecutableRegExp = /\.(?:com|exe)$/i;
-    var isCmdShimRegExp = /node_modules[\\/].bin[\\/][^\\/]+\.cmd$/i;
-    function detectShebang(parsed) {
-      parsed.file = resolveCommand(parsed);
-      const shebang = parsed.file && readShebang(parsed.file);
-      if (shebang) {
-        parsed.args.unshift(parsed.file);
-        parsed.command = shebang;
-        return resolveCommand(parsed);
-      }
-      return parsed.file;
-    }
-    function parseNonShell(parsed) {
-      if (!isWin) {
-        return parsed;
-      }
-      const commandFile = detectShebang(parsed);
-      const needsShell = !isExecutableRegExp.test(commandFile);
-      if (parsed.options.forceShell || needsShell) {
-        const needsDoubleEscapeMetaChars = isCmdShimRegExp.test(commandFile);
-        parsed.command = path.normalize(parsed.command);
-        parsed.command = escape2.command(parsed.command);
-        parsed.args = parsed.args.map((arg) => escape2.argument(arg, needsDoubleEscapeMetaChars));
-        const shellCommand = [parsed.command].concat(parsed.args).join(" ");
-        parsed.args = ["/d", "/s", "/c", `"${shellCommand}"`];
-        parsed.command = process.env.comspec || "cmd.exe";
-        parsed.options.windowsVerbatimArguments = true;
-      }
-      return parsed;
-    }
-    function parse3(command, args, options) {
-      if (args && !Array.isArray(args)) {
-        options = args;
-        args = null;
-      }
-      args = args ? args.slice(0) : [];
-      options = Object.assign({}, options);
-      const parsed = {
-        command,
-        args,
-        options,
-        file: void 0,
-        original: {
-          command,
-          args
-        }
-      };
-      return options.shell ? parsed : parseNonShell(parsed);
-    }
-    module.exports = parse3;
-  }
-});
-
-// node_modules/cross-spawn/lib/enoent.js
-var require_enoent = __commonJS({
-  "node_modules/cross-spawn/lib/enoent.js"(exports, module) {
-    "use strict";
-    var isWin = process.platform === "win32";
-    function notFoundError(original, syscall) {
-      return Object.assign(new Error(`${syscall} ${original.command} ENOENT`), {
-        code: "ENOENT",
-        errno: "ENOENT",
-        syscall: `${syscall} ${original.command}`,
-        path: original.command,
-        spawnargs: original.args
-      });
-    }
-    function hookChildProcess(cp, parsed) {
-      if (!isWin) {
-        return;
-      }
-      const originalEmit = cp.emit;
-      cp.emit = function(name, arg1) {
-        if (name === "exit") {
-          const err = verifyENOENT(arg1, parsed);
-          if (err) {
-            return originalEmit.call(cp, "error", err);
-          }
-        }
-        return originalEmit.apply(cp, arguments);
-      };
-    }
-    function verifyENOENT(status, parsed) {
-      if (isWin && status === 1 && !parsed.file) {
-        return notFoundError(parsed.original, "spawn");
-      }
-      return null;
-    }
-    function verifyENOENTSync(status, parsed) {
-      if (isWin && status === 1 && !parsed.file) {
-        return notFoundError(parsed.original, "spawnSync");
-      }
-      return null;
-    }
-    module.exports = {
-      hookChildProcess,
-      verifyENOENT,
-      verifyENOENTSync,
-      notFoundError
-    };
-  }
-});
-
-// node_modules/cross-spawn/index.js
-var require_cross_spawn = __commonJS({
-  "node_modules/cross-spawn/index.js"(exports, module) {
-    "use strict";
-    var cp = __require("child_process");
-    var parse3 = require_parse();
-    var enoent = require_enoent();
-    function spawn2(command, args, options) {
-      const parsed = parse3(command, args, options);
-      const spawned = cp.spawn(parsed.command, parsed.args, parsed.options);
-      enoent.hookChildProcess(spawned, parsed);
-      return spawned;
-    }
-    function spawnSync(command, args, options) {
-      const parsed = parse3(command, args, options);
-      const result = cp.spawnSync(parsed.command, parsed.args, parsed.options);
-      result.error = result.error || enoent.verifyENOENTSync(result.status, parsed);
-      return result;
-    }
-    module.exports = spawn2;
-    module.exports.spawn = spawn2;
-    module.exports.sync = spawnSync;
-    module.exports._parse = parse3;
-    module.exports._enoent = enoent;
   }
 });
 
@@ -19809,7 +19306,7 @@ var Protocol = class {
           return;
         }
         const pollInterval = task2.pollInterval ?? this._options?.defaultTaskPollInterval ?? 1e3;
-        await new Promise((resolve5) => setTimeout(resolve5, pollInterval));
+        await new Promise((resolve2) => setTimeout(resolve2, pollInterval));
         options?.signal?.throwIfAborted();
       }
     } catch (error2) {
@@ -19826,7 +19323,7 @@ var Protocol = class {
    */
   request(request, resultSchema, options) {
     const { relatedRequestId, resumptionToken, onresumptiontoken, task, relatedTask } = options ?? {};
-    return new Promise((resolve5, reject) => {
+    return new Promise((resolve2, reject) => {
       const earlyReject = (error2) => {
         reject(error2);
       };
@@ -19904,7 +19401,7 @@ var Protocol = class {
           if (!parseResult.success) {
             reject(parseResult.error);
           } else {
-            resolve5(parseResult.data);
+            resolve2(parseResult.data);
           }
         } catch (error2) {
           reject(error2);
@@ -20165,12 +19662,12 @@ var Protocol = class {
       }
     } catch {
     }
-    return new Promise((resolve5, reject) => {
+    return new Promise((resolve2, reject) => {
       if (signal.aborted) {
         reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
         return;
       }
-      const timeoutId = setTimeout(resolve5, interval);
+      const timeoutId = setTimeout(resolve2, interval);
       signal.addEventListener("abort", () => {
         clearTimeout(timeoutId);
         reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
@@ -21261,7 +20758,7 @@ var McpServer = class {
     let task = createTaskResult.task;
     const pollInterval = task.pollInterval ?? 5e3;
     while (task.status !== "completed" && task.status !== "failed" && task.status !== "cancelled") {
-      await new Promise((resolve5) => setTimeout(resolve5, pollInterval));
+      await new Promise((resolve2) => setTimeout(resolve2, pollInterval));
       const updatedTask = await extra.taskStore.getTask(taskId);
       if (!updatedTask) {
         throw new McpError(ErrorCode.InternalError, `Task ${taskId} not found during polling`);
@@ -21925,2401 +21422,22 @@ var StdioServerTransport = class {
     this.onclose?.();
   }
   send(message) {
-    return new Promise((resolve5) => {
+    return new Promise((resolve2) => {
       const json = serializeMessage(message);
       if (this._stdout.write(json)) {
-        resolve5();
+        resolve2();
       } else {
-        this._stdout.once("drain", resolve5);
+        this._stdout.once("drain", resolve2);
       }
     });
   }
 };
-
-// src/browser/driver-factory.ts
-import { existsSync as existsSync3 } from "node:fs";
-import { resolve as resolve3 } from "node:path";
-
-// src/browser/devtools-driver.ts
-import { existsSync } from "node:fs";
-import { mkdir } from "node:fs/promises";
-import { dirname, join as join2, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
-
-// node_modules/@modelcontextprotocol/sdk/dist/esm/experimental/tasks/client.js
-var ExperimentalClientTasks = class {
-  constructor(_client) {
-    this._client = _client;
-  }
-  /**
-   * Calls a tool and returns an AsyncGenerator that yields response messages.
-   * The generator is guaranteed to end with either a 'result' or 'error' message.
-   *
-   * This method provides streaming access to tool execution, allowing you to
-   * observe intermediate task status updates for long-running tool calls.
-   * Automatically validates structured output if the tool has an outputSchema.
-   *
-   * @example
-   * ```typescript
-   * const stream = client.experimental.tasks.callToolStream({ name: 'myTool', arguments: {} });
-   * for await (const message of stream) {
-   *   switch (message.type) {
-   *     case 'taskCreated':
-   *       console.log('Tool execution started:', message.task.taskId);
-   *       break;
-   *     case 'taskStatus':
-   *       console.log('Tool status:', message.task.status);
-   *       break;
-   *     case 'result':
-   *       console.log('Tool result:', message.result);
-   *       break;
-   *     case 'error':
-   *       console.error('Tool error:', message.error);
-   *       break;
-   *   }
-   * }
-   * ```
-   *
-   * @param params - Tool call parameters (name and arguments)
-   * @param resultSchema - Zod schema for validating the result (defaults to CallToolResultSchema)
-   * @param options - Optional request options (timeout, signal, task creation params, etc.)
-   * @returns AsyncGenerator that yields ResponseMessage objects
-   *
-   * @experimental
-   */
-  async *callToolStream(params, resultSchema = CallToolResultSchema, options) {
-    const clientInternal = this._client;
-    const optionsWithTask = {
-      ...options,
-      // We check if the tool is known to be a task during auto-configuration, but assume
-      // the caller knows what they're doing if they pass this explicitly
-      task: options?.task ?? (clientInternal.isToolTask(params.name) ? {} : void 0)
-    };
-    const stream = clientInternal.requestStream({ method: "tools/call", params }, resultSchema, optionsWithTask);
-    const validator = clientInternal.getToolOutputValidator(params.name);
-    for await (const message of stream) {
-      if (message.type === "result" && validator) {
-        const result = message.result;
-        if (!result.structuredContent && !result.isError) {
-          yield {
-            type: "error",
-            error: new McpError(ErrorCode.InvalidRequest, `Tool ${params.name} has an output schema but did not return structured content`)
-          };
-          return;
-        }
-        if (result.structuredContent) {
-          try {
-            const validationResult = validator(result.structuredContent);
-            if (!validationResult.valid) {
-              yield {
-                type: "error",
-                error: new McpError(ErrorCode.InvalidParams, `Structured content does not match the tool's output schema: ${validationResult.errorMessage}`)
-              };
-              return;
-            }
-          } catch (error2) {
-            if (error2 instanceof McpError) {
-              yield { type: "error", error: error2 };
-              return;
-            }
-            yield {
-              type: "error",
-              error: new McpError(ErrorCode.InvalidParams, `Failed to validate structured content: ${error2 instanceof Error ? error2.message : String(error2)}`)
-            };
-            return;
-          }
-        }
-      }
-      yield message;
-    }
-  }
-  /**
-   * Gets the current status of a task.
-   *
-   * @param taskId - The task identifier
-   * @param options - Optional request options
-   * @returns The task status
-   *
-   * @experimental
-   */
-  async getTask(taskId, options) {
-    return this._client.getTask({ taskId }, options);
-  }
-  /**
-   * Retrieves the result of a completed task.
-   *
-   * @param taskId - The task identifier
-   * @param resultSchema - Zod schema for validating the result
-   * @param options - Optional request options
-   * @returns The task result
-   *
-   * @experimental
-   */
-  async getTaskResult(taskId, resultSchema, options) {
-    return this._client.getTaskResult({ taskId }, resultSchema, options);
-  }
-  /**
-   * Lists tasks with optional pagination.
-   *
-   * @param cursor - Optional pagination cursor
-   * @param options - Optional request options
-   * @returns List of tasks with optional next cursor
-   *
-   * @experimental
-   */
-  async listTasks(cursor, options) {
-    return this._client.listTasks(cursor ? { cursor } : void 0, options);
-  }
-  /**
-   * Cancels a running task.
-   *
-   * @param taskId - The task identifier
-   * @param options - Optional request options
-   *
-   * @experimental
-   */
-  async cancelTask(taskId, options) {
-    return this._client.cancelTask({ taskId }, options);
-  }
-  /**
-   * Sends a request and returns an AsyncGenerator that yields response messages.
-   * The generator is guaranteed to end with either a 'result' or 'error' message.
-   *
-   * This method provides streaming access to request processing, allowing you to
-   * observe intermediate task status updates for task-augmented requests.
-   *
-   * @param request - The request to send
-   * @param resultSchema - Zod schema for validating the result
-   * @param options - Optional request options (timeout, signal, task creation params, etc.)
-   * @returns AsyncGenerator that yields ResponseMessage objects
-   *
-   * @experimental
-   */
-  requestStream(request, resultSchema, options) {
-    return this._client.requestStream(request, resultSchema, options);
-  }
-};
-
-// node_modules/@modelcontextprotocol/sdk/dist/esm/client/index.js
-function applyElicitationDefaults(schema, data) {
-  if (!schema || data === null || typeof data !== "object")
-    return;
-  if (schema.type === "object" && schema.properties && typeof schema.properties === "object") {
-    const obj = data;
-    const props = schema.properties;
-    for (const key of Object.keys(props)) {
-      const propSchema = props[key];
-      if (obj[key] === void 0 && Object.prototype.hasOwnProperty.call(propSchema, "default")) {
-        obj[key] = propSchema.default;
-      }
-      if (obj[key] !== void 0) {
-        applyElicitationDefaults(propSchema, obj[key]);
-      }
-    }
-  }
-  if (Array.isArray(schema.anyOf)) {
-    for (const sub of schema.anyOf) {
-      if (typeof sub !== "boolean") {
-        applyElicitationDefaults(sub, data);
-      }
-    }
-  }
-  if (Array.isArray(schema.oneOf)) {
-    for (const sub of schema.oneOf) {
-      if (typeof sub !== "boolean") {
-        applyElicitationDefaults(sub, data);
-      }
-    }
-  }
-}
-function getSupportedElicitationModes(capabilities) {
-  if (!capabilities) {
-    return { supportsFormMode: false, supportsUrlMode: false };
-  }
-  const hasFormCapability = capabilities.form !== void 0;
-  const hasUrlCapability = capabilities.url !== void 0;
-  const supportsFormMode = hasFormCapability || !hasFormCapability && !hasUrlCapability;
-  const supportsUrlMode = hasUrlCapability;
-  return { supportsFormMode, supportsUrlMode };
-}
-var Client = class extends Protocol {
-  /**
-   * Initializes this client with the given name and version information.
-   */
-  constructor(_clientInfo, options) {
-    super(options);
-    this._clientInfo = _clientInfo;
-    this._cachedToolOutputValidators = /* @__PURE__ */ new Map();
-    this._cachedKnownTaskTools = /* @__PURE__ */ new Set();
-    this._cachedRequiredTaskTools = /* @__PURE__ */ new Set();
-    this._listChangedDebounceTimers = /* @__PURE__ */ new Map();
-    this._capabilities = options?.capabilities ?? {};
-    this._jsonSchemaValidator = options?.jsonSchemaValidator ?? new AjvJsonSchemaValidator();
-    if (options?.listChanged) {
-      this._pendingListChangedConfig = options.listChanged;
-    }
-  }
-  /**
-   * Set up handlers for list changed notifications based on config and server capabilities.
-   * This should only be called after initialization when server capabilities are known.
-   * Handlers are silently skipped if the server doesn't advertise the corresponding listChanged capability.
-   * @internal
-   */
-  _setupListChangedHandlers(config2) {
-    if (config2.tools && this._serverCapabilities?.tools?.listChanged) {
-      this._setupListChangedHandler("tools", ToolListChangedNotificationSchema, config2.tools, async () => {
-        const result = await this.listTools();
-        return result.tools;
-      });
-    }
-    if (config2.prompts && this._serverCapabilities?.prompts?.listChanged) {
-      this._setupListChangedHandler("prompts", PromptListChangedNotificationSchema, config2.prompts, async () => {
-        const result = await this.listPrompts();
-        return result.prompts;
-      });
-    }
-    if (config2.resources && this._serverCapabilities?.resources?.listChanged) {
-      this._setupListChangedHandler("resources", ResourceListChangedNotificationSchema, config2.resources, async () => {
-        const result = await this.listResources();
-        return result.resources;
-      });
-    }
-  }
-  /**
-   * Access experimental features.
-   *
-   * WARNING: These APIs are experimental and may change without notice.
-   *
-   * @experimental
-   */
-  get experimental() {
-    if (!this._experimental) {
-      this._experimental = {
-        tasks: new ExperimentalClientTasks(this)
-      };
-    }
-    return this._experimental;
-  }
-  /**
-   * Registers new capabilities. This can only be called before connecting to a transport.
-   *
-   * The new capabilities will be merged with any existing capabilities previously given (e.g., at initialization).
-   */
-  registerCapabilities(capabilities) {
-    if (this.transport) {
-      throw new Error("Cannot register capabilities after connecting to transport");
-    }
-    this._capabilities = mergeCapabilities(this._capabilities, capabilities);
-  }
-  /**
-   * Override request handler registration to enforce client-side validation for elicitation.
-   */
-  setRequestHandler(requestSchema, handler) {
-    const shape = getObjectShape(requestSchema);
-    const methodSchema = shape?.method;
-    if (!methodSchema) {
-      throw new Error("Schema is missing a method literal");
-    }
-    const methodValue = getLiteralValue(methodSchema);
-    if (typeof methodValue !== "string") {
-      throw new Error("Schema method literal must be a string");
-    }
-    const method = methodValue;
-    if (method === "elicitation/create") {
-      const wrappedHandler = async (request, extra) => {
-        const validatedRequest = safeParse2(ElicitRequestSchema, request);
-        if (!validatedRequest.success) {
-          const errorMessage = validatedRequest.error instanceof Error ? validatedRequest.error.message : String(validatedRequest.error);
-          throw new McpError(ErrorCode.InvalidParams, `Invalid elicitation request: ${errorMessage}`);
-        }
-        const { params } = validatedRequest.data;
-        params.mode = params.mode ?? "form";
-        const { supportsFormMode, supportsUrlMode } = getSupportedElicitationModes(this._capabilities.elicitation);
-        if (params.mode === "form" && !supportsFormMode) {
-          throw new McpError(ErrorCode.InvalidParams, "Client does not support form-mode elicitation requests");
-        }
-        if (params.mode === "url" && !supportsUrlMode) {
-          throw new McpError(ErrorCode.InvalidParams, "Client does not support URL-mode elicitation requests");
-        }
-        const result = await Promise.resolve(handler(request, extra));
-        if (params.task) {
-          const taskValidationResult = safeParse2(CreateTaskResultSchema, result);
-          if (!taskValidationResult.success) {
-            const errorMessage = taskValidationResult.error instanceof Error ? taskValidationResult.error.message : String(taskValidationResult.error);
-            throw new McpError(ErrorCode.InvalidParams, `Invalid task creation result: ${errorMessage}`);
-          }
-          return taskValidationResult.data;
-        }
-        const validationResult = safeParse2(ElicitResultSchema, result);
-        if (!validationResult.success) {
-          const errorMessage = validationResult.error instanceof Error ? validationResult.error.message : String(validationResult.error);
-          throw new McpError(ErrorCode.InvalidParams, `Invalid elicitation result: ${errorMessage}`);
-        }
-        const validatedResult = validationResult.data;
-        const requestedSchema = params.mode === "form" ? params.requestedSchema : void 0;
-        if (params.mode === "form" && validatedResult.action === "accept" && validatedResult.content && requestedSchema) {
-          if (this._capabilities.elicitation?.form?.applyDefaults) {
-            try {
-              applyElicitationDefaults(requestedSchema, validatedResult.content);
-            } catch {
-            }
-          }
-        }
-        return validatedResult;
-      };
-      return super.setRequestHandler(requestSchema, wrappedHandler);
-    }
-    if (method === "sampling/createMessage") {
-      const wrappedHandler = async (request, extra) => {
-        const validatedRequest = safeParse2(CreateMessageRequestSchema, request);
-        if (!validatedRequest.success) {
-          const errorMessage = validatedRequest.error instanceof Error ? validatedRequest.error.message : String(validatedRequest.error);
-          throw new McpError(ErrorCode.InvalidParams, `Invalid sampling request: ${errorMessage}`);
-        }
-        const { params } = validatedRequest.data;
-        const result = await Promise.resolve(handler(request, extra));
-        if (params.task) {
-          const taskValidationResult = safeParse2(CreateTaskResultSchema, result);
-          if (!taskValidationResult.success) {
-            const errorMessage = taskValidationResult.error instanceof Error ? taskValidationResult.error.message : String(taskValidationResult.error);
-            throw new McpError(ErrorCode.InvalidParams, `Invalid task creation result: ${errorMessage}`);
-          }
-          return taskValidationResult.data;
-        }
-        const hasTools = params.tools || params.toolChoice;
-        const resultSchema = hasTools ? CreateMessageResultWithToolsSchema : CreateMessageResultSchema;
-        const validationResult = safeParse2(resultSchema, result);
-        if (!validationResult.success) {
-          const errorMessage = validationResult.error instanceof Error ? validationResult.error.message : String(validationResult.error);
-          throw new McpError(ErrorCode.InvalidParams, `Invalid sampling result: ${errorMessage}`);
-        }
-        return validationResult.data;
-      };
-      return super.setRequestHandler(requestSchema, wrappedHandler);
-    }
-    return super.setRequestHandler(requestSchema, handler);
-  }
-  assertCapability(capability, method) {
-    if (!this._serverCapabilities?.[capability]) {
-      throw new Error(`Server does not support ${capability} (required for ${method})`);
-    }
-  }
-  async connect(transport2, options) {
-    await super.connect(transport2);
-    if (transport2.sessionId !== void 0) {
-      return;
-    }
-    try {
-      const result = await this.request({
-        method: "initialize",
-        params: {
-          protocolVersion: LATEST_PROTOCOL_VERSION,
-          capabilities: this._capabilities,
-          clientInfo: this._clientInfo
-        }
-      }, InitializeResultSchema, options);
-      if (result === void 0) {
-        throw new Error(`Server sent invalid initialize result: ${result}`);
-      }
-      if (!SUPPORTED_PROTOCOL_VERSIONS.includes(result.protocolVersion)) {
-        throw new Error(`Server's protocol version is not supported: ${result.protocolVersion}`);
-      }
-      this._serverCapabilities = result.capabilities;
-      this._serverVersion = result.serverInfo;
-      if (transport2.setProtocolVersion) {
-        transport2.setProtocolVersion(result.protocolVersion);
-      }
-      this._instructions = result.instructions;
-      await this.notification({
-        method: "notifications/initialized"
-      });
-      if (this._pendingListChangedConfig) {
-        this._setupListChangedHandlers(this._pendingListChangedConfig);
-        this._pendingListChangedConfig = void 0;
-      }
-    } catch (error2) {
-      void this.close();
-      throw error2;
-    }
-  }
-  /**
-   * After initialization has completed, this will be populated with the server's reported capabilities.
-   */
-  getServerCapabilities() {
-    return this._serverCapabilities;
-  }
-  /**
-   * After initialization has completed, this will be populated with information about the server's name and version.
-   */
-  getServerVersion() {
-    return this._serverVersion;
-  }
-  /**
-   * After initialization has completed, this may be populated with information about the server's instructions.
-   */
-  getInstructions() {
-    return this._instructions;
-  }
-  assertCapabilityForMethod(method) {
-    switch (method) {
-      case "logging/setLevel":
-        if (!this._serverCapabilities?.logging) {
-          throw new Error(`Server does not support logging (required for ${method})`);
-        }
-        break;
-      case "prompts/get":
-      case "prompts/list":
-        if (!this._serverCapabilities?.prompts) {
-          throw new Error(`Server does not support prompts (required for ${method})`);
-        }
-        break;
-      case "resources/list":
-      case "resources/templates/list":
-      case "resources/read":
-      case "resources/subscribe":
-      case "resources/unsubscribe":
-        if (!this._serverCapabilities?.resources) {
-          throw new Error(`Server does not support resources (required for ${method})`);
-        }
-        if (method === "resources/subscribe" && !this._serverCapabilities.resources.subscribe) {
-          throw new Error(`Server does not support resource subscriptions (required for ${method})`);
-        }
-        break;
-      case "tools/call":
-      case "tools/list":
-        if (!this._serverCapabilities?.tools) {
-          throw new Error(`Server does not support tools (required for ${method})`);
-        }
-        break;
-      case "completion/complete":
-        if (!this._serverCapabilities?.completions) {
-          throw new Error(`Server does not support completions (required for ${method})`);
-        }
-        break;
-      case "initialize":
-        break;
-      case "ping":
-        break;
-    }
-  }
-  assertNotificationCapability(method) {
-    switch (method) {
-      case "notifications/roots/list_changed":
-        if (!this._capabilities.roots?.listChanged) {
-          throw new Error(`Client does not support roots list changed notifications (required for ${method})`);
-        }
-        break;
-      case "notifications/initialized":
-        break;
-      case "notifications/cancelled":
-        break;
-      case "notifications/progress":
-        break;
-    }
-  }
-  assertRequestHandlerCapability(method) {
-    if (!this._capabilities) {
-      return;
-    }
-    switch (method) {
-      case "sampling/createMessage":
-        if (!this._capabilities.sampling) {
-          throw new Error(`Client does not support sampling capability (required for ${method})`);
-        }
-        break;
-      case "elicitation/create":
-        if (!this._capabilities.elicitation) {
-          throw new Error(`Client does not support elicitation capability (required for ${method})`);
-        }
-        break;
-      case "roots/list":
-        if (!this._capabilities.roots) {
-          throw new Error(`Client does not support roots capability (required for ${method})`);
-        }
-        break;
-      case "tasks/get":
-      case "tasks/list":
-      case "tasks/result":
-      case "tasks/cancel":
-        if (!this._capabilities.tasks) {
-          throw new Error(`Client does not support tasks capability (required for ${method})`);
-        }
-        break;
-      case "ping":
-        break;
-    }
-  }
-  assertTaskCapability(method) {
-    assertToolsCallTaskCapability(this._serverCapabilities?.tasks?.requests, method, "Server");
-  }
-  assertTaskHandlerCapability(method) {
-    if (!this._capabilities) {
-      return;
-    }
-    assertClientRequestTaskCapability(this._capabilities.tasks?.requests, method, "Client");
-  }
-  async ping(options) {
-    return this.request({ method: "ping" }, EmptyResultSchema, options);
-  }
-  async complete(params, options) {
-    return this.request({ method: "completion/complete", params }, CompleteResultSchema, options);
-  }
-  async setLoggingLevel(level, options) {
-    return this.request({ method: "logging/setLevel", params: { level } }, EmptyResultSchema, options);
-  }
-  async getPrompt(params, options) {
-    return this.request({ method: "prompts/get", params }, GetPromptResultSchema, options);
-  }
-  async listPrompts(params, options) {
-    return this.request({ method: "prompts/list", params }, ListPromptsResultSchema, options);
-  }
-  async listResources(params, options) {
-    return this.request({ method: "resources/list", params }, ListResourcesResultSchema, options);
-  }
-  async listResourceTemplates(params, options) {
-    return this.request({ method: "resources/templates/list", params }, ListResourceTemplatesResultSchema, options);
-  }
-  async readResource(params, options) {
-    return this.request({ method: "resources/read", params }, ReadResourceResultSchema, options);
-  }
-  async subscribeResource(params, options) {
-    return this.request({ method: "resources/subscribe", params }, EmptyResultSchema, options);
-  }
-  async unsubscribeResource(params, options) {
-    return this.request({ method: "resources/unsubscribe", params }, EmptyResultSchema, options);
-  }
-  /**
-   * Calls a tool and waits for the result. Automatically validates structured output if the tool has an outputSchema.
-   *
-   * For task-based execution with streaming behavior, use client.experimental.tasks.callToolStream() instead.
-   */
-  async callTool(params, resultSchema = CallToolResultSchema, options) {
-    if (this.isToolTaskRequired(params.name)) {
-      throw new McpError(ErrorCode.InvalidRequest, `Tool "${params.name}" requires task-based execution. Use client.experimental.tasks.callToolStream() instead.`);
-    }
-    const result = await this.request({ method: "tools/call", params }, resultSchema, options);
-    const validator = this.getToolOutputValidator(params.name);
-    if (validator) {
-      if (!result.structuredContent && !result.isError) {
-        throw new McpError(ErrorCode.InvalidRequest, `Tool ${params.name} has an output schema but did not return structured content`);
-      }
-      if (result.structuredContent) {
-        try {
-          const validationResult = validator(result.structuredContent);
-          if (!validationResult.valid) {
-            throw new McpError(ErrorCode.InvalidParams, `Structured content does not match the tool's output schema: ${validationResult.errorMessage}`);
-          }
-        } catch (error2) {
-          if (error2 instanceof McpError) {
-            throw error2;
-          }
-          throw new McpError(ErrorCode.InvalidParams, `Failed to validate structured content: ${error2 instanceof Error ? error2.message : String(error2)}`);
-        }
-      }
-    }
-    return result;
-  }
-  isToolTask(toolName) {
-    if (!this._serverCapabilities?.tasks?.requests?.tools?.call) {
-      return false;
-    }
-    return this._cachedKnownTaskTools.has(toolName);
-  }
-  /**
-   * Check if a tool requires task-based execution.
-   * Unlike isToolTask which includes 'optional' tools, this only checks for 'required'.
-   */
-  isToolTaskRequired(toolName) {
-    return this._cachedRequiredTaskTools.has(toolName);
-  }
-  /**
-   * Cache validators for tool output schemas.
-   * Called after listTools() to pre-compile validators for better performance.
-   */
-  cacheToolMetadata(tools) {
-    this._cachedToolOutputValidators.clear();
-    this._cachedKnownTaskTools.clear();
-    this._cachedRequiredTaskTools.clear();
-    for (const tool of tools) {
-      if (tool.outputSchema) {
-        const toolValidator = this._jsonSchemaValidator.getValidator(tool.outputSchema);
-        this._cachedToolOutputValidators.set(tool.name, toolValidator);
-      }
-      const taskSupport = tool.execution?.taskSupport;
-      if (taskSupport === "required" || taskSupport === "optional") {
-        this._cachedKnownTaskTools.add(tool.name);
-      }
-      if (taskSupport === "required") {
-        this._cachedRequiredTaskTools.add(tool.name);
-      }
-    }
-  }
-  /**
-   * Get cached validator for a tool
-   */
-  getToolOutputValidator(toolName) {
-    return this._cachedToolOutputValidators.get(toolName);
-  }
-  async listTools(params, options) {
-    const result = await this.request({ method: "tools/list", params }, ListToolsResultSchema, options);
-    this.cacheToolMetadata(result.tools);
-    return result;
-  }
-  /**
-   * Set up a single list changed handler.
-   * @internal
-   */
-  _setupListChangedHandler(listType, notificationSchema, options, fetcher) {
-    const parseResult = ListChangedOptionsBaseSchema.safeParse(options);
-    if (!parseResult.success) {
-      throw new Error(`Invalid ${listType} listChanged options: ${parseResult.error.message}`);
-    }
-    if (typeof options.onChanged !== "function") {
-      throw new Error(`Invalid ${listType} listChanged options: onChanged must be a function`);
-    }
-    const { autoRefresh, debounceMs } = parseResult.data;
-    const { onChanged } = options;
-    const refresh = async () => {
-      if (!autoRefresh) {
-        onChanged(null, null);
-        return;
-      }
-      try {
-        const items = await fetcher();
-        onChanged(null, items);
-      } catch (e) {
-        const error2 = e instanceof Error ? e : new Error(String(e));
-        onChanged(error2, null);
-      }
-    };
-    const handler = () => {
-      if (debounceMs) {
-        const existingTimer = this._listChangedDebounceTimers.get(listType);
-        if (existingTimer) {
-          clearTimeout(existingTimer);
-        }
-        const timer = setTimeout(refresh, debounceMs);
-        this._listChangedDebounceTimers.set(listType, timer);
-      } else {
-        refresh();
-      }
-    };
-    this.setNotificationHandler(notificationSchema, handler);
-  }
-  async sendRootsListChanged() {
-    return this.notification({ method: "notifications/roots/list_changed" });
-  }
-};
-
-// node_modules/@modelcontextprotocol/sdk/dist/esm/client/stdio.js
-var import_cross_spawn = __toESM(require_cross_spawn(), 1);
-import process3 from "node:process";
-import { PassThrough } from "node:stream";
-var DEFAULT_INHERITED_ENV_VARS = process3.platform === "win32" ? [
-  "APPDATA",
-  "HOMEDRIVE",
-  "HOMEPATH",
-  "LOCALAPPDATA",
-  "PATH",
-  "PROCESSOR_ARCHITECTURE",
-  "SYSTEMDRIVE",
-  "SYSTEMROOT",
-  "TEMP",
-  "USERNAME",
-  "USERPROFILE",
-  "PROGRAMFILES"
-] : (
-  /* list inspired by the default env inheritance of sudo */
-  ["HOME", "LOGNAME", "PATH", "SHELL", "TERM", "USER"]
-);
-function getDefaultEnvironment() {
-  const env = {};
-  for (const key of DEFAULT_INHERITED_ENV_VARS) {
-    const value = process3.env[key];
-    if (value === void 0) {
-      continue;
-    }
-    if (value.startsWith("()")) {
-      continue;
-    }
-    env[key] = value;
-  }
-  return env;
-}
-var StdioClientTransport = class {
-  constructor(server2) {
-    this._stderrStream = null;
-    this._serverParams = server2;
-    this._readBuffer = new ReadBuffer({ maxBufferSize: server2.maxBufferSize });
-    if (server2.stderr === "pipe" || server2.stderr === "overlapped") {
-      this._stderrStream = new PassThrough();
-    }
-  }
-  /**
-   * Starts the server process and prepares to communicate with it.
-   */
-  async start() {
-    if (this._process) {
-      throw new Error("StdioClientTransport already started! If using Client class, note that connect() calls start() automatically.");
-    }
-    return new Promise((resolve5, reject) => {
-      this._process = (0, import_cross_spawn.default)(this._serverParams.command, this._serverParams.args ?? [], {
-        // merge default env with server env because mcp server needs some env vars
-        env: {
-          ...getDefaultEnvironment(),
-          ...this._serverParams.env
-        },
-        stdio: ["pipe", "pipe", this._serverParams.stderr ?? "inherit"],
-        shell: false,
-        windowsHide: process3.platform === "win32",
-        cwd: this._serverParams.cwd
-      });
-      this._process.on("error", (error2) => {
-        reject(error2);
-        this.onerror?.(error2);
-      });
-      this._process.on("spawn", () => {
-        resolve5();
-      });
-      this._process.on("close", (_code) => {
-        this._process = void 0;
-        this.onclose?.();
-      });
-      this._process.stdin?.on("error", (error2) => {
-        this.onerror?.(error2);
-      });
-      this._process.stdout?.on("data", (chunk) => {
-        try {
-          this._readBuffer.append(chunk);
-          this.processReadBuffer();
-        } catch (error2) {
-          this.onerror?.(error2);
-          this.close().catch(() => {
-          });
-        }
-      });
-      this._process.stdout?.on("error", (error2) => {
-        this.onerror?.(error2);
-      });
-      if (this._stderrStream && this._process.stderr) {
-        this._process.stderr.pipe(this._stderrStream);
-      }
-    });
-  }
-  /**
-   * The stderr stream of the child process, if `StdioServerParameters.stderr` was set to "pipe" or "overlapped".
-   *
-   * If stderr piping was requested, a PassThrough stream is returned _immediately_, allowing callers to
-   * attach listeners before the start method is invoked. This prevents loss of any early
-   * error output emitted by the child process.
-   */
-  get stderr() {
-    if (this._stderrStream) {
-      return this._stderrStream;
-    }
-    return this._process?.stderr ?? null;
-  }
-  /**
-   * The child process pid spawned by this transport.
-   *
-   * This is only available after the transport has been started.
-   */
-  get pid() {
-    return this._process?.pid ?? null;
-  }
-  processReadBuffer() {
-    while (true) {
-      try {
-        const message = this._readBuffer.readMessage();
-        if (message === null) {
-          break;
-        }
-        this.onmessage?.(message);
-      } catch (error2) {
-        this.onerror?.(error2);
-      }
-    }
-  }
-  async close() {
-    if (this._process) {
-      const processToClose = this._process;
-      this._process = void 0;
-      const closePromise = new Promise((resolve5) => {
-        processToClose.once("close", () => {
-          resolve5();
-        });
-      });
-      try {
-        processToClose.stdin?.end();
-      } catch {
-      }
-      await Promise.race([closePromise, new Promise((resolve5) => setTimeout(resolve5, 2e3).unref())]);
-      if (processToClose.exitCode === null) {
-        try {
-          processToClose.kill("SIGTERM");
-        } catch {
-        }
-        await Promise.race([closePromise, new Promise((resolve5) => setTimeout(resolve5, 2e3).unref())]);
-      }
-      if (processToClose.exitCode === null) {
-        try {
-          processToClose.kill("SIGKILL");
-        } catch {
-        }
-      }
-    }
-    this._readBuffer.clear();
-  }
-  send(message) {
-    return new Promise((resolve5) => {
-      if (!this._process?.stdin) {
-        throw new Error("Not connected");
-      }
-      const json = serializeMessage(message);
-      if (this._process.stdin.write(json)) {
-        resolve5();
-      } else {
-        this._process.stdin.once("drain", resolve5);
-      }
-    });
-  }
-};
-
-// src/protocol.ts
-var PROTOCOL_VERSION = "2.1";
-function createAutomationSchemas(z, options = {}) {
-  const id2 = z.string().min(1).max(160);
-  const scalar = z.union([z.string().max(1e4), z.boolean()]);
-  const object3 = (shape) => z.object(shape).strict();
-  const source = object3({ profile_id: id2, profile_revision: z.number().int().positive(), source_ref: z.string().min(1).max(240) });
-  const literal2 = object3({ literal: scalar });
-  const value = options.allowSources === false ? literal2 : z.union([literal2, object3({ source })]);
-  const effect = z.enum(["interaction", "save_record", "save_draft", "advance_step", "final_submit", "unknown"]);
-  const writes = [
-    object3({ kind: z.literal("set_value"), ref: id2, expected_value_token: id2, value }),
-    object3({ kind: z.literal("set_checked"), ref: id2, expected_value_token: id2, checked: z.boolean() }),
-    object3({ kind: z.literal("select_option"), ref: id2, expected_value_token: id2, option_ref: id2.optional(), option_value: z.string().max(1e4).optional() })
-  ];
-  const write = z.discriminatedUnion("kind", writes);
-  const action = z.discriminatedUnion("kind", [
-    ...writes,
-    object3({ kind: z.literal("set_values"), items: z.array(write).min(1).max(20) }),
-    object3({ kind: z.literal("click"), ref: id2, effect_kind: effect, evidence_refs: z.array(id2).max(10).optional(), expected_value_token: id2.optional() }),
-    object3({ kind: z.literal("press_key"), ref: id2, key: z.enum(["Escape", "ArrowDown", "ArrowUp", "ArrowLeft", "ArrowRight", "Home", "End"]), expected_value_token: id2.optional() }),
-    object3({ kind: z.literal("scroll"), ref: id2, direction: z.enum(["up", "down", "left", "right"]), pixels: z.number().int().min(1).max(2e3).optional() })
-  ]);
-  const condition = z.union([
-    object3({ kind: z.enum(["visible", "hidden", "expanded", "options_ready", "structure_changed"]), ref: id2 }),
-    object3({ kind: z.literal("value_equals"), ref: id2, value: scalar }),
-    object3({ kind: z.literal("text_present"), ref: id2, text: z.string().min(1).max(1e3) })
-  ]);
-  return {
-    observe: object3({ tab_id: z.number().int().positive().optional(), session_id: id2.optional(), mode: z.enum(["overview", "detail", "changes", "verify"]).optional(), scope_ref: id2.optional(), snapshot_id: id2.optional(), operation_ids: z.array(id2).min(1).max(20).optional(), limit: z.number().int().min(1).max(80).optional(), cursor: id2.optional() }).superRefine((value2, context) => {
-      if (Number(value2.tab_id !== void 0) + Number(value2.session_id !== void 0) !== 1) context.addIssue({ code: "custom", message: "observe requires exactly one tab_id or session_id" });
-      if (value2.mode === "verify" && !value2.operation_ids?.length) context.addIssue({ code: "custom", path: ["operation_ids"], message: "verify requires operation_ids" });
-    }),
-    act: object3({ session_id: id2, snapshot_id: id2, operation_id: id2, action, wait_for: condition.optional(), timeout_ms: z.number().int().min(100).max(12e3).optional() }).superRefine((value2, context) => {
-      const actions = value2.action.kind === "set_values" ? value2.action.items : [value2.action];
-      for (const item of actions) {
-        if (item.kind === "select_option" && Number(item.option_ref !== void 0) + Number(item.option_value !== void 0) !== 1) {
-          context.addIssue({ code: "custom", path: ["action"], message: "select_option requires exactly one option_ref or option_value" });
-        }
-      }
-    }),
-    wait: object3({ session_id: id2, snapshot_id: id2, condition, timeout_ms: z.number().int().min(100).max(1e4).optional() }),
-    undo_operations: object3({ session_id: id2, operation_ids: z.array(id2).min(1).max(20), operation_id: id2 })
-  };
-}
-function canonical(value) {
-  if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`;
-  if (value && typeof value === "object") {
-    return `{${Object.entries(value).filter(([, item]) => item !== void 0).sort(([a], [b]) => a.localeCompare(b)).map(([key, item]) => `${JSON.stringify(key)}:${canonical(item)}`).join(",")}}`;
-  }
-  return JSON.stringify(value);
-}
-
-// src/browser/connection-diagnostics.ts
-import { readFile } from "node:fs/promises";
-import { homedir, platform as currentPlatform } from "node:os";
-import { join } from "node:path";
-function chromeUserDataDir(dependencies = {}) {
-  const platform = dependencies.platform ?? currentPlatform();
-  const home = dependencies.homeDir ?? homedir();
-  if (platform === "darwin") return join(home, "Library", "Application Support", "Google", "Chrome");
-  if (platform === "win32") {
-    const localAppData = dependencies.localAppData ?? process.env.LOCALAPPDATA;
-    return localAppData ? join(localAppData, "Google", "Chrome", "User Data") : null;
-  }
-  if (platform === "linux") return join(home, ".config", "google-chrome");
-  return null;
-}
-async function probeAutoConnect(dependencies = {}) {
-  const userDataDir = chromeUserDataDir(dependencies);
-  if (!userDataDir) {
-    return diagnostic("devtools_active_port_missing", "\u65E0\u6CD5\u786E\u5B9A\u5F53\u524D\u5E73\u53F0\u7684 Chrome \u6570\u636E\u76EE\u5F55\uFF1B\u8BF7\u6539\u7528\u4E13\u7528 Profile \u6216\u660E\u786E\u914D\u7F6E WebSocket endpoint", "blocked");
-  }
-  const readText = dependencies.readText ?? ((path, encoding) => readFile(path, encoding));
-  try {
-    const value = await readText(join(userDataDir, "DevToolsActivePort"), "utf8");
-    return validActivePort(value) ? diagnostic("endpoint_ready", "\u8FDC\u7A0B\u8C03\u8BD5\u7AEF\u70B9\u5DF2\u5C31\u7EEA\uFF1B\u8FDE\u63A5\u8BF7\u6C42\u51FA\u73B0\u65F6\u8BF7\u5728 Chrome \u70B9\u51FB Allow", "required") : diagnostic("devtools_active_port_invalid", "Chrome \u7684 DevToolsActivePort \u683C\u5F0F\u65E0\u6548\uFF1B\u8BF7\u91CD\u542F Chrome \u540E\u91CD\u65B0\u5F00\u542F\u8FDC\u7A0B\u8C03\u8BD5", "blocked");
-  } catch (error2) {
-    const code = fileErrorCode(error2);
-    if (code === "EACCES" || code === "EPERM") {
-      return diagnostic(
-        "devtools_active_port_permission_denied",
-        "\u5F53\u524D AI \u5BA2\u6237\u7AEF\u65E0\u6743\u8BFB\u53D6 Chrome \u7684 DevToolsActivePort\uFF1B\u8BF7\u4F7F\u7528 Resume Companion \u4E13\u7528 Profile\uFF0C\u6216\u5728\u5141\u8BB8\u8BFB\u53D6\u8BE5\u6587\u4EF6\u7684\u5BA2\u6237\u7AEF\u4E2D\u4F7F\u7528 current-profile \u6A21\u5F0F",
-        "blocked"
-      );
-    }
-    if (code !== "ENOENT") {
-      return diagnostic("devtools_active_port_missing", "\u65E0\u6CD5\u8BFB\u53D6 Chrome \u7684 DevToolsActivePort\uFF1B\u8BF7\u4F7F\u7528\u4E13\u7528 Profile \u6216\u68C0\u67E5 Chrome \u5B89\u88C5", "blocked");
-    }
-  }
-  const endpoint = await probeHttpEndpoint("http://127.0.0.1:9222", dependencies);
-  if (endpoint === "permission_proxy") {
-    return diagnostic(
-      "permission_proxy_unsupported",
-      "Chrome \u6743\u9650\u4EE3\u7406\u6B63\u5728\u76D1\u542C\uFF0C\u4F46\u5F53\u524D\u8FDE\u63A5\u73AF\u5883\u6CA1\u6709\u53EF\u8BFB\u7684 DevToolsActivePort\uFF0C\u4E0D\u80FD\u901A\u8FC7 HTTP discovery \u4EE3\u66FF\uFF1B\u8BF7\u4F7F\u7528\u4E13\u7528 Profile",
-      "blocked"
-    );
-  }
-  if (endpoint === "standard") {
-    return diagnostic(
-      "devtools_active_port_missing",
-      "Chrome \u8C03\u8BD5\u7AEF\u53E3\u53EF\u8BBF\u95EE\uFF0C\u4F46 DevToolsActivePort \u7F3A\u5931\uFF1B\u8BF7\u660E\u786E\u914D\u7F6E RESUME_COMPANION_DEVTOOLS_BROWSER_URL",
-      "blocked"
-    );
-  }
-  return diagnostic(
-    "remote_debugging_disabled",
-    "\u5F53\u524D\u672A\u53D1\u73B0\u53EF\u8FDE\u63A5\u7684 Chrome \u8FDC\u7A0B\u8C03\u8BD5\u7AEF\u70B9\uFF1B\u5982\u9700\u4F7F\u7528\u5F53\u524D Profile\uFF0C\u8BF7\u5148\u5728 chrome://inspect/#remote-debugging \u5F00\u542F\u8FDC\u7A0B\u8C03\u8BD5",
-    "required"
-  );
-}
-async function probeBrowserUrl(browserUrl, dependencies = {}) {
-  const endpoint = await probeHttpEndpoint(browserUrl, dependencies);
-  if (endpoint === "permission_proxy") {
-    return diagnostic(
-      "permission_proxy_unsupported",
-      "\u914D\u7F6E\u7684 browser URL \u662F Chrome \u6743\u9650\u4EE3\u7406\uFF0C\u5B83\u4E0D\u4F1A\u63D0\u4F9B /json/version\uFF1B\u8BF7\u4F7F\u7528 auto_connect \u6216\u975E\u9ED8\u8BA4 Profile \u7684\u6807\u51C6\u8C03\u8BD5\u7AEF\u53E3",
-      "blocked"
-    );
-  }
-  if (endpoint === "standard") {
-    return diagnostic("explicit_endpoint_ready", "\u660E\u786E\u914D\u7F6E\u7684 Chrome \u8C03\u8BD5\u7AEF\u70B9\u5DF2\u5C31\u7EEA", "unknown");
-  }
-  return diagnostic("remote_debugging_disabled", "\u660E\u786E\u914D\u7F6E\u7684 Chrome \u8C03\u8BD5\u7AEF\u70B9\u4E0D\u53EF\u8BBF\u95EE", "blocked");
-}
-function sanitizeDiagnosticText(value) {
-  return value.replace(/wss?:\/\/[^\s"']+/gi, "[redacted-websocket]").replace(/https?:\/\/[^\s"']+/gi, "[redacted-url]").replace(/("?(?:cookie|authorization|headers?|value)"?\s*[:=]\s*)("[^"]*"|'[^']*'|[^\s,}]+)/gi, "$1[redacted]").replace(/\/devtools\/browser\/[A-Za-z0-9._~!$&'()*+,;=:@%-]+/g, "/devtools/browser/[redacted]").slice(0, 500);
-}
-function safeDiagnosticFromText(value) {
-  const sanitized = sanitizeDiagnosticText(value);
-  if (/\b(?:EPERM|EACCES)\b|operation not permitted|permission denied/i.test(sanitized)) return "DevToolsActivePort read denied by host permissions";
-  if (/DevToolsActivePort/i.test(sanitized) && /ENOENT|not found|could not find/i.test(sanitized)) return "DevToolsActivePort was not found";
-  if (/disconnected|connection closed|transport closed|TargetClose/i.test(sanitized)) return "Chrome transport disconnected";
-  if (/permission|\bAllow\b/i.test(sanitized)) return "Chrome connection approval is required";
-  return null;
-}
-function diagnostic(code, message, permission_state) {
-  return { code, message, permission_state };
-}
-function validActivePort(value) {
-  const [rawPort, rawPath] = value.split("\n").map((line) => line.trim()).filter(Boolean);
-  const port = Number(rawPort);
-  return Number.isInteger(port) && port > 0 && port <= 65535 && Boolean(rawPath?.startsWith("/devtools/browser/"));
-}
-async function probeHttpEndpoint(browserUrl, dependencies) {
-  const fetcher = dependencies.fetch ?? globalThis.fetch;
-  const timeoutMs = dependencies.timeoutMs ?? 600;
-  try {
-    const endpoint = new URL("/json/version", browserUrl).toString();
-    const response = await fetcher(endpoint, { method: "GET", signal: AbortSignal.timeout(timeoutMs) });
-    if (response.status === 404) return "permission_proxy";
-    return response.ok ? "standard" : "unavailable";
-  } catch {
-    return "unavailable";
-  }
-}
-function fileErrorCode(error2) {
-  return typeof error2 === "object" && error2 !== null && "code" in error2 && typeof error2.code === "string" ? error2.code : void 0;
-}
-
-// src/browser/errors.ts
-var BrowserError = class extends Error {
-  constructor(code, message, options) {
-    super(`${code}: ${message}`, options);
-    this.code = code;
-    this.name = "BrowserError";
-  }
-  code;
-};
-function messageOf(error2) {
-  return error2 instanceof Error ? error2.message : String(error2);
-}
-function normalizeBrowserError(error2, context) {
-  if (error2 instanceof BrowserError) return error2;
-  const message = causeMessages(error2).join("\n");
-  if (/(?:\b(?:EPERM|EACCES)\b|operation not permitted|permission denied)/i.test(message) && /DevToolsActivePort|Chrome/i.test(message)) {
-    return new BrowserError("devtools_active_port_permission_denied", "\u5F53\u524D AI \u5BA2\u6237\u7AEF\u65E0\u6743\u8BFB\u53D6 Chrome \u7684 DevToolsActivePort\uFF1B\u8BF7\u4F7F\u7528 Resume Companion \u4E13\u7528 Profile", { cause: error2 });
-  }
-  if (/DevToolsActivePort/i.test(message) && /invalid|format/i.test(message)) {
-    return new BrowserError("devtools_active_port_invalid", "Chrome \u7684 DevToolsActivePort \u683C\u5F0F\u65E0\u6548\uFF1B\u8BF7\u91CD\u542F Chrome \u540E\u91CD\u8BD5", { cause: error2 });
-  }
-  if (/DevToolsActivePort/i.test(message) && /ENOENT|not found|Could not find/i.test(message)) {
-    return new BrowserError("devtools_active_port_missing", "\u6CA1\u6709\u627E\u5230 Chrome \u7684 DevToolsActivePort\uFF1B\u8BF7\u786E\u8BA4\u8FDC\u7A0B\u8C03\u8BD5\u5DF2\u5F00\u542F\uFF0C\u6216\u4F7F\u7528\u4E13\u7528 Profile", { cause: error2 });
-  }
-  if (/\/json\/version|HTTP Not Found|HTTP 404/i.test(message)) {
-    return new BrowserError("permission_proxy_unsupported", "\u8BE5\u7AEF\u53E3\u662F Chrome \u6743\u9650\u4EE3\u7406\uFF0C\u4E0D\u80FD\u4F5C\u4E3A\u666E\u901A browser URL \u4F7F\u7528\uFF1B\u8BF7\u6539\u7528 auto_connect \u6216\u4E13\u7528 Profile", { cause: error2 });
-  }
-  if (context?.endpointReady && /permission|\bAllow\b|approve|unauthori[sz]ed/i.test(message)) {
-    return new BrowserError("browser_approval_required", "\u8FDC\u7A0B\u8C03\u8BD5\u5DF2\u5F00\u542F\uFF1B\u8BF7\u5728 Chrome \u7684\u672C\u6B21\u8FDE\u63A5\u63D0\u793A\u4E2D\u70B9\u51FB Allow", { cause: error2 });
-  }
-  if (/remote debugging|chrome:\/\/inspect/i.test(message)) {
-    return new BrowserError("remote_debugging_disabled", "\u5F53\u524D\u672A\u53D1\u73B0\u53EF\u8FDE\u63A5\u7684\u8FDC\u7A0B\u8C03\u8BD5\u7AEF\u70B9\uFF1B\u8BF7\u5F00\u542F Chrome \u8FDC\u7A0B\u8C03\u8BD5\uFF0C\u6216\u4F7F\u7528\u4E13\u7528 Profile", { cause: error2 });
-  }
-  if (/disconnected|closed|ECONN|transport|Not connected|TargetClose|Could not connect/i.test(message)) {
-    return new BrowserError("browser_disconnected", "Chrome transport \u5DF2\u65AD\u5F00\uFF1B\u4E0B\u4E00\u6B21\u8C03\u7528\u4F1A\u521B\u5EFA\u65B0\u7684\u8FDE\u63A5", { cause: error2 });
-  }
-  return new BrowserError("driver_unavailable", safeFallbackMessage(message), { cause: error2 });
-}
-function isConnectionError(code) {
-  return [
-    "browser_approval_required",
-    "browser_disconnected",
-    "browser_permission_required",
-    "devtools_active_port_invalid",
-    "devtools_active_port_missing",
-    "devtools_active_port_permission_denied",
-    "driver_unavailable",
-    "permission_proxy_unsupported",
-    "remote_debugging_disabled"
-  ].includes(code);
-}
-function causeMessages(error2) {
-  const messages = [];
-  const seen = /* @__PURE__ */ new Set();
-  let current = error2;
-  while (current !== void 0 && current !== null && !seen.has(current) && messages.length < 6) {
-    seen.add(current);
-    if (current instanceof Error) {
-      messages.push(current.message);
-      current = current.cause;
-    } else {
-      messages.push(String(current));
-      break;
-    }
-  }
-  return messages;
-}
-function safeFallbackMessage(message) {
-  if (!message) return "\u6D4F\u89C8\u5668\u9A71\u52A8\u4E0D\u53EF\u7528";
-  return "\u6D4F\u89C8\u5668\u9A71\u52A8\u8FD4\u56DE\u4E86\u672A\u5206\u7C7B\u9519\u8BEF\uFF1B\u539F\u59CB\u5185\u5BB9\u672A\u5411 MCP \u54CD\u5E94\u516C\u5F00\uFF0C\u8BF7\u67E5\u770B\u5B89\u5168\u8BCA\u65AD\u7801\u6216\u91CD\u65B0\u8FDE\u63A5";
-}
-
-// src/browser/operation-journal.ts
-var OperationJournal = class {
-  records = /* @__PURE__ */ new Map();
-  async run(operationId, input, job) {
-    const signature = canonical(input);
-    const existing = this.records.get(operationId);
-    if (existing) {
-      if (existing.signature !== signature) throw new BrowserError("operation_conflict", "\u76F8\u540C operation_id \u4F7F\u7528\u4E86\u4E0D\u540C\u53C2\u6570\uFF0C\u672A\u91CD\u590D\u6267\u884C");
-      return existing.promise;
-    }
-    let record2;
-    const promise = Promise.resolve().then(() => job(record2)).then((result) => {
-      record2.result = result;
-      return result;
-    });
-    record2 = { signature, promise, changes: [], createdAt: Date.now() };
-    this.records.set(operationId, record2);
-    this.trim();
-    return promise;
-  }
-  get(operationId) {
-    return this.records.get(operationId);
-  }
-  verify(operationIds) {
-    return operationIds.map((operationId) => {
-      const record2 = this.records.get(operationId);
-      if (!record2) return { operation_id: operationId, status: "unknown", message: "\u64CD\u4F5C\u8BB0\u5F55\u5DF2\u8FC7\u671F\u6216\u5C5E\u4E8E\u65E7\u4F1A\u8BDD" };
-      return {
-        operation_id: operationId,
-        status: record2.result?.status ?? "unknown",
-        values: record2.changes.map((change) => ({ ref: change.ref, reversible: change.reversible && !change.undone && !record2.boundary, value_retained: null }))
-      };
-    });
-  }
-  markBoundary() {
-    for (const record2 of this.records.values()) record2.boundary = true;
-  }
-  clear() {
-    this.records.clear();
-  }
-  trim() {
-    if (this.records.size <= 200) return;
-    for (const [id2, record2] of this.records) {
-      if (record2.result) this.records.delete(id2);
-      if (this.records.size <= 200) break;
-    }
-  }
-};
-
-// src/browser/snapshot.ts
-import { createHash, randomUUID } from "node:crypto";
-
-// src/browser/safety-policy.ts
-var normalize = (value) => value.replace(/\s+/g, "").toLocaleLowerCase();
-var matches = (value, patterns) => patterns.some((pattern) => pattern.test(value));
-var finalSubmitPatterns = [
-  /确认.*提交/,
-  /最终.*提交/,
-  /提交.*申请/,
-  /立即.*申请/,
-  /立即.*投递/,
-  /确认.*投递/,
-  /applynow/,
-  /submitapplication/,
-  /completeapplication/
-];
-var finalStagePatterns = [/最终.*核对/, /最终.*确认/, /核对.*申请/, /确认.*申请信息/, /application.*review/i, /review.*application/i];
-var forwardActionPatterns = [/下一步/, /继续/, /完成/, /确认/, /提交/, /申请/, /next/i, /continue/i, /finish/i, /submit/i, /apply/i];
-var declarationPatterns = [/声明/, /承诺/, /本人确认/, /同意.*协议/, /同意.*条款/, /授权/, /电子签名/, /certif/i, /consent/i, /agree.*terms/i];
-var verificationPatterns = [/验证码/, /动态码/, /短信码/, /otp/i, /captcha/i, /人机验证/, /安全验证/];
-var passwordPatterns = [/密码/, /password/i, /passcode/i, /口令/];
-var uploadPatterns = [/上传/, /附件/, /选择文件/, /添加简历/, /upload/i, /attach/i];
-var deletionPatterns = [/删除/, /移除/, /注销/, /清空/, /delete/i, /remove/i];
-function inferEffect(name, declared = "unknown") {
-  const value = normalize(name);
-  if (declared === "final_submit" || matches(value, finalSubmitPatterns)) return "final_submit";
-  if (/保存.*草稿|暂存|savedraft/i.test(value)) return "save_draft";
-  if (/保存|添加.*完成|确认添加|saverecord/i.test(value)) return "save_record";
-  if (/下一步|继续|下一页|next|continue/i.test(value)) return "advance_step";
-  return declared === "unknown" ? "interaction" : declared;
-}
-function evaluateSafety(input) {
-  const name = normalize(`${input.name} ${input.description ?? ""}`);
-  const context = normalize(input.context ?? "");
-  const effect = inferEffect(name, input.effect);
-  if (effect === "final_submit") return { blocked: true, reason: "restricted:final_submit \u6700\u7EC8\u7533\u8BF7\u63D0\u4EA4\u5FC5\u987B\u7531\u7528\u6237\u5B8C\u6210", effect };
-  if (["button", "link"].includes(input.role) && matches(context, finalStagePatterns) && matches(name, forwardActionPatterns)) {
-    return { blocked: true, reason: "restricted:final_submit \u6700\u7EC8\u6838\u5BF9\u9875\u7684\u524D\u8FDB\u64CD\u4F5C\u5FC5\u987B\u7531\u7528\u6237\u5B8C\u6210", effect: "final_submit" };
-  }
-  if (matches(name, verificationPatterns)) return { blocked: true, reason: "restricted:verification \u9A8C\u8BC1\u7801\u548C\u8EAB\u4EFD\u9A8C\u8BC1\u5FC5\u987B\u7531\u7528\u6237\u5B8C\u6210", effect };
-  if (matches(name, passwordPatterns)) return { blocked: true, reason: "restricted:password \u5BC6\u7801\u5B57\u6BB5\u5FC5\u987B\u7531\u7528\u6237\u5B8C\u6210", effect };
-  if (matches(name, uploadPatterns)) return { blocked: true, reason: "restricted:upload \u6587\u4EF6\u4E0A\u4F20\u5FC5\u987B\u7531\u7528\u6237\u5B8C\u6210", effect };
-  if (matches(name, deletionPatterns)) return { blocked: true, reason: "restricted:deletion \u5220\u9664\u64CD\u4F5C\u5FC5\u987B\u7531\u7528\u6237\u5B8C\u6210", effect };
-  if (["checkbox", "radio", "switch"].includes(input.role) && matches(name, declarationPatterns)) {
-    return { blocked: true, reason: "restricted:declaration \u58F0\u660E\u3001\u540C\u610F\u548C\u6388\u6743\u5FC5\u987B\u7531\u7528\u6237\u5B8C\u6210", effect };
-  }
-  return { blocked: false, effect };
-}
-
-// src/browser/snapshot.ts
-var actionableRoles = /* @__PURE__ */ new Set(["textbox", "searchbox", "combobox", "spinbutton", "slider", "checkbox", "radio", "switch", "button", "link", "tab", "option", "treeitem"]);
-var structuralRoles = /* @__PURE__ */ new Set(["RootWebArea", "WebArea", "form", "group", "region", "article", "listitem", "dialog", "alert", "status", "heading", "listbox", "tree"]);
-var scopeRoles = /* @__PURE__ */ new Set(["form", "group", "region", "article", "listitem", "dialog"]);
-function kindFor(node) {
-  switch (node.role) {
-    case "textbox":
-      return node.multiline ? "textarea" : "text";
-    case "searchbox":
-      return "text";
-    case "spinbutton":
-      return "number";
-    case "switch":
-      return "checkbox";
-    case "RootWebArea":
-    case "WebArea":
-      return "document";
-    default:
-      return node.role ?? "unknown";
-  }
-}
-function valueFor(node) {
-  if (typeof node.checked === "boolean") return node.checked;
-  if (typeof node.value === "string") return node.value;
-  if (typeof node.value === "number") return String(node.value);
-  if (node.role === "checkbox" || node.role === "radio" || node.role === "switch") return false;
-  if (node.role === "textbox" || node.role === "searchbox" || node.role === "combobox" || node.role === "spinbutton") return "";
-  return null;
-}
-function tokenFor(node, value) {
-  return createHash("sha256").update(canonical([node.id, node.role, node.name, value, node.disabled, node.expanded, node.selected])).digest("base64url").slice(0, 22);
-}
-function flatten(root, refForUid) {
-  const result = [];
-  const visit = (node, parent) => {
-    const flat = { node, ...parent ? { parent } : {}, children: [], ref: refForUid(node.id) };
-    result.push(flat);
-    flat.children = (node.children ?? []).map((child) => visit(child, flat));
-    return flat;
-  };
-  visit(root);
-  return result;
-}
-function scopeOf(flat) {
-  let current = flat.parent;
-  while (current) {
-    if (scopeRoles.has(current.node.role ?? "")) return current;
-    current = current.parent;
-  }
-  let root = flat;
-  while (root.parent) root = root.parent;
-  return root;
-}
-function nearestOwner(flat, all) {
-  let current = flat.parent;
-  while (current) {
-    if (current.node.role === "combobox" || current.node.role === "listbox") return current;
-    current = current.parent;
-  }
-  const expanded = all.filter((candidate) => candidate.node.role === "combobox" && candidate.node.expanded === true);
-  return expanded.length === 1 ? expanded[0] : void 0;
-}
-function contextOf(flat) {
-  const names = [];
-  let current = flat.parent;
-  while (current) {
-    const name = String(current.node.name ?? "").trim();
-    if (name && !names.includes(name)) names.push(name);
-    current = current.parent;
-  }
-  return names.slice(0, 5).join(" / ");
-}
-function allowedActions(kind, blocked, node) {
-  if (blocked || node.disabled) return [];
-  if (["text", "textarea", "number", "slider"].includes(kind)) return ["set_value", "press_key"];
-  if (kind === "combobox") return ["set_value", "select_option", "click", "press_key"];
-  if (kind === "checkbox" || kind === "radio") return ["set_checked", "click"];
-  if (["button", "link", "tab", "option", "treeitem"].includes(kind)) return ["click"];
-  return [];
-}
-var ReferenceBook = class {
-  refs = /* @__PURE__ */ new Map();
-  sequence = 0;
-  refForUid = (uid) => {
-    const existing = this.refs.get(uid);
-    if (existing) return existing;
-    const ref = `e${++this.sequence}`;
-    this.refs.set(uid, ref);
-    return ref;
-  };
-};
-function normalizeSnapshot(input) {
-  const flat = flatten(input.root, input.references.refForUid);
-  const entries = /* @__PURE__ */ new Map();
-  const uidToRef = /* @__PURE__ */ new Map();
-  for (const item of flat) uidToRef.set(item.node.id, item.ref);
-  for (const item of flat) {
-    const node = item.node;
-    const role = node.role ?? "unknown";
-    const name = String(node.name ?? "").trim();
-    if (!actionableRoles.has(role) && !structuralRoles.has(role) && !name) continue;
-    const kind = kindFor(node);
-    const scope = scopeOf(item);
-    const value = valueFor(node);
-    const token = tokenFor(node, value);
-    const safety = evaluateSafety({ name, role: kind, context: contextOf(item), ...node.description ? { description: node.description } : {} });
-    const owner = role === "option" || role === "treeitem" ? nearestOwner(item, flat) : void 0;
-    const element = {
-      ref: item.ref,
-      uid: node.id,
-      role,
-      kind,
-      name,
-      scope_ref: scope.ref,
-      value,
-      allowed_actions: allowedActions(kind, safety.blocked, node),
-      effect_kind: safety.effect,
-      in_viewport: true
-    };
-    if (actionableRoles.has(role) && !safety.blocked) element.expected_value_token = token;
-    if (safety.reason) element.blocked_reason = safety.reason;
-    if (node.expanded !== void 0) element.expanded = node.expanded;
-    if (node.selected !== void 0) element.selected = node.selected;
-    if (node.required !== void 0) element.required = node.required;
-    if (node.disabled !== void 0) element.disabled = node.disabled;
-    if (node.description) element.description = node.description;
-    if (["text", "textarea", "number", "combobox", "checkbox", "radio", "slider"].includes(kind)) element.validation = { state: "unknown", messages: [] };
-    if (owner) {
-      element.owner_ref = owner.ref;
-      element.option_ref = item.ref;
-    }
-    if (["button", "link", "tab"].includes(kind)) element.evidence_refs = [item.ref, scope.ref];
-    entries.set(item.ref, { node, flat: item, public: element, token, value });
-  }
-  const order = [...entries.keys()];
-  return {
-    id: randomUUID(),
-    pageId: input.pageId,
-    url: input.url,
-    title: input.title,
-    entries,
-    uidToRef,
-    order,
-    signature: createHash("sha256").update(canonical(order.map((ref) => entries.get(ref)?.public))).digest("base64url"),
-    createdAt: Date.now(),
-    exposed: /* @__PURE__ */ new Set()
-  };
-}
-function assertSnapshotEntry(snapshot, ref, expectedToken, requireExposed = true) {
-  const entry = snapshot.entries.get(ref);
-  if (!entry || requireExposed && !snapshot.exposed.has(ref)) throw new BrowserError("stale", "\u5143\u7D20\u6CA1\u6709\u51FA\u73B0\u5728\u6307\u5B9A\u89C2\u5BDF\u8303\u56F4\u4E2D\uFF0C\u8BF7\u91CD\u65B0\u89C2\u5BDF");
-  if (expectedToken !== void 0 && entry.token !== expectedToken) throw new BrowserError("stale", "\u89C2\u5BDF\u540E\u5B57\u6BB5\u5185\u5BB9\u5DF2\u6539\u53D8\uFF0C\u5DF2\u4FDD\u7559\u5F53\u524D\u503C");
-  if (entry.public.blocked_reason) throw new BrowserError("blocked", entry.public.blocked_reason);
-  return entry;
-}
-function descendantsOf(entry, snapshot) {
-  const refs = /* @__PURE__ */ new Set([entry.public.ref]);
-  const walk = (node) => {
-    for (const child of node.children) {
-      refs.add(child.ref);
-      walk(child);
-    }
-  };
-  walk(entry.flat);
-  for (const candidate of snapshot.entries.values()) if (candidate.public.owner_ref === entry.public.ref) refs.add(candidate.public.ref);
-  return refs;
-}
-
-// src/browser/devtools-driver.ts
-var moduleDirectory = dirname(fileURLToPath(import.meta.url));
-var DEFAULT_RUNTIME = [
-  resolve(moduleDirectory, "runtime/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js"),
-  resolve(moduleDirectory, "node_modules/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js"),
-  resolve(moduleDirectory, "../../runtime/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js"),
-  resolve(moduleDirectory, "../../node_modules/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js")
-].find(existsSync) ?? resolve(moduleDirectory, "runtime/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js");
-var sleep = (milliseconds) => new Promise((resolveDelay) => setTimeout(resolveDelay, milliseconds));
-var byteSize = (value) => Buffer.byteLength(JSON.stringify(value), "utf8");
-var DevToolsDriver = class {
-  kind = "devtools";
-  runtimePath;
-  profileMode;
-  dataDir;
-  dependencies;
-  client = null;
-  transport = null;
-  connecting = null;
-  connected = false;
-  permissionState;
-  lastConnectionError = null;
-  lastDiagnostic = null;
-  lastRawStderrCause = null;
-  stderrDiagnostics = [];
-  seededStartPage = false;
-  sessions = /* @__PURE__ */ new Map();
-  pageSessions = /* @__PURE__ */ new Map();
-  constructor(options) {
-    this.runtimePath = options.runtimePath ?? process.env.RESUME_COMPANION_DEVTOOLS_RUNTIME ?? DEFAULT_RUNTIME;
-    this.profileMode = options.profileMode ?? parseProfileMode(process.env.RESUME_COMPANION_CHROME_PROFILE_MODE);
-    this.dataDir = options.dataDir;
-    this.permissionState = this.profileMode === "auto_connect" ? "unknown" : "not_required";
-    this.dependencies = {
-      createClient: () => new Client({ name: "resume-companion-browser-driver", version: "0.7.0" }),
-      createTransport: (parameters) => new StdioClientTransport(parameters),
-      probeAutoConnect,
-      probeBrowserUrl,
-      ...options.dependencies
-    };
-  }
-  async status() {
-    const runtimeReady = existsSync(this.runtimePath);
-    if (runtimeReady && !this.connected) await this.refreshConnectionDiagnostic();
-    const connectionError = this.lastConnectionError;
-    return {
-      kind: this.kind,
-      ready: runtimeReady,
-      connected: this.connected,
-      compatible: runtimeReady,
-      profile_mode: this.profileMode,
-      permission_state: this.permissionState,
-      ...connectionError ? { connection_error_code: connectionError.code, connection_error_message: connectionError.message } : {},
-      runtime_version: "1.9.0",
-      capabilities: {
-        coreProtocol: "2.1",
-        continuousForms: true,
-        finalSubmit: false,
-        trustedEvents: true,
-        chromeSetupUrl: this.profileMode === "auto_connect" ? "chrome://inspect/#remote-debugging" : void 0,
-        manualChromeAuthorization: this.profileMode === "auto_connect",
-        dedicatedProfile: true,
-        explicitBrowserUrl: true,
-        explicitWebSocketEndpoint: true,
-        verticalScroll: true,
-        horizontalScroll: false,
-        frames: "accessibility-tree",
-        shadowDOM: "accessibility-tree",
-        activateTab: true
-      },
-      message: !runtimeReady ? "Chrome DevTools MCP \u8FD0\u884C\u5305\u7F3A\u5931\uFF0C\u8BF7\u91CD\u65B0\u6784\u5EFA\u6216\u5B89\u88C5\u5B8C\u6574\u53D1\u884C\u5305" : this.connected ? "Chrome DevTools \u9A71\u52A8\u5DF2\u8FDE\u63A5" : connectionError ? connectionError.message : this.profileMode === "auto_connect" ? "\u8FDC\u7A0B\u8C03\u8BD5\u7AEF\u70B9\u5DF2\u5C31\u7EEA\uFF1B\u7F51\u9875\u5DE5\u5177\u9996\u6B21\u8C03\u7528\u4F1A\u8FDE\u63A5\u5F53\u524D Chrome\uFF0C\u5E76\u7531\u7528\u6237\u5728 Chrome \u4E2D\u70B9\u51FB Allow" : this.profileMode === "dedicated" ? "\u7F51\u9875\u5DE5\u5177\u9996\u6B21\u8C03\u7528\u5C06\u542F\u52A8 Resume Companion \u4E13\u7528\u7684\u6301\u4E45 Chrome Profile\uFF1B\u9996\u6B21\u4F7F\u7528\u9700\u8981\u5728\u5176\u4E2D\u767B\u5F55\u62DB\u8058\u7F51\u7AD9" : "\u7F51\u9875\u5DE5\u5177\u9996\u6B21\u8C03\u7528\u65F6\u542F\u52A8\u4E34\u65F6\u9694\u79BB Chrome",
-      ...this.stderrDiagnostics.length > 0 ? { diagnostics: { stderr: [...this.stderrDiagnostics] } } : {}
-    };
-  }
-  async listTabs(input, signal) {
-    const pages = await this.pages(signal);
-    const needle = input.url_contains?.toLocaleLowerCase();
-    const matching = pages.filter((page) => /^https?:\/\//.test(page.url) && (!needle || `${page.title}
-${page.url}`.toLocaleLowerCase().includes(needle)));
-    const tabs = matching.slice(0, 100).map((page, index) => ({
-      tabId: page.id,
-      windowId: 0,
-      index,
-      active: Boolean(page.selected),
-      title: page.title,
-      url: page.url
-    }));
-    return {
-      currentWindowOnly: false,
-      requestedCurrentWindowOnly: input.current_window_only !== false,
-      total: matching.length,
-      truncated: matching.length > tabs.length,
-      tabs,
-      notice: input.current_window_only !== false ? "DevTools \u534F\u8BAE\u6309\u5DF2\u6388\u6743\u6D4F\u89C8\u5668\u4E0A\u4E0B\u6587\u5217\u51FA\u6807\u7B7E\u9875\uFF0C\u4E0D\u533A\u5206 Chrome \u7A97\u53E3\u3002" : void 0
-    };
-  }
-  async activateTab(input, signal) {
-    const structured = await this.call("select_page", { pageId: input.tab_id, bringToFront: true }, signal);
-    const page = extractPages(structured).find((item) => item.id === input.tab_id);
-    if (!page || !/^https?:\/\//.test(page.url)) throw new BrowserError("blocked", "\u6307\u5B9A\u6807\u7B7E\u9875\u4E0D\u662F\u666E\u901A HTTP/HTTPS \u7F51\u9875");
-    return {
-      tabId: page.id,
-      windowId: 0,
-      status: "visible",
-      pageState: { visibility: "visible", focused: true },
-      note: "\u9875\u9762\u5DF2\u5207\u5230\u524D\u53F0\uFF0C\u53EF\u4EE5\u7EE7\u7EED\u89C2\u5BDF"
-    };
-  }
-  async observe(input, signal) {
-    const session = await this.sessionForObserve(input, signal);
-    const mode = input.mode ?? "overview";
-    if (mode === "verify") {
-      const snapshot2 = await this.capture(session, signal);
-      const operations = this.verifyOperations(session, input.operation_ids ?? [], snapshot2);
-      return this.formatObservation(session, snapshot2, input, { operations, remaining_operation_ids: [] });
-    }
-    if (input.cursor) {
-      const cursor = session.cursors.get(input.cursor);
-      if (!cursor || cursor.mode !== mode || cursor.scopeRef !== input.scope_ref) throw new BrowserError("stale", "\u5206\u9875\u6761\u4EF6\u53D8\u5316\u6216\u6E38\u6807\u5DF2\u8FC7\u671F");
-      const stored = session.snapshots.get(cursor.snapshotId);
-      if (!stored) throw new BrowserError("stale", "\u5206\u9875\u5FEB\u7167\u5DF2\u8FC7\u671F\uFF0C\u8BF7\u91CD\u65B0\u89C2\u5BDF");
-      const current = await this.capture(session, signal);
-      if (current.signature !== stored.signature) throw new BrowserError("stale", "\u9875\u9762\u5DF2\u53D8\u5316\uFF0C\u8BF7\u91CD\u65B0\u89C2\u5BDF\uFF0C\u4E0D\u62FC\u63A5\u65E7\u5206\u9875");
-      return this.formatObservation(session, stored, input, {}, cursor.offset);
-    }
-    const snapshot = await this.capture(session, signal);
-    return this.formatObservation(session, snapshot, input);
-  }
-  async act(input, signal) {
-    const session = this.requireSession(input.session_id);
-    return session.journal.run(input.operation_id, input, async (record2) => {
-      this.throwIfAborted(signal);
-      const source = session.snapshots.get(input.snapshot_id);
-      if (!source) throw new BrowserError("stale", "\u52A8\u4F5C\u5F15\u7528\u7684\u5FEB\u7167\u5DF2\u8FC7\u671F\uFF0C\u8BF7\u91CD\u65B0\u89C2\u5BDF");
-      const writes = input.action.kind === "set_values" ? input.action.items : isWrite(input.action) ? [input.action] : [];
-      for (const write of writes) this.preflightWrite(source, write);
-      if (input.action.kind === "click" || input.action.kind === "press_key" || input.action.kind === "scroll") {
-        assertSnapshotEntry(source, input.action.ref, "expected_value_token" in input.action ? input.action.expected_value_token : void 0);
-      }
-      const before = await this.capture(session, signal);
-      if (before.url !== source.url) throw new BrowserError("stale", "\u9875\u9762\u5DF2\u7ECF\u5BFC\u822A\uFF0C\u8BF7\u91CD\u65B0\u679A\u4E3E\u6216\u89C2\u5BDF\u6807\u7B7E\u9875");
-      const changes = writes.map((write) => this.changeForWrite(before, source, write));
-      record2.changes.push(...changes);
-      try {
-        const dispatched = await this.dispatchAction(session, source, before, input, signal);
-        const after = await this.capture(session, signal, true);
-        const receipt = this.receiptForAction(input, before, after, record2.changes, dispatched);
-        if (input.action.kind === "click" && ["save_record", "save_draft", "advance_step"].includes(String(receipt.effect_kind))) session.journal.markBoundary();
-        return receipt;
-      } catch (error2) {
-        if (error2 instanceof BrowserError) throw error2;
-        try {
-          const after = await this.capture(session, signal, true);
-          const results = this.readBack(record2.changes, after);
-          return { operation_id: input.operation_id, status: results.some((item) => item.value_retained) ? "unknown" : "failed", dispatched: true, side_effects: "possible", results, message: messageOf(error2) };
-        } catch {
-          return { operation_id: input.operation_id, status: "unknown", dispatched: true, side_effects: "possible", results: [], message: messageOf(error2) };
-        }
-      }
-    });
-  }
-  async wait(input, signal) {
-    const session = this.requireSession(input.session_id);
-    const source = session.snapshots.get(input.snapshot_id);
-    if (!source) throw new BrowserError("stale", "\u7B49\u5F85\u5F15\u7528\u7684\u5FEB\u7167\u5DF2\u8FC7\u671F\uFF0C\u8BF7\u91CD\u65B0\u89C2\u5BDF");
-    if (input.condition.kind !== "structure_changed") assertSnapshotEntry(source, input.condition.ref);
-    const deadline = Date.now() + (input.timeout_ms ?? 5e3);
-    do {
-      this.throwIfAborted(signal);
-      const current = await this.capture(session, signal);
-      const result = evaluateCondition(input.condition, source, current);
-      if (result.ready) return { status: "ready", reason: result.reason, snapshot_id: current.id, condition: input.condition };
-      await sleep(120);
-    } while (Date.now() < deadline);
-    return { status: "unknown", reason: "timeout", snapshot_id: source.id, condition: input.condition };
-  }
-  async undo(input, signal) {
-    const session = this.requireSession(input.session_id);
-    return session.journal.run(input.operation_id, input, async () => {
-      const results = [];
-      for (const operationId of [...input.operation_ids].reverse()) {
-        this.throwIfAborted(signal);
-        const record2 = session.journal.get(operationId);
-        if (!record2) {
-          results.push({ operation_id: operationId, status: "unknown", message: "\u64CD\u4F5C\u8BB0\u5F55\u4E0D\u5B58\u5728\u6216\u5DF2\u7ECF\u8FC7\u671F" });
-          continue;
-        }
-        if (record2.boundary) {
-          results.push({ operation_id: operationId, status: "blocked", message: "\u8BE5\u64CD\u4F5C\u4F4D\u4E8E\u4FDD\u5B58\u6216\u9875\u9762\u8FC1\u79FB\u8FB9\u754C\u4E4B\u524D\uFF0C\u4E0D\u80FD\u5B89\u5168\u64A4\u9500" });
-          continue;
-        }
-        for (const change of [...record2.changes].reverse()) {
-          if (change.undone || !change.reversible) continue;
-          const current = await this.capture(session, signal);
-          const entry = current.entries.get(change.ref);
-          if (!entry || entry.value !== change.written) {
-            results.push({ operation_id: operationId, ref: change.ref, status: "blocked", message: "\u5B57\u6BB5\u5DF2\u88AB\u7528\u6237\u6216\u540E\u7EED\u64CD\u4F5C\u4FEE\u6539\uFF0C\u672A\u8986\u76D6\u5F53\u524D\u503C" });
-            continue;
-          }
-          await this.call("fill", { pageId: session.pageId, uid: entry.node.id, value: scalarToFill(change.before ?? ""), includeSnapshot: false }, signal);
-          change.undone = true;
-          results.push({ operation_id: operationId, ref: change.ref, status: "applied" });
-        }
-      }
-      const applied = results.some((result) => result.status === "applied");
-      return { operation_id: input.operation_id, status: applied ? "applied" : "blocked", results };
-    });
-  }
-  async close() {
-    await this.resetConnection();
-    this.lastConnectionError = null;
-    this.lastDiagnostic = null;
-    this.lastRawStderrCause = null;
-  }
-  async ensureClient() {
-    if (this.client) return this.client;
-    if (this.connecting) return this.connecting;
-    this.connecting = this.startClient();
-    try {
-      return await this.connecting;
-    } finally {
-      this.connecting = null;
-    }
-  }
-  async startClient() {
-    if (!existsSync(this.runtimePath)) throw new BrowserError("driver_unavailable", `Chrome DevTools MCP \u8FD0\u884C\u5305\u4E0D\u5B58\u5728\uFF1A${this.runtimePath}`);
-    await this.assertConnectionPrerequisites();
-    this.lastRawStderrCause = null;
-    if (this.profileMode === "dedicated") await mkdir(join2(this.dataDir, "chrome-profile"), { recursive: true, mode: 448 });
-    const transport2 = this.dependencies.createTransport({
-      command: process.execPath,
-      args: [this.runtimePath, ...this.upstreamArguments()],
-      cwd: dirname(this.runtimePath),
-      env: {
-        ...stringEnvironment(),
-        CHROME_DEVTOOLS_MCP_NO_USAGE_STATISTICS: "1",
-        CHROME_DEVTOOLS_MCP_NO_UPDATE_CHECKS: "1"
-      },
-      stderr: "pipe"
-    });
-    this.captureStderr(transport2);
-    const client = this.dependencies.createClient();
-    try {
-      await client.connect(transport2);
-    } catch (error2) {
-      await client.close().catch(() => void 0);
-      throw normalizeBrowserError(this.withStderrCause(error2));
-    }
-    this.transport = transport2;
-    this.client = client;
-    return client;
-  }
-  upstreamArguments() {
-    const args = [
-      "--experimental-structured-content",
-      "--no-usage-statistics",
-      "--no-performance-crux",
-      "--no-javascript-evaluation",
-      "--no-source-maps",
-      "--redact-network-headers",
-      "--no-category-emulation",
-      "--no-category-performance",
-      "--no-category-network",
-      "--no-category-memory",
-      "--no-category-extensions",
-      "--no-category-experimental-third-party",
-      "--no-category-experimental-webmcp",
-      "--no-category-pwa"
-    ];
-    const browserUrl = process.env.RESUME_COMPANION_DEVTOOLS_BROWSER_URL;
-    const wsEndpoint = process.env.RESUME_COMPANION_DEVTOOLS_WS_ENDPOINT;
-    if (browserUrl && wsEndpoint) throw new BrowserError("invalid_request", "browser URL \u548C WebSocket endpoint \u53EA\u80FD\u914D\u7F6E\u4E00\u4E2A");
-    if (wsEndpoint) args.push(`--ws-endpoint=${wsEndpoint}`);
-    else if (browserUrl) args.push(`--browser-url=${browserUrl}`);
-    else if (this.profileMode === "auto_connect") args.push("--auto-connect", "--channel=stable");
-    else if (this.profileMode === "isolated") args.push("--isolated");
-    else args.push(`--user-data-dir=${join2(this.dataDir, "chrome-profile")}`, "--channel=stable");
-    if (process.env.RESUME_COMPANION_DEVTOOLS_HEADLESS === "1") args.push("--headless");
-    const executable = process.env.RESUME_COMPANION_CHROME_EXECUTABLE;
-    if (executable && !browserUrl && this.profileMode !== "auto_connect") args.push(`--executable-path=${executable}`);
-    return args;
-  }
-  async call(name, arguments_, signal) {
-    const allowed = /* @__PURE__ */ new Set(["list_pages", "select_page", "take_snapshot", "fill", "fill_form", "click", "press_key"]);
-    if (name === "new_page" && process.env.RESUME_COMPANION_DEVTOOLS_START_URL) allowed.add("new_page");
-    if (!allowed.has(name)) throw new BrowserError("blocked", `\u5185\u90E8\u6D4F\u89C8\u5668\u5DE5\u5177\u4E0D\u5728\u5141\u8BB8\u5217\u8868\uFF1A${name}`);
-    this.throwIfAborted(signal);
-    let result;
-    try {
-      const client = await this.ensureClient();
-      result = await client.callTool({ name, arguments: arguments_ }, void 0, signal ? { signal } : void 0);
-    } catch (error2) {
-      const normalized = normalizeBrowserError(this.withStderrCause(error2), { endpointReady: this.lastDiagnostic?.code === "endpoint_ready" });
-      if (isConnectionError(normalized.code)) await this.failConnection(normalized);
-      throw normalized;
-    }
-    if (result.isError) {
-      const text2 = result.content?.map((item) => item.text ?? "").filter(Boolean).join("\n") || `${name} \u6267\u884C\u5931\u8D25`;
-      const normalized = normalizeBrowserError(this.withStderrCause(new Error(text2)), { endpointReady: this.lastDiagnostic?.code === "endpoint_ready" });
-      if (isConnectionError(normalized.code)) await this.failConnection(normalized);
-      throw normalized;
-    }
-    this.connected = true;
-    this.lastConnectionError = null;
-    this.lastRawStderrCause = null;
-    if (this.profileMode === "auto_connect") this.permissionState = "granted";
-    const structured = isRecord(result.structuredContent) ? result.structuredContent : {};
-    if (structured.reconnected === true) this.invalidateSessions();
-    return structured;
-  }
-  async refreshConnectionDiagnostic() {
-    if (process.env.RESUME_COMPANION_DEVTOOLS_WS_ENDPOINT) {
-      this.lastConnectionError = null;
-      this.permissionState = "unknown";
-      return;
-    }
-    let diagnostic2 = null;
-    const browserUrl = process.env.RESUME_COMPANION_DEVTOOLS_BROWSER_URL;
-    if (browserUrl) diagnostic2 = await this.dependencies.probeBrowserUrl(browserUrl);
-    else if (this.profileMode === "auto_connect") diagnostic2 = await this.dependencies.probeAutoConnect();
-    if (!diagnostic2) return;
-    this.lastDiagnostic = diagnostic2;
-    this.permissionState = diagnostic2.permission_state;
-    if (diagnostic2.code === "endpoint_ready" || diagnostic2.code === "explicit_endpoint_ready") {
-      this.lastConnectionError = null;
-      return;
-    }
-    this.lastConnectionError = { code: diagnostic2.code, message: diagnostic2.message };
-  }
-  async assertConnectionPrerequisites() {
-    await this.refreshConnectionDiagnostic();
-    const browserUrl = process.env.RESUME_COMPANION_DEVTOOLS_BROWSER_URL;
-    const usesDiscoverableEndpoint = this.profileMode === "auto_connect" || Boolean(browserUrl);
-    const endpointReady = this.lastDiagnostic?.code === "endpoint_ready" || this.lastDiagnostic?.code === "explicit_endpoint_ready";
-    if (!usesDiscoverableEndpoint || endpointReady || !this.lastConnectionError) return;
-    throw new BrowserError(this.lastConnectionError.code, this.lastConnectionError.message);
-  }
-  async failConnection(error2) {
-    this.lastConnectionError = { code: error2.code, message: error2.message.replace(/^[a-z_]+:\s*/, "") };
-    this.permissionState = permissionStateForError(error2.code, this.profileMode);
-    await this.resetConnection();
-  }
-  async resetConnection() {
-    const client = this.client;
-    this.client = null;
-    this.transport = null;
-    this.connecting = null;
-    this.connected = false;
-    this.invalidateSessions();
-    await client?.close().catch(() => void 0);
-  }
-  captureStderr(transport2) {
-    transport2.stderr?.on("data", (chunk) => {
-      for (const line of String(chunk).split(/\r?\n/)) {
-        const diagnostic2 = safeDiagnosticFromText(line);
-        if (!diagnostic2) continue;
-        this.lastRawStderrCause = new Error(line.slice(0, 4096));
-        if (this.stderrDiagnostics.at(-1) === diagnostic2) continue;
-        this.stderrDiagnostics.push(diagnostic2);
-        if (this.stderrDiagnostics.length > 8) this.stderrDiagnostics.shift();
-      }
-    });
-  }
-  withStderrCause(error2) {
-    if (!this.lastRawStderrCause) return error2;
-    return new Error(messageOf(error2), {
-      cause: new Error(this.lastRawStderrCause.message, { cause: error2 })
-    });
-  }
-  async pages(signal) {
-    let structured = await this.call("list_pages", {}, signal);
-    let pages = extractPages(structured);
-    const startUrl = process.env.RESUME_COMPANION_DEVTOOLS_START_URL;
-    if (startUrl && !this.seededStartPage && !pages.some((page) => /^https?:\/\//.test(page.url))) {
-      const url = new URL(startUrl);
-      if (!["http:", "https:"].includes(url.protocol)) throw new BrowserError("invalid_request", "RESUME_COMPANION_DEVTOOLS_START_URL \u53EA\u5141\u8BB8 HTTP/HTTPS");
-      this.seededStartPage = true;
-      structured = await this.call("new_page", { url: url.href, background: false, timeout: 1e4 }, signal);
-      pages = extractPages(structured);
-    }
-    return pages;
-  }
-  async sessionForObserve(input, signal) {
-    if (input.session_id) return this.requireSession(input.session_id);
-    const pageId = input.tab_id;
-    if (!pageId) throw new BrowserError("invalid_request", "observe \u9700\u8981 tab_id \u6216 session_id");
-    const pages = await this.pages(signal);
-    const page = pages.find((item) => item.id === pageId);
-    if (!page || !/^https?:\/\//.test(page.url)) throw new BrowserError("blocked", "\u6307\u5B9A\u6807\u7B7E\u9875\u4E0D\u662F\u666E\u901A HTTP/HTTPS \u7F51\u9875");
-    const existing = this.pageSessions.get(pageId);
-    if (existing && !existing.invalidated && existing.url === page.url) return existing;
-    if (existing) this.dropSession(existing);
-    const session = {
-      id: crypto.randomUUID(),
-      pageId,
-      url: page.url,
-      title: page.title,
-      invalidated: false,
-      references: new ReferenceBook(),
-      snapshots: /* @__PURE__ */ new Map(),
-      cursors: /* @__PURE__ */ new Map(),
-      journal: new OperationJournal()
-    };
-    this.sessions.set(session.id, session);
-    this.pageSessions.set(pageId, session);
-    return session;
-  }
-  requireSession(sessionId) {
-    const session = this.sessions.get(sessionId);
-    if (!session || session.invalidated) throw new BrowserError("stale", "\u9875\u9762\u3001\u5BFC\u822A\u6216\u6D4F\u89C8\u5668\u8FDE\u63A5\u5DF2\u7ECF\u53D8\u5316\uFF0C\u8BF7\u4F7F\u7528 tab_id \u91CD\u65B0\u89C2\u5BDF");
-    return session;
-  }
-  async capture(session, signal, allowNavigation = false) {
-    const pages = await this.pages(signal);
-    const page = pages.find((item) => item.id === session.pageId);
-    if (!page) {
-      this.dropSession(session);
-      throw new BrowserError("stale", "\u6807\u7B7E\u9875\u5DF2\u7ECF\u5173\u95ED\uFF0C\u8BF7\u91CD\u65B0\u679A\u4E3E\u6807\u7B7E\u9875");
-    }
-    const navigated = page.url !== session.url;
-    if (navigated && !allowNavigation) {
-      this.dropSession(session);
-      throw new BrowserError("stale", "\u9875\u9762\u5DF2\u7ECF\u5BFC\u822A\uFF0C\u8BF7\u4F7F\u7528 tab_id \u91CD\u65B0\u89C2\u5BDF");
-    }
-    await this.call("select_page", { pageId: session.pageId, bringToFront: false }, signal);
-    const structured = await this.call("take_snapshot", { pageId: session.pageId, verbose: false }, signal);
-    const root = structured.snapshot;
-    if (!isAxNode(root)) throw new BrowserError("unknown", "Chrome \u6CA1\u6709\u8FD4\u56DE\u53EF\u89E3\u6790\u7684\u65E0\u969C\u788D\u5FEB\u7167");
-    const snapshot = normalizeSnapshot({ root, pageId: session.pageId, url: page.url, title: page.title, references: session.references });
-    session.snapshots.set(snapshot.id, snapshot);
-    while (session.snapshots.size > 20) {
-      const oldest = session.snapshots.keys().next().value;
-      if (!oldest) break;
-      session.snapshots.delete(oldest);
-      for (const [cursor, state] of session.cursors) if (state.snapshotId === oldest) session.cursors.delete(cursor);
-    }
-    if (navigated) session.invalidated = true;
-    else {
-      session.url = page.url;
-      session.title = page.title;
-    }
-    return snapshot;
-  }
-  formatObservation(session, snapshot, input, extra = {}, forcedOffset) {
-    const mode = input.mode ?? "overview";
-    let elements = snapshot.order.map((ref) => snapshot.entries.get(ref)?.public).filter((item) => Boolean(item));
-    if (mode === "detail" && input.scope_ref) {
-      const source = this.findExposedEntry(session, input.scope_ref);
-      const refs = descendantsOf(source, snapshot);
-      elements = elements.filter((element) => refs.has(element.ref));
-    }
-    const old = input.snapshot_id ? session.snapshots.get(input.snapshot_id) : void 0;
-    const removedRefs = mode === "changes" && old ? old.order.filter((ref) => !snapshot.entries.has(ref)).slice(0, 80) : [];
-    if (mode === "changes" && old) elements = elements.filter((element) => canonical(element) !== canonical(old.entries.get(element.ref)?.public));
-    const cursorState = input.cursor ? session.cursors.get(input.cursor) : void 0;
-    const offset = forcedOffset ?? cursorState?.offset ?? 0;
-    const limit = input.limit ?? (mode === "overview" ? 80 : 50);
-    const response = {
-      protocol_version: "2.1",
-      driver: "devtools",
-      session_id: session.id,
-      snapshot_id: snapshot.id,
-      page: { url: snapshot.url, title: snapshot.title, page_id: snapshot.pageId, visibility: "visible", focused: true },
-      mode,
-      scope_ref: input.scope_ref ?? elements[0]?.scope_ref ?? null,
-      elements: [],
-      total: elements.length,
-      offset,
-      removed_refs: removedRefs,
-      requires_full_observation: mode === "changes" && !old,
-      rendered_only: true,
-      notices: [],
-      ...extra
-    };
-    const output = response.elements;
-    while (offset + output.length < elements.length && output.length < limit) {
-      const element = elements[offset + output.length];
-      if (!element) break;
-      output.push(stripInternal(element));
-      if (byteSize(response) > 11200) {
-        output.pop();
-        break;
-      }
-    }
-    for (const element of output) {
-      for (const ref of [element.ref, element.scope_ref, element.owner_ref, ...Array.isArray(element.evidence_refs) ? element.evidence_refs : []]) {
-        if (typeof ref === "string" && snapshot.entries.has(ref)) snapshot.exposed.add(ref);
-      }
-    }
-    const next = offset + output.length;
-    response.truncated = next < elements.length;
-    if (response.truncated) {
-      const cursor = crypto.randomUUID();
-      session.cursors.set(cursor, { snapshotId: snapshot.id, offset: next, mode, ...input.scope_ref ? { scopeRef: input.scope_ref } : {} });
-      response.next_cursor = cursor;
-    }
-    response.response_bytes = byteSize(response);
-    return response;
-  }
-  findExposedEntry(session, ref) {
-    for (const snapshot of [...session.snapshots.values()].reverse()) {
-      if (snapshot.exposed.has(ref)) {
-        const entry = snapshot.entries.get(ref);
-        if (entry) return entry;
-      }
-    }
-    throw new BrowserError("stale", "\u8BF7\u5148\u89C2\u5BDF\u9875\u9762\u540E\u518D\u4F7F\u7528\u8303\u56F4\u5F15\u7528");
-  }
-  preflightWrite(source, write) {
-    const entry = assertSnapshotEntry(source, write.ref, write.expected_value_token);
-    const required2 = write.kind === "set_checked" ? "set_checked" : write.kind === "select_option" ? "select_option" : "set_value";
-    if (!entry.public.allowed_actions.includes(required2)) throw new BrowserError("blocked", `\u5B57\u6BB5\u4E0D\u5141\u8BB8 ${required2} \u64CD\u4F5C`);
-    if (write.kind === "select_option" && write.option_ref) {
-      const option = assertSnapshotEntry(source, write.option_ref);
-      if (option.public.owner_ref && option.public.owner_ref !== write.ref) throw new BrowserError("blocked", "\u5019\u9009\u9879\u4E0D\u5C5E\u4E8E\u76EE\u6807\u5B57\u6BB5");
-    }
-  }
-  changeForWrite(current, source, write) {
-    const old = assertSnapshotEntry(source, write.ref, write.expected_value_token);
-    const entry = assertSnapshotEntry(current, write.ref, write.expected_value_token, false);
-    if (entry.node.id !== old.node.id) throw new BrowserError("stale", "\u5B57\u6BB5\u5F15\u7528\u5DF2\u7ECF\u66FF\u6362\uFF0C\u8BF7\u91CD\u65B0\u89C2\u5BDF");
-    return { ref: write.ref, before: entry.value, written: intendedValue(write, source), reversible: true };
-  }
-  async dispatchAction(session, source, current, input, signal) {
-    const action = input.action;
-    if (action.kind === "set_values") {
-      const elements = action.items.map((write) => this.fillElement(current, source, write));
-      return this.call("fill_form", { pageId: session.pageId, elements, includeSnapshot: false }, signal);
-    }
-    if (isWrite(action)) {
-      const element = this.fillElement(current, source, action);
-      return this.call("fill", { pageId: session.pageId, ...element, includeSnapshot: false }, signal);
-    }
-    const entry = assertSnapshotEntry(current, action.ref, "expected_value_token" in action ? action.expected_value_token : void 0, false);
-    if (action.kind === "click") {
-      if (action.effect_kind === "final_submit" || entry.public.effect_kind === "final_submit") throw new BrowserError("blocked", "\u6700\u7EC8\u7533\u8BF7\u63D0\u4EA4\u5FC5\u987B\u7531\u7528\u6237\u5B8C\u6210");
-      if (!entry.public.allowed_actions.includes("click")) throw new BrowserError("blocked", "\u8BE5\u5143\u7D20\u4E0D\u5141\u8BB8\u70B9\u51FB");
-      return this.call("click", { pageId: session.pageId, uid: entry.node.id, includeSnapshot: false }, signal);
-    }
-    if (action.kind === "press_key") {
-      if (!entry.public.allowed_actions.includes("press_key")) throw new BrowserError("blocked", "\u8BE5\u5143\u7D20\u4E0D\u5141\u8BB8\u952E\u76D8\u64CD\u4F5C");
-      await this.call("click", { pageId: session.pageId, uid: entry.node.id, includeSnapshot: false }, signal);
-      return this.call("press_key", { pageId: session.pageId, key: action.key, includeSnapshot: false }, signal);
-    }
-    if (action.direction === "left" || action.direction === "right") {
-      throw new BrowserError("unsupported_capability", "\u5F53\u524D DevTools \u9A71\u52A8\u4E0D\u63D0\u4F9B\u6A2A\u5411\u6EDA\u52A8\uFF1B\u8BF7\u7531\u7528\u6237\u5904\u7406\u8BE5\u6A2A\u5411\u63A7\u4EF6");
-    }
-    const key = action.direction === "down" ? "PageDown" : "PageUp";
-    const count = Math.max(1, Math.min(4, Math.ceil((action.pixels ?? 600) / 600)));
-    let result = {};
-    for (let index = 0; index < count; index++) {
-      result = await this.call("press_key", { pageId: session.pageId, key, includeSnapshot: false }, signal);
-    }
-    return { ...result, scroll_direction: action.direction, requested_pixels: action.pixels ?? null, key_presses: count };
-  }
-  fillElement(current, source, write) {
-    const entry = assertSnapshotEntry(current, write.ref, write.expected_value_token, false);
-    if (write.kind === "set_value") return { uid: entry.node.id, value: scalarToFill(write.value.literal) };
-    if (write.kind === "set_checked") return { uid: entry.node.id, value: String(write.checked) };
-    if (write.option_ref) {
-      const option = assertSnapshotEntry(source, write.option_ref);
-      return { uid: entry.node.id, value: option.public.name };
-    }
-    return { uid: entry.node.id, value: write.option_value ?? "" };
-  }
-  receiptForAction(input, before, after, changes, dispatched) {
-    const action = input.action;
-    if (isWrite(action) || action.kind === "set_values") {
-      const results = this.readBack(changes, after);
-      const all = results.length > 0 && results.every((item) => item.value_retained === true);
-      return { operation_id: input.operation_id, status: all ? "applied" : "failed", dispatched: true, side_effects: all ? "confirmed" : "possible", results };
-    }
-    if (action.kind === "click") {
-      const navigated = before.url !== after.url || after.signature !== before.signature;
-      const effect = action.effect_kind === "unknown" ? String(assertSnapshotEntry(before, action.ref).public.effect_kind ?? "interaction") : action.effect_kind;
-      return {
-        operation_id: input.operation_id,
-        status: navigated ? "applied" : "dispatched",
-        dispatched: true,
-        effect_kind: effect,
-        persistence: ["save_record", "save_draft"].includes(effect) ? "unconfirmed" : void 0,
-        transition: effect === "advance_step" ? { requires_observe: true, page_changed: before.url !== after.url || before.signature !== after.signature } : void 0,
-        upstream: dispatched.message
-      };
-    }
-    return { operation_id: input.operation_id, status: "applied", dispatched: true, side_effects: "confirmed" };
-  }
-  readBack(changes, after) {
-    return changes.map((change) => {
-      const actual = after.entries.get(change.ref)?.value;
-      return {
-        ref: change.ref,
-        value_retained: actual === change.written,
-        actual_value: actual ?? null,
-        validation: after.entries.get(change.ref)?.public.validation ?? { state: "unknown", messages: [] },
-        reversible: change.reversible && actual === change.written
-      };
-    });
-  }
-  verifyOperations(session, operationIds, snapshot) {
-    return operationIds.map((operationId) => {
-      const record2 = session.journal.get(operationId);
-      if (!record2) return { operation_id: operationId, status: "unknown", message: "\u64CD\u4F5C\u8BB0\u5F55\u5DF2\u8FC7\u671F\u6216\u5C5E\u4E8E\u65E7\u9875\u9762" };
-      return {
-        operation_id: operationId,
-        status: record2.result?.status ?? "unknown",
-        values: record2.changes.map((change) => {
-          const current = snapshot.entries.get(change.ref);
-          return {
-            ref: change.ref,
-            value_retained: current?.value === change.written,
-            validation: current?.public.validation ?? { state: "unknown", messages: [] },
-            reversible: Boolean(current && current.value === change.written && change.reversible && !change.undone && !record2.boundary)
-          };
-        })
-      };
-    });
-  }
-  dropSession(session) {
-    session.invalidated = true;
-    session.journal.clear();
-    this.sessions.delete(session.id);
-    if (this.pageSessions.get(session.pageId) === session) this.pageSessions.delete(session.pageId);
-  }
-  invalidateSessions() {
-    for (const session of this.sessions.values()) session.invalidated = true;
-    this.sessions.clear();
-    this.pageSessions.clear();
-  }
-  throwIfAborted(signal) {
-    if (signal?.aborted) throw new BrowserError("cancelled", "\u8BF7\u6C42\u5DF2\u53D6\u6D88\uFF1B\u8BF7\u5148\u56DE\u8BFB\u5DF2\u6D3E\u53D1\u52A8\u4F5C\u7684\u7ED3\u679C");
-  }
-};
-function parseProfileMode(value) {
-  if (!value) return "dedicated";
-  if (value === "auto_connect" || value === "dedicated" || value === "isolated") return value;
-  throw new Error("RESUME_COMPANION_CHROME_PROFILE_MODE \u5FC5\u987B\u662F auto_connect\u3001dedicated \u6216 isolated");
-}
-function permissionStateForError(code, profileMode) {
-  if (profileMode !== "auto_connect") return "not_required";
-  if (code === "browser_approval_required" || code === "remote_debugging_disabled") return "required";
-  if (["devtools_active_port_invalid", "devtools_active_port_missing", "devtools_active_port_permission_denied", "permission_proxy_unsupported"].includes(code)) return "blocked";
-  return "unknown";
-}
-function stringEnvironment() {
-  return Object.fromEntries(Object.entries(process.env).filter((entry) => typeof entry[1] === "string"));
-}
-function isRecord(value) {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-function isAxNode(value) {
-  return isRecord(value) && typeof value.id === "string";
-}
-function extractPages(value) {
-  if (!Array.isArray(value.pages)) return [];
-  return value.pages.filter(isRecord).flatMap((page) => {
-    if (typeof page.id !== "number" || typeof page.url !== "string") return [];
-    return [{ id: page.id, url: page.url, title: typeof page.title === "string" ? page.title : "", selected: page.selected === true }];
-  });
-}
-function stripInternal(element) {
-  const { uid: _uid, ...publicElement } = element;
-  return publicElement;
-}
-function isWrite(action) {
-  return action.kind === "set_value" || action.kind === "set_checked" || action.kind === "select_option";
-}
-function intendedValue(write, source) {
-  if (write.kind === "set_value") return write.value.literal;
-  if (write.kind === "set_checked") return write.checked;
-  if (write.option_ref) return assertSnapshotEntry(source, write.option_ref).public.name;
-  return write.option_value ?? "";
-}
-function scalarToFill(value) {
-  return typeof value === "boolean" ? String(value) : value ?? "";
-}
-function evaluateCondition(condition, source, current) {
-  const entry = current.entries.get(condition.ref);
-  switch (condition.kind) {
-    case "visible":
-      return { ready: Boolean(entry), reason: entry ? "visible" : "waiting" };
-    case "hidden":
-      return { ready: !entry, reason: entry ? "waiting" : "hidden" };
-    case "expanded":
-      return { ready: entry?.public.expanded === true, reason: entry?.public.expanded === true ? "expanded" : "waiting" };
-    case "value_equals":
-      return { ready: entry?.value === condition.value, reason: entry?.value === condition.value ? "value_equals" : "waiting" };
-    case "structure_changed":
-      return { ready: current.signature !== source.signature, reason: current.signature !== source.signature ? "structure_changed" : "waiting" };
-    case "options_ready": {
-      const options = [...current.entries.values()].filter((candidate) => candidate.public.owner_ref === condition.ref && candidate.public.option_ref);
-      if (options.length > 0) return { ready: true, reason: "options_ready" };
-      if (entry?.public.expanded === true) return { ready: true, reason: "empty" };
-      return { ready: false, reason: "waiting" };
-    }
-    case "text_present": {
-      if (!entry) return { ready: false, reason: "waiting" };
-      const refs = descendantsOf(entry, current);
-      const found = [...refs].some((ref) => current.entries.get(ref)?.public.name.includes(condition.text));
-      return { ready: found, reason: found ? "text_present" : "waiting" };
-    }
-  }
-}
-
-// src/browser/extension-driver.ts
-import { existsSync as existsSync2 } from "node:fs";
-import { homedir as homedir2 } from "node:os";
-import { join as join4, resolve as resolve2 } from "node:path";
-
-// src/browser/native-bridge-server.ts
-import { randomBytes, randomUUID as randomUUID2 } from "node:crypto";
-import { chmod, mkdir as mkdir2, readFile as readFile2, rm, writeFile } from "node:fs/promises";
-import { join as join3 } from "node:path";
-import { createServer } from "node:net";
-
-// ../../shared/browser-bridge.ts
-var BRIDGE_PROTOCOL_VERSION = "1.0";
-var BRIDGE_MAX_MESSAGE_BYTES = 512 * 1024;
-var RESUME_COMPANION_EXTENSION_ID = "feifaflnkjdihpbbhnihidjjkeapamnh";
-function isRecord2(value) {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-function byteSize2(value) {
-  return new TextEncoder().encode(JSON.stringify(value)).byteLength;
-}
-function assertBridgeMessage(value) {
-  if (!isRecord2(value) || value.protocol !== BRIDGE_PROTOCOL_VERSION || typeof value.kind !== "string") throw new Error("invalid bridge message");
-  if (byteSize2(value) > BRIDGE_MAX_MESSAGE_BYTES) throw new Error("bridge message exceeds 512 KiB");
-  if (value.kind === "request" && !(typeof value.id === "string" && value.id.length <= 160 && typeof value.method === "string" && ["status", "tabs", "activate_tab", "observe", "act", "wait", "undo_operations"].includes(value.method) && typeof value.deadline === "number")) throw new Error("invalid bridge request");
-  if (value.kind === "cancel" && !(typeof value.id === "string" && value.id.length <= 160)) throw new Error("invalid bridge cancel");
-  if (value.kind === "response" && !(typeof value.id === "string" && typeof value.ok === "boolean" && (value.ok || isRecord2(value.error)))) throw new Error("invalid bridge response");
-  if (value.kind === "hello" && !(typeof value.token === "string" && typeof value.extension_origin === "string" && typeof value.extension_version === "string" && typeof value.host_pid === "number")) throw new Error("invalid bridge hello");
-  if (value.kind === "extension_hello" && typeof value.extension_version !== "string") throw new Error("invalid extension hello");
-  if (!["request", "cancel", "response", "hello", "extension_hello", "bridge_ready"].includes(value.kind)) throw new Error("unknown bridge message");
-}
-
-// src/browser/native-bridge-server.ts
-var socketSequence = 0;
-var NativeBridgeServer = class {
-  constructor(dataDir, timeoutMs = 6e4) {
-    this.dataDir = dataDir;
-    this.timeoutMs = timeoutMs;
-    this.bridgeDir = join3(dataDir, "bridge");
-    const sequence = socketSequence++;
-    this.socketPath = process.platform === "win32" ? `\\\\.\\pipe\\resume-companion-${process.pid}-${randomUUID2()}` : join3(this.bridgeDir, `mcp-${process.pid}-${sequence.toString(36)}.sock`);
-    this.descriptorPath = join3(this.bridgeDir, "active.json");
-  }
-  dataDir;
-  timeoutMs;
-  bridgeDir;
-  socketPath;
-  descriptorPath;
-  token = randomBytes(32).toString("base64url");
-  server = null;
-  starting = null;
-  socket = null;
-  extensionVersion;
-  pending = /* @__PURE__ */ new Map();
-  async ensureStarted() {
-    if (this.server) {
-      await this.writeDescriptor();
-      return;
-    }
-    if (this.starting) return this.starting;
-    this.starting = this.start();
-    try {
-      await this.starting;
-    } finally {
-      this.starting = null;
-    }
-  }
-  state() {
-    return { started: Boolean(this.server), connected: Boolean(this.socket?.writable), ...this.extensionVersion ? { extension_version: this.extensionVersion } : {}, protocol: BRIDGE_PROTOCOL_VERSION, descriptor_path: this.descriptorPath };
-  }
-  async request(method, params, signal) {
-    try {
-      await this.ensureStarted();
-    } catch {
-      throw new BrowserError("bridge_disconnected", "\u5F53\u524D AI \u5BBF\u4E3B\u65E0\u6CD5\u542F\u52A8\u672C\u5730\u6269\u5C55 IPC\uFF1B\u53EF\u68C0\u67E5\u5BBF\u4E3B\u6743\u9650\u6216\u6539\u7528 DevTools \u4E13\u7528 Profile");
-    }
-    const socket = await this.waitForConnection(signal);
-    const id2 = randomUUID2();
-    const deadline = Date.now() + this.timeoutMs;
-    const message = { kind: "request", protocol: BRIDGE_PROTOCOL_VERSION, id: id2, method, params, deadline };
-    if (Buffer.byteLength(JSON.stringify(message), "utf8") > BRIDGE_MAX_MESSAGE_BYTES) throw new BrowserError("invalid_request", "\u6D4F\u89C8\u5668\u8BF7\u6C42\u8D85\u8FC7 512 KiB \u4E0A\u9650");
-    return new Promise((resolve5, reject) => {
-      const timer = setTimeout(() => {
-        this.pending.delete(id2);
-        socket.write(`${JSON.stringify({ kind: "cancel", protocol: BRIDGE_PROTOCOL_VERSION, id: id2 })}
-`);
-        reject(new BrowserError("timeout", "Chrome \u6269\u5C55\u54CD\u5E94\u8D85\u65F6\uFF1B\u8BF7\u5148\u89C2\u5BDF\u9875\u9762\u7ED3\u679C\u518D\u51B3\u5B9A\u662F\u5426\u91CD\u8BD5"));
-      }, this.timeoutMs);
-      const abort = () => {
-        if (!this.pending.delete(id2)) return;
-        clearTimeout(timer);
-        socket.write(`${JSON.stringify({ kind: "cancel", protocol: BRIDGE_PROTOCOL_VERSION, id: id2 })}
-`);
-        reject(new BrowserError("cancelled", "\u8BF7\u6C42\u5DF2\u53D6\u6D88\uFF1B\u8BF7\u5148\u56DE\u8BFB\u5DF2\u6D3E\u53D1\u52A8\u4F5C\u7684\u7ED3\u679C"));
-      };
-      this.pending.set(id2, { resolve: resolve5, reject, timer, ...signal ? { abort } : {} });
-      signal?.addEventListener("abort", abort, { once: true });
-      if (signal?.aborted) {
-        abort();
-        return;
-      }
-      socket.write(`${JSON.stringify(message)}
-`);
-    });
-  }
-  async close() {
-    const server2 = this.server;
-    this.server = null;
-    this.failPending(new BrowserError("bridge_disconnected", "MCP \u670D\u52A1\u6B63\u5728\u5173\u95ED"));
-    this.socket?.destroy();
-    this.socket = null;
-    if (server2) await new Promise((resolve5) => server2.close(() => resolve5()));
-    await Promise.all([this.removeDescriptorIfOwned(), process.platform === "win32" ? Promise.resolve() : rm(this.socketPath, { force: true })]);
-  }
-  async start() {
-    await mkdir2(this.bridgeDir, { recursive: true, mode: 448 });
-    await chmod(this.bridgeDir, 448).catch(() => void 0);
-    if (process.platform !== "win32") await rm(this.socketPath, { force: true });
-    const server2 = createServer((socket) => this.accept(socket));
-    server2.on("error", () => {
-    });
-    await new Promise((resolve5, reject) => {
-      const onError = (error2) => {
-        reject(error2);
-      };
-      server2.once("error", onError);
-      server2.listen(this.socketPath, () => {
-        server2.off("error", onError);
-        resolve5();
-      });
-    });
-    this.server = server2;
-    if (process.platform !== "win32") await chmod(this.socketPath, 384).catch(() => void 0);
-    await this.writeDescriptor();
-  }
-  async writeDescriptor() {
-    const descriptor = { protocol: BRIDGE_PROTOCOL_VERSION, token: this.token, socket_path: this.socketPath, pid: process.pid, expires_at: Date.now() + 12 * 60 * 60 * 1e3 };
-    await writeFile(this.descriptorPath, `${JSON.stringify(descriptor)}
-`, { mode: 384 });
-    await chmod(this.descriptorPath, 384).catch(() => void 0);
-  }
-  accept(candidate) {
-    let authenticated = false;
-    let localBuffer = "";
-    const reject = () => {
-      candidate.destroy();
-    };
-    candidate.on("data", (chunk) => {
-      localBuffer += chunk.toString("utf8");
-      if (Buffer.byteLength(localBuffer, "utf8") > BRIDGE_MAX_MESSAGE_BYTES * 2) {
-        reject();
-        return;
-      }
-      for (; ; ) {
-        const newline = localBuffer.indexOf("\n");
-        if (newline < 0) return;
-        const line = localBuffer.slice(0, newline);
-        localBuffer = localBuffer.slice(newline + 1);
-        if (!line) continue;
-        let message;
-        try {
-          message = JSON.parse(line);
-          assertBridgeMessage(message);
-        } catch {
-          reject();
-          return;
-        }
-        if (!authenticated) {
-          if (message.kind !== "hello" || message.token !== this.token || message.protocol !== BRIDGE_PROTOCOL_VERSION || message.extension_origin !== `chrome-extension://${RESUME_COMPANION_EXTENSION_ID}/`) {
-            reject();
-            return;
-          }
-          authenticated = true;
-          this.socket?.destroy();
-          this.socket = candidate;
-          this.extensionVersion = message.extension_version;
-          candidate.write(`${JSON.stringify({ kind: "bridge_ready", protocol: BRIDGE_PROTOCOL_VERSION })}
-`);
-          continue;
-        }
-        this.handle(message);
-      }
-    });
-    candidate.on("error", () => candidate.destroy());
-    candidate.on("close", () => {
-      if (this.socket !== candidate) return;
-      this.socket = null;
-      this.extensionVersion = void 0;
-      this.failPending(new BrowserError("bridge_disconnected", "Chrome \u6269\u5C55\u4E0E MCP \u7684\u672C\u5730\u6865\u63A5\u5DF2\u65AD\u5F00"));
-    });
-  }
-  handle(message) {
-    if (!isRecord2(message) || message.kind !== "response" || typeof message.id !== "string") return;
-    const pending = this.pending.get(message.id);
-    if (!pending) return;
-    this.pending.delete(message.id);
-    clearTimeout(pending.timer);
-    if (message.ok === true) pending.resolve(message.result);
-    else {
-      const remote = isRecord2(message.error) ? message.error : {};
-      pending.reject(new BrowserError(errorCode(remote.code), typeof remote.message === "string" ? remote.message : "Chrome \u6269\u5C55\u6267\u884C\u5931\u8D25"));
-    }
-  }
-  async waitForConnection(signal) {
-    const deadline = Date.now() + Math.min(35e3, this.timeoutMs);
-    while (!this.socket?.writable && Date.now() < deadline) {
-      if (signal?.aborted) throw new BrowserError("cancelled", "\u8BF7\u6C42\u5DF2\u53D6\u6D88");
-      await new Promise((resolve5) => setTimeout(resolve5, 100));
-    }
-    if (!this.socket?.writable) throw new BrowserError("bridge_disconnected", "Chrome \u6269\u5C55\u5C1A\u672A\u8FDE\u63A5\u3002\u8BF7\u786E\u8BA4\u6269\u5C55\u548C Native Host \u5DF2\u5B89\u88C5\uFF0C\u7136\u540E\u70B9\u51FB\u6269\u5C55\u56FE\u6807\u91CD\u8FDE");
-    return this.socket;
-  }
-  failPending(error2) {
-    for (const pending of this.pending.values()) {
-      clearTimeout(pending.timer);
-      pending.reject(error2);
-    }
-    this.pending.clear();
-  }
-  async removeDescriptorIfOwned() {
-    try {
-      const descriptor = JSON.parse(await readFile2(this.descriptorPath, "utf8"));
-      if (descriptor.token === this.token && descriptor.socket_path === this.socketPath) await rm(this.descriptorPath, { force: true });
-    } catch {
-    }
-  }
-};
-function errorCode(value) {
-  const known = /* @__PURE__ */ new Set(["blocked", "browser_disconnected", "bridge_disconnected", "cancelled", "debugger_attach_conflict", "debugger_permission_denied", "driver_unavailable", "extension_disabled", "extension_not_installed", "invalid_request", "native_host_missing", "operation_conflict", "stale", "timeout", "unknown", "unsupported_capability"]);
-  return typeof value === "string" && known.has(value) ? value : "unknown";
-}
-
-// src/browser/extension-driver.ts
-var ExtensionDriver = class {
-  kind = "extension";
-  bridge;
-  extensionPath;
-  installerPath;
-  constructor(options) {
-    this.bridge = new NativeBridgeServer(options.dataDir, options.timeoutMs);
-    this.extensionPath = [resolve2(import.meta.dirname, "browser-assets/extension"), resolve2(import.meta.dirname, "../../browser-assets/extension")].find(existsSync2) ?? resolve2(import.meta.dirname, "browser-assets/extension");
-    this.installerPath = [resolve2(import.meta.dirname, "browser-assets/native-host/install.bundle.mjs"), resolve2(import.meta.dirname, "../../browser-assets/native-host/install.bundle.mjs")].find(existsSync2) ?? resolve2(import.meta.dirname, "browser-assets/native-host/install.bundle.mjs");
-  }
-  async status(signal) {
-    let bridgeStartError = false;
-    try {
-      await this.bridge.ensureStarted();
-    } catch {
-      bridgeStartError = true;
-    }
-    const state = this.bridge.state();
-    let remote = {};
-    if (state.connected) {
-      try {
-        remote = await this.bridge.request("status", {}, signal);
-      } catch {
-        remote = {};
-      }
-    }
-    const assetsReady = existsSync2(this.extensionPath) && existsSync2(this.installerPath);
-    const nativeHostInstalled = existsSync2(nativeHostManifestPath());
-    const remoteCapabilities = isRecord3(remote.capabilities) ? remote.capabilities : {};
-    const protocolCompatible = !state.connected || remoteCapabilities.coreProtocol === PROTOCOL_VERSION;
-    return {
-      kind: this.kind,
-      ready: assetsReady,
-      connected: state.connected,
-      compatible: assetsReady && protocolCompatible,
-      profile_mode: "extension",
-      permission_state: state.connected ? "granted" : "unknown",
-      protocol_version: PROTOCOL_VERSION,
-      bridge_protocol_version: state.protocol,
-      ...state.extension_version ? { extension_version: state.extension_version } : {},
-      setup: { extension_path: this.extensionPath, native_host_installer: this.installerPath, native_host_installed: nativeHostInstalled },
-      capabilities: Object.keys(remoteCapabilities).length ? remoteCapabilities : { coreProtocol: PROTOCOL_VERSION, continuousForms: true, finalSubmit: false, trustedEvents: true, activateTab: true },
-      ...Array.isArray(remote.recentUnconfirmedOperations) ? { recent_unconfirmed_operations: remote.recentUnconfirmedOperations } : {},
-      ...!assetsReady ? { connection_error_code: "extension_not_installed" } : !nativeHostInstalled ? { connection_error_code: "native_host_missing" } : bridgeStartError ? { connection_error_code: "bridge_disconnected", connection_error_message: "\u5F53\u524D AI \u5BBF\u4E3B\u65E0\u6CD5\u521B\u5EFA\u672C\u5730\u6269\u5C55 IPC" } : !state.connected ? { connection_error_code: "bridge_disconnected" } : !protocolCompatible ? { connection_error_code: "unsupported_capability" } : {},
-      message: !assetsReady ? "\u6D4F\u89C8\u5668\u6269\u5C55\u53D1\u884C\u8D44\u6E90\u7F3A\u5931\uFF0C\u8BF7\u91CD\u65B0\u6784\u5EFA\u6216\u5B89\u88C5\u5B8C\u6574\u53D1\u884C\u5305" : !nativeHostInstalled ? "Native Host \u5C1A\u672A\u5B89\u88C5\uFF1B\u8BF7\u8FD0\u884C setup \u4E2D\u7684\u5B89\u88C5\u5668\uFF0C\u7136\u540E\u91CD\u65B0\u52A0\u8F7D\u6269\u5C55" : bridgeStartError ? "\u5F53\u524D AI \u5BBF\u4E3B\u65E0\u6CD5\u521B\u5EFA\u672C\u5730\u6269\u5C55 IPC\uFF1B\u672C\u5730\u8D44\u6599\u5DE5\u5177\u4ECD\u53EF\u4F7F\u7528\uFF0C\u53EF\u6539\u7528 DevTools \u4E13\u7528 Profile" : state.connected && protocolCompatible ? "\u5DF2\u8FDE\u63A5\u65E5\u5E38 Chrome Profile \u4E2D\u7684\u7B80\u5386\u968F\u884C\u6269\u5C55" : state.connected ? "\u6269\u5C55\u4E0E MCP \u5DE5\u5177\u534F\u8BAE\u4E0D\u517C\u5BB9\uFF0C\u8BF7\u540C\u6B65\u5347\u7EA7" : "\u7B49\u5F85 Chrome \u6269\u5C55\u8FDE\u63A5\uFF1B\u8BF7\u786E\u8BA4\u6269\u5C55\u5DF2\u542F\u7528\uFF0C\u5FC5\u8981\u65F6\u70B9\u51FB\u6269\u5C55\u56FE\u6807\u91CD\u8FDE",
-      recommended_fallback: state.connected ? void 0 : "devtools"
-    };
-  }
-  listTabs(input, signal) {
-    return this.bridge.request("tabs", input, signal);
-  }
-  activateTab(input, signal) {
-    return this.bridge.request("activate_tab", input, signal);
-  }
-  observe(input, signal) {
-    return this.bridge.request("observe", input, signal);
-  }
-  act(input, signal) {
-    if (input.action.kind === "click" && input.action.effect_kind === "final_submit") throw new BrowserError("blocked", "\u6700\u7EC8\u7533\u8BF7\u63D0\u4EA4\u5FC5\u987B\u7531\u7528\u6237\u5B8C\u6210");
-    return this.bridge.request("act", input, signal);
-  }
-  wait(input, signal) {
-    return this.bridge.request("wait", input, signal);
-  }
-  undo(input, signal) {
-    return this.bridge.request("undo_operations", input, signal);
-  }
-  close() {
-    return this.bridge.close();
-  }
-};
-function isRecord3(value) {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-function nativeHostManifestPath() {
-  if (process.platform === "darwin") return join4(homedir2(), "Library", "Application Support", "Google", "Chrome", "NativeMessagingHosts", "com.resume_companion.bridge.json");
-  if (process.platform === "win32") return join4(process.env.APPDATA || join4(homedir2(), "AppData", "Roaming"), "Resume Companion", "com.resume_companion.bridge.json");
-  return join4(homedir2(), ".config", "google-chrome", "NativeMessagingHosts", "com.resume_companion.bridge.json");
-}
-
-// src/browser/driver-factory.ts
-function createBrowserDriver(dataDir) {
-  const selected = process.env.RESUME_COMPANION_BROWSER_DRIVER ?? "extension";
-  if (!["extension", "devtools", "auto"].includes(selected)) throw new Error("RESUME_COMPANION_BROWSER_DRIVER \u5FC5\u987B\u662F extension\u3001devtools \u6216 auto");
-  if (selected !== "devtools") return new ExtensionDriver({ dataDir });
-  const runtimePath = process.env.RESUME_COMPANION_DEVTOOLS_RUNTIME ?? [
-    resolve3(import.meta.dirname, "runtime/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js"),
-    resolve3(import.meta.dirname, "node_modules/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js"),
-    resolve3(import.meta.dirname, "../../runtime/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js"),
-    resolve3(import.meta.dirname, "../../node_modules/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js")
-  ].find(existsSync3) ?? resolve3(import.meta.dirname, "runtime/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js");
-  return new DevToolsDriver({ dataDir, runtimePath });
-}
 
 // src/profile-store.ts
-import { randomUUID as randomUUID3 } from "node:crypto";
-import { chmod as chmod2, copyFile, mkdir as mkdir3, open, readFile as readFile3, readdir, rename, stat, writeFile as writeFile2 } from "node:fs/promises";
-import { homedir as homedir3 } from "node:os";
-import { dirname as dirname2, isAbsolute, join as join5, resolve as resolve4 } from "node:path";
+import { randomUUID } from "node:crypto";
+import { chmod, copyFile, mkdir, open, readFile, readdir, rename, stat, writeFile } from "node:fs/promises";
+import { homedir } from "node:os";
+import { dirname, isAbsolute, join, resolve } from "node:path";
 var ID_PATTERN = /^[A-Za-z0-9_-]{1,100}$/;
 var id = external_exports.string().regex(ID_PATTERN);
 var optionalId = id.optional();
@@ -24485,7 +21603,7 @@ var emptyProfile = (profileId, revision) => ({
   custom_answers: [],
   supplemental_fields: []
 });
-var ensureId = (value) => value ?? randomUUID3();
+var ensureId = (value) => value ?? randomUUID();
 function mergeChanges(profile, changes, revision) {
   const next = structuredClone(profile);
   if (changes.basic) next.basic = basic.parse({ ...next.basic, ...changes.basic });
@@ -24500,14 +21618,14 @@ function mergeChanges(profile, changes, revision) {
   return ProfileSchema.parse(next);
 }
 function defaultDataDir() {
-  if (process.platform === "darwin") return join5(homedir3(), "Library", "Application Support", "Resume Companion");
-  if (process.platform === "win32") return join5(process.env.APPDATA || join5(homedir3(), "AppData", "Roaming"), "Resume Companion");
-  return join5(process.env.XDG_DATA_HOME || join5(homedir3(), ".local", "share"), "resume-companion");
+  if (process.platform === "darwin") return join(homedir(), "Library", "Application Support", "Resume Companion");
+  if (process.platform === "win32") return join(process.env.APPDATA || join(homedir(), "AppData", "Roaming"), "Resume Companion");
+  return join(process.env.XDG_DATA_HOME || join(homedir(), ".local", "share"), "resume-companion");
 }
 function resolveDataDir(value = process.env.RESUME_COMPANION_DATA_DIR) {
   if (!value) return defaultDataDir();
-  const expanded = value === "~" ? homedir3() : value.startsWith("~/") ? join5(homedir3(), value.slice(2)) : value;
-  return isAbsolute(expanded) ? resolve4(expanded) : resolve4(process.cwd(), expanded);
+  const expanded = value === "~" ? homedir() : value.startsWith("~/") ? join(homedir(), value.slice(2)) : value;
+  return isAbsolute(expanded) ? resolve(expanded) : resolve(process.cwd(), expanded);
 }
 async function syncDirectory(path) {
   try {
@@ -24518,23 +21636,23 @@ async function syncDirectory(path) {
   }
 }
 async function atomicWrite(path, value) {
-  await mkdir3(dirname2(path), { recursive: true, mode: 448 });
-  const temporary = `${path}.tmp-${process.pid}-${randomUUID3()}`;
-  await writeFile2(temporary, `${JSON.stringify(value, null, 2)}
+  await mkdir(dirname(path), { recursive: true, mode: 448 });
+  const temporary = `${path}.tmp-${process.pid}-${randomUUID()}`;
+  await writeFile(temporary, `${JSON.stringify(value, null, 2)}
 `, { encoding: "utf8", mode: 384 });
   const handle = await open(temporary, "r");
   await handle.sync();
   await handle.close();
   await rename(temporary, path);
-  await chmod2(path, 384).catch(() => void 0);
-  await syncDirectory(dirname2(path));
+  await chmod(path, 384).catch(() => void 0);
+  await syncDirectory(dirname(path));
 }
 function storageError(code, message) {
   const error2 = new Error(`${code}: ${message}`);
   error2.code = code;
   return error2;
 }
-function fileErrorCode2(error2) {
+function fileErrorCode(error2) {
   return typeof error2 === "object" && error2 !== null && "code" in error2 && typeof error2.code === "string" ? error2.code : void 0;
 }
 function entryFor(stored) {
@@ -24580,8 +21698,9 @@ function scalarSource(profile, sourceRef) {
   }
   return void 0;
 }
-var ReadViewSchema = external_exports.object({
+var ProfileReadSchema = external_exports.object({
   profile_id: id,
+  expected_revision: external_exports.number().int().positive().optional().describe("\u9996\u6B21\u76EE\u5F55\u8BFB\u53D6\u540E\uFF0C\u540E\u7EED\u8BFB\u53D6\u586B\u5199\u8BE5\u6B21\u8FD4\u56DE\u7684 profile_revision"),
   section: external_exports.enum(["basic", "education", "experience", "projects", "skills", "certificates", "custom_answers", "supplemental_fields"]).optional(),
   record_id: id.optional(),
   source_refs: external_exports.array(external_exports.string().min(1).max(240)).max(100).optional(),
@@ -24595,15 +21714,15 @@ var ProfileStore = class {
   queue = Promise.resolve();
   constructor(dataDir = resolveDataDir()) {
     this.dataDir = dataDir;
-    this.indexPath = join5(dataDir, "index.json");
+    this.indexPath = join(dataDir, "index.json");
   }
   async initialize() {
-    for (const folder of ["", "profiles", "history", "backups"]) await mkdir3(join5(this.dataDir, folder), { recursive: true, mode: 448 });
-    await chmod2(this.dataDir, 448).catch(() => void 0);
+    for (const folder of ["", "profiles", "history", "backups"]) await mkdir(join(this.dataDir, folder), { recursive: true, mode: 448 });
+    await chmod(this.dataDir, 448).catch(() => void 0);
     try {
       await stat(this.indexPath);
     } catch (error2) {
-      if (fileErrorCode2(error2) !== "ENOENT") throw error2;
+      if (fileErrorCode(error2) !== "ENOENT") throw error2;
       await atomicWrite(this.indexPath, { format: "resume-companion-index", storage_version: 1, profiles: [] });
     }
     await this.readIndex();
@@ -24617,7 +21736,7 @@ var ProfileStore = class {
   async readIndex() {
     let raw;
     try {
-      raw = await readFile3(this.indexPath, "utf8");
+      raw = await readFile(this.indexPath, "utf8");
     } catch (error2) {
       throw storageError("storage_unavailable", `\u65E0\u6CD5\u8BFB\u53D6\u8D44\u6599\u7D22\u5F15\uFF1A${error2 instanceof Error ? error2.message : String(error2)}`);
     }
@@ -24634,9 +21753,9 @@ var ProfileStore = class {
   async readStored(profileId) {
     let raw;
     try {
-      raw = await readFile3(join5(this.dataDir, "profiles", `${profileId}.json`), "utf8");
+      raw = await readFile(join(this.dataDir, "profiles", `${profileId}.json`), "utf8");
     } catch (error2) {
-      if (fileErrorCode2(error2) === "ENOENT") throw storageError("profile_missing", "\u6307\u5B9A\u7684\u672C\u5730\u8D44\u6599\u4E0D\u5B58\u5728");
+      if (fileErrorCode(error2) === "ENOENT") throw storageError("profile_missing", "\u6307\u5B9A\u7684\u672C\u5730\u8D44\u6599\u4E0D\u5B58\u5728");
       throw storageError("storage_unavailable", `\u65E0\u6CD5\u8BFB\u53D6\u8D44\u6599\uFF1A${error2 instanceof Error ? error2.message : String(error2)}`);
     }
     let value;
@@ -24687,7 +21806,7 @@ var ProfileStore = class {
       } else {
         if (index.profiles.length >= 100) throw storageError("profile_limit", "\u672C\u5730\u8D44\u6599\u5DF2\u8FBE\u5230 100 \u4EFD\u4E0A\u9650");
         if (index.profiles.some((item) => item.name === input.name)) throw storageError("name_conflict", "\u5DF2\u6709\u540C\u540D\u8D44\u6599\uFF0C\u8BF7\u6362\u4E00\u4E2A\u540D\u79F0");
-        const profileId = randomUUID3();
+        const profileId = randomUUID();
         stored = StoredProfileSchema.parse({
           format: "resume-companion-profile",
           storage_version: 1,
@@ -24703,11 +21822,11 @@ var ProfileStore = class {
       const serialized = JSON.stringify(stored);
       if (Buffer.byteLength(serialized, "utf8") > 1048576) throw storageError("profile_too_large", "\u5355\u4EFD\u8D44\u6599\u8D85\u8FC7 1 MiB\uFF0C\u8BF7\u7CBE\u7B80\u540E\u518D\u4FDD\u5B58");
       if (previous) {
-        const historyDir = join5(this.dataDir, "history", previous.id);
-        await mkdir3(historyDir, { recursive: true, mode: 448 });
-        await atomicWrite(join5(historyDir, `${previous.revision}.json`), previous);
+        const historyDir = join(this.dataDir, "history", previous.id);
+        await mkdir(historyDir, { recursive: true, mode: 448 });
+        await atomicWrite(join(historyDir, `${previous.revision}.json`), previous);
       }
-      await atomicWrite(join5(this.dataDir, "profiles", `${stored.id}.json`), stored);
+      await atomicWrite(join(this.dataDir, "profiles", `${stored.id}.json`), stored);
       const nextEntries = index.profiles.filter((item) => item.id !== stored.id);
       nextEntries.push(entryFor(stored));
       await atomicWrite(this.indexPath, { ...index, profiles: nextEntries });
@@ -24715,9 +21834,12 @@ var ProfileStore = class {
     });
   }
   async readView(raw) {
-    const params = ReadViewSchema.parse(raw);
+    const params = ProfileReadSchema.parse(raw);
     if (params.record_id && !params.section) throw storageError("invalid_request", "record_id \u9700\u8981\u540C\u65F6\u6307\u5B9A section");
     const stored = await this.get(params.profile_id);
+    if (params.expected_revision !== void 0 && params.expected_revision !== stored.revision) {
+      throw storageError("profile_changed", `\u8D44\u6599\u5DF2\u7ECF\u66F4\u65B0\uFF1B\u5F53\u524D\u4FEE\u8BA2\u4E3A ${stored.revision}\uFF0C\u8BF7\u91CD\u65B0\u8BFB\u53D6\u76EE\u5F55\u5E76\u56FA\u5B9A\u65B0\u7684\u4FEE\u8BA2\u53F7`);
+    }
     const base = { profile_id: stored.id, name: stored.name, profile_revision: stored.revision, updated_at: stored.updated_at };
     if (params.source_refs) {
       const entries = params.source_refs.map((source_ref) => {
@@ -24761,8 +21883,8 @@ var ProfileStore = class {
   }
   async rebuildIndex() {
     return this.exclusive(async () => {
-      await mkdir3(join5(this.dataDir, "profiles"), { recursive: true, mode: 448 });
-      const names = (await readdir(join5(this.dataDir, "profiles"))).filter((name) => name.endsWith(".json"));
+      await mkdir(join(this.dataDir, "profiles"), { recursive: true, mode: 448 });
+      const names = (await readdir(join(this.dataDir, "profiles"))).filter((name) => name.endsWith(".json"));
       const profiles = [];
       for (const name of names) {
         const profileId = name.slice(0, -5);
@@ -24774,7 +21896,7 @@ var ProfileStore = class {
       }
       let backup;
       try {
-        backup = join5(this.dataDir, "backups", `index-${(/* @__PURE__ */ new Date()).toISOString().replaceAll(":", "-")}.json`);
+        backup = join(this.dataDir, "backups", `index-${(/* @__PURE__ */ new Date()).toISOString().replaceAll(":", "-")}.json`);
         await copyFile(this.indexPath, backup);
       } catch {
         backup = null;
@@ -24789,29 +21911,17 @@ var ProfileStore = class {
 // src/index.ts
 var store = new ProfileStore();
 await store.initialize();
-var driver = createBrowserDriver(store.dataDir);
-var clientSchemas = createAutomationSchemas(external_exports);
-var wireSchemas = createAutomationSchemas(external_exports, { allowSources: false });
-var profileReadSchema = external_exports.object({
-  profile_id: external_exports.string().regex(/^[A-Za-z0-9_-]{1,100}$/),
-  section: external_exports.enum(["basic", "education", "experience", "projects", "skills", "certificates", "custom_answers", "supplemental_fields"]).optional(),
-  record_id: external_exports.string().regex(/^[A-Za-z0-9_-]{1,100}$/).optional(),
-  source_refs: external_exports.array(external_exports.string().min(1).max(240)).min(1).max(100).optional(),
-  offset: external_exports.number().int().nonnegative().optional(),
-  limit: external_exports.number().int().min(1).max(50).optional(),
-  include_source_markdown: external_exports.boolean().optional()
-}).strict();
 function toolResult(data) {
-  const structuredContent = isRecord4(data) ? data : { value: data };
+  const structuredContent = isRecord(data) ? data : { value: data };
   return { content: [{ type: "text", text: JSON.stringify(data) }], structuredContent };
 }
-function errorResult(error2, sideEffects = "none") {
-  const message = messageOf(error2) || "\u5DE5\u5177\u6267\u884C\u5931\u8D25";
+function errorResult(error2) {
+  const message = error2 instanceof Error ? error2.message : String(error2);
   const prefixed = /^([a-z_]+):/.exec(message)?.[1];
   const name = typeof error2 === "object" && error2 !== null && "name" in error2 ? error2.name : void 0;
   const code = prefixed ?? (name === "ZodError" ? "invalid_request" : "internal_error");
-  const status = code === "stale" ? "stale" : code === "unknown" || code === "timeout" ? "unknown" : "blocked";
-  const data = { status, error: { code, message }, side_effects: sideEffects };
+  const status = code === "profile_changed" ? "stale" : "blocked";
+  const data = { status, error: { code, message }, side_effects: "none" };
   return { isError: true, ...toolResult(data) };
 }
 async function runLocal(job) {
@@ -24821,95 +21931,38 @@ async function runLocal(job) {
     return errorResult(error2);
   }
 }
-async function runBrowser(method, params, signal) {
-  try {
-    const fn = driver[method];
-    return toolResult(await fn.call(driver, params, signal));
-  } catch (error2) {
-    const possible = (method === "act" || method === "undo") && /disconnected|timeout|cancelled|unknown/i.test(messageOf(error2));
-    return errorResult(error2, possible ? "possible" : "none");
-  }
-}
-async function resolveActionSources(params) {
-  const resolved = structuredClone(params);
-  const resolveValue = async (value) => {
-    if ("literal" in value) return value;
-    return { literal: await store.resolveSource(value.source) };
-  };
-  const writes = resolved.action.kind === "set_values" ? resolved.action.items : [resolved.action];
-  for (const write of writes) if (write.kind === "set_value") write.value = await resolveValue(write.value);
-  return wireSchemas.act.parse(resolved);
-}
-var server = new McpServer({ name: "resume-companion", version: "0.7.0" });
+var server = new McpServer({ name: "resume-companion", version: "0.11.0" });
 server.registerTool("resume_status", {
-  title: "\u68C0\u67E5\u7B80\u5386\u968F\u884C\u72B6\u6001",
-  description: "\u8FD4\u56DE MCP \u672C\u5730\u8D44\u6599\u5E93\u3001\u5DF2\u4FDD\u5B58\u7B80\u5386\u548C\u6D4F\u89C8\u5668\u9A71\u52A8\u72B6\u6001\u3002\u6D4F\u89C8\u5668\u5C1A\u672A\u8FDE\u63A5\u65F6\u8D44\u6599\u7BA1\u7406\u4ECD\u53EF\u6B63\u5E38\u4F7F\u7528\uFF1B\u7F51\u9875\u5DE5\u5177\u9996\u6B21\u8C03\u7528\u4F1A\u6309\u9700\u8FDE\u63A5 Chrome\u3002",
+  title: "\u68C0\u67E5\u7B80\u5386\u968F\u884C\u8D44\u6599\u5E93\u72B6\u6001",
+  description: "\u8FD4\u56DE\u672C\u5730\u8D44\u6599\u5E93\u76EE\u5F55\u3001\u683C\u5F0F\u7248\u672C\u548C\u8D44\u6599\u6570\u91CF\u3002\u6D4F\u89C8\u5668\u7531\u72EC\u7ACB\u7684 Chrome DevTools MCP \u63D0\u4F9B\uFF0C\u56E0\u6B64\u672C\u5DE5\u5177\u4E0D\u4F1A\u542F\u52A8\u6216\u68C0\u67E5 Chrome\u3002",
   annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true }
-}, async () => runLocal(async () => {
-  const [storage, profiles, browser] = await Promise.all([store.status(), store.list(), driver.status()]);
-  return { storage, profiles, browser };
-}));
+}, async () => runLocal(async () => ({
+  storage: await store.status(),
+  service: { name: "resume-companion", version: "0.11.0", role: "profile_library" }
+})));
 server.registerTool("resume_profile_list", {
   title: "\u5217\u51FA\u672C\u5730\u7B80\u5386\u8D44\u6599",
-  description: "\u5217\u51FA MCP \u672C\u5730\u8D44\u6599\u5E93\u4E2D\u7684\u7B80\u5386 ID\u3001\u540D\u79F0\u3001\u4FEE\u8BA2\u53F7\u548C\u66F4\u65B0\u65F6\u95F4\uFF0C\u4E0D\u8FD4\u56DE\u7B80\u5386\u6B63\u6587\u3002",
+  description: "\u5217\u51FA\u672C\u5730\u8D44\u6599\u5E93\u4E2D\u7684\u7B80\u5386 ID\u3001\u540D\u79F0\u3001\u4FEE\u8BA2\u53F7\u548C\u66F4\u65B0\u65F6\u95F4\uFF0C\u4E0D\u8FD4\u56DE\u7B80\u5386\u6B63\u6587\u3002",
   annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true }
 }, async () => runLocal(async () => ({ profiles: await store.list() })));
 server.registerTool("resume_profile_read", {
   title: "\u8BFB\u53D6\u672C\u5730\u7B80\u5386\u8D44\u6599",
-  description: "\u8BFB\u53D6\u6307\u5B9A\u8D44\u6599\u7684\u76EE\u5F55\u3001\u67D0\u4E2A\u680F\u76EE\u3001\u8BB0\u5F55\u6216\u6765\u6E90\u5F15\u7528\u3002\u7701\u7565 section \u65F6\u53EA\u8FD4\u56DE\u76EE\u5F55\uFF1B\u672A\u77E5\u503C\u4FDD\u6301 null\u3002",
-  inputSchema: profileReadSchema,
+  description: "\u8BFB\u53D6\u6307\u5B9A\u8D44\u6599\u7684\u76EE\u5F55\u3001\u680F\u76EE\u3001\u8BB0\u5F55\u6216\u6765\u6E90\u5F15\u7528\u3002\u9996\u6B21\u8BFB\u53D6\u7701\u7565 expected_revision\uFF1B\u540E\u7EED\u8BFB\u53D6\u643A\u5E26\u9996\u6B21\u8FD4\u56DE\u7684 profile_revision\uFF0C\u8D44\u6599\u5DF2\u53D8\u5316\u65F6\u4F1A\u505C\u6B62\u5E76\u8981\u6C42\u91CD\u65B0\u8BFB\u53D6\u3002\u672A\u77E5\u503C\u4FDD\u6301 null\u3002",
+  inputSchema: ProfileReadSchema,
   annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true }
-}, async (input) => runLocal(() => store.readView(profileReadSchema.parse(input))));
+}, async (input) => runLocal(() => store.readView(ProfileReadSchema.parse(input))));
 server.registerTool("resume_profile_save", {
   title: "\u521B\u5EFA\u6216\u66F4\u65B0\u672C\u5730\u7B80\u5386\u8D44\u6599",
   description: "\u521B\u5EFA\u65F6\u7701\u7565 profile_id \u5E76\u63D0\u4F9B\u540D\u79F0\uFF1B\u66F4\u65B0\u65F6\u63D0\u4F9B profile_id \u548C\u6700\u8FD1\u8BFB\u53D6\u7684 expected_revision\u3002\u53EA\u4FDD\u5B58\u7528\u6237\u660E\u786E\u63D0\u4F9B\u7684\u4E8B\u5B9E\uFF0C\u672A\u77E5\u503C\u4F7F\u7528 null\u3002",
   inputSchema: ProfileSaveSchema,
   annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false }
 }, async (input) => runLocal(() => store.save(ProfileSaveSchema.parse(input))));
-server.registerTool("resume_list_tabs", {
-  title: "\u5217\u51FA\u53EF\u5904\u7406\u7684 Chrome \u6807\u7B7E\u9875",
-  description: "\u6309\u9700\u8FDE\u63A5\u5DF2\u914D\u7F6E\u7684 Chrome \u4E0A\u4E0B\u6587\uFF0C\u5217\u51FA\u666E\u901A HTTP/HTTPS \u6807\u7B7E\u9875\uFF0C\u53EA\u8FD4\u56DE\u6807\u9898\u3001\u7F51\u5740\u548C\u6807\u7B7E\u9875 ID\uFF0C\u4E0D\u8BFB\u53D6\u9875\u9762\u6B63\u6587\u3002",
-  inputSchema: {
-    current_window_only: external_exports.boolean().optional().describe("DevTools \u9A71\u52A8\u679A\u4E3E\u5DF2\u6388\u6743\u6D4F\u89C8\u5668\u4E0A\u4E0B\u6587\uFF1B\u5F53\u524D\u7248\u672C\u4E0D\u533A\u5206 Chrome \u7A97\u53E3"),
-    url_contains: external_exports.string().trim().max(500).optional().describe("\u53EF\u9009\u7684\u6807\u9898\u6216\u7F51\u5740\u8FC7\u6EE4\u6587\u672C")
-  },
-  annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true }
-}, async (input, extra) => runBrowser("listTabs", input, extra?.signal));
-server.registerTool("resume_activate_tab", {
-  title: "\u6FC0\u6D3B\u62DB\u8058\u6807\u7B7E\u9875",
-  description: "\u628A\u6307\u5B9A\u666E\u901A\u7F51\u9875\u6807\u7B7E\u9875\u5207\u5230\u524D\u53F0\u5E76\u56DE\u8BFB\u53EF\u89C1\u72B6\u6001\uFF1B\u4E0D\u4F1A\u5237\u65B0\u3001\u5BFC\u822A\u6216\u586B\u5199\u3002",
-  inputSchema: { tab_id: external_exports.number().int().positive() },
-  annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true }
-}, async (input, extra) => runBrowser("activateTab", input, extra?.signal));
-var browserTools = [
-  ["observe", "observe", "\u89C2\u5BDF\u62DB\u8058\u9875\u9762", "\u9996\u6B21\u63D0\u4F9B tab_id\uFF0C\u540E\u7EED\u4F7F\u7528 session_id\u3002\u8FD4\u56DE\u57FA\u4E8E\u65E0\u969C\u788D\u6811\u7684\u7ED3\u6784\u5316\u5143\u7D20\u3001\u5019\u9009\u3001\u53D8\u5316\u6216\u64CD\u4F5C\u6838\u5BF9\uFF1B\u4E0D\u63A5\u53D7\u9009\u62E9\u5668\u548C\u811A\u672C\u3002", true],
-  ["act", "act", "\u6267\u884C\u4E00\u4E2A\u8868\u5355\u57FA\u7840\u52A8\u4F5C", "\u4F7F\u7528\u89C2\u5BDF\u8FD4\u56DE\u7684\u5F15\u7528\u3001\u5FEB\u7167\u548C\u503C token \u6267\u884C\u8F93\u5165\u3001\u9009\u62E9\u3001\u70B9\u51FB\u6216\u6709\u9650\u6279\u91CF\u5199\u5165\u3002\u6700\u7EC8\u63D0\u4EA4\u3001\u58F0\u660E\u3001\u9A8C\u8BC1\u3001\u5220\u9664\u548C\u4E0A\u4F20\u7531\u7528\u6237\u5904\u7406\u3002", false],
-  ["wait", "wait", "\u7B49\u5F85\u9875\u9762\u7684\u6709\u9650\u6761\u4EF6", "\u7B49\u5F85\u5F15\u7528\u53EF\u89C1\u3001\u6D88\u5931\u3001\u5C55\u5F00\u3001\u5019\u9009\u5C31\u7EEA\u3001\u503C\u3001\u6587\u672C\u6216\u7ED3\u6784\u53D8\u5316\uFF1B\u8D85\u65F6\u8FD4\u56DE unknown\u3002", true],
-  ["undo_operations", "undo", "\u6761\u4EF6\u64A4\u9500\u5B57\u6BB5\u64CD\u4F5C", "\u53EA\u5728\u7F51\u9875\u5F53\u524D\u503C\u4ECD\u7B49\u4E8E\u5DE5\u5177\u5199\u5165\u503C\u65F6\u9006\u5E8F\u6062\u590D\u5B57\u6BB5\uFF1B\u4E0D\u80FD\u56DE\u6EDA\u7F51\u7AD9\u5DF2\u7ECF\u4FDD\u5B58\u7684\u6570\u636E\u3002", false]
-];
-for (const [toolMethod, driverMethod, title, description, readOnly] of browserTools) {
-  server.registerTool(`resume_${toolMethod}`, {
-    title,
-    description,
-    inputSchema: clientSchemas[toolMethod],
-    annotations: { readOnlyHint: readOnly, destructiveHint: toolMethod === "undo_operations", idempotentHint: toolMethod !== "act" }
-  }, async (input, extra) => {
-    try {
-      const parsed = clientSchemas[toolMethod].parse(input);
-      const params = toolMethod === "act" ? await resolveActionSources(parsed) : parsed;
-      return runBrowser(driverMethod, params, extra?.signal);
-    } catch (error2) {
-      return errorResult(error2);
-    }
-  });
-}
 var transport = new StdioServerTransport();
 await server.connect(transport);
 var closing = false;
 async function shutdown() {
   if (closing) return;
   closing = true;
-  await driver.close();
   await server.close();
 }
 process.once("SIGINT", () => {
@@ -24918,6 +21971,6 @@ process.once("SIGINT", () => {
 process.once("SIGTERM", () => {
   void shutdown().finally(() => process.exit(0));
 });
-function isRecord4(value) {
+function isRecord(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }

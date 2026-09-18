@@ -19,9 +19,15 @@ await build({
   outfile: resolve(root, 'server.bundle.mjs'),
 });
 
+await build({
+  ...common,
+  entryPoints: [resolve(root, 'src/chrome-launcher.ts')],
+  outfile: resolve(root, 'chrome-launcher.bundle.mjs'),
+});
+
 const runtimeRoot = resolve(root, 'runtime');
 await rm(runtimeRoot, { recursive: true, force: true });
 await mkdir(runtimeRoot, { recursive: true });
 await cp(resolve(root, 'node_modules/chrome-devtools-mcp'), resolve(runtimeRoot, 'chrome-devtools-mcp'), { recursive: true });
 
-console.log('Self-contained MCP server, extension assets and pinned DevTools fallback generated.');
+console.log('Profile MCP, Chrome launcher and pinned Chrome DevTools MCP runtime generated.');

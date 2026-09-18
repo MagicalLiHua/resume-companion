@@ -1,12 +1,8 @@
-# 开发指南
+# 开发说明
 
-> 当前正文记录 0.10.0 的扩展主驱动实现基线。下一阶段开发以 [Chrome DevTools MCP 主驱动重构计划](Chrome%20DevTools%20MCP主驱动重构计划.md)为准；完成 0.11.0 迁移时再同步删改这里的扩展、Native Host 和备用驱动说明。
+0.11.0 的产品代码使用严格 TypeScript。Resume Companion 只实现本地资料服务和一个薄的 Chrome MCP 启动器；浏览器协议、页面快照和输入能力来自固定的官方 `chrome-devtools-mcp@1.9.0`。
 
-产品逻辑、MCP、Chrome 扩展、Native Host 和页面执行引擎使用严格 TypeScript。只有构建、打包、调试客户端和兼容启动器保留为短小的 `.mjs` 或 shell 脚本。
-
-## 安装与回归
-
-使用 Node.js 24：
+## 命令
 
 ~~~sh
 npm ci
@@ -14,53 +10,43 @@ npm ci --prefix plugins/resume-companion
 npm run typecheck
 npm run build
 npm test
-npm run test:e2e
 npm run test:core
-npm run test:devtools
+npm run test:e2e
 npm run package
 ~~~
 
-`npm test` 覆盖共享协议、Native Host 中继集成、本地资料、快照、安全策略和驱动故障。`test:e2e` 在 Playwright 中运行完整页面执行引擎；`test:devtools` 则验证官方 Chrome DevTools MCP 备用驱动的隔离与持久 Profile。所有自动化回归只使用合成资料。
+`test:e2e` 启动本地虚构招聘站点和无头 Chrome，直接调用官方 MCP。测试只使用合成数据。某些受限环境需要允许监听 `127.0.0.1:4174` 和启动 Chrome。
 
 ## 目录
 
 | 目录 | 内容 |
 | --- | --- |
-| `shared` | MCP、Native Host 与扩展共享的版本化桥接协议 |
-| `extension/src/background` | Native Messaging、标签页管理、`chrome.debugger` 可信输入与工具路由 |
-| `extension/src/content` | 页面观察、动作、动态控件、策略、回读与撤销 |
-| `native-host/src` | Chrome Native Messaging 长度帧、来源校验和私有 socket 中继 |
-| `plugins/resume-companion/src` | MCP、本地资料库、协议、扩展驱动与 DevTools 备用驱动 |
-| `tests/fixtures` | 虚构的单页和多步招聘表单 |
-| `tests/e2e` | 复杂页面控件与操作语义回归 |
-| `plugins/resume-companion/tests` | MCP 契约、资料库、扩展 socket 和 DevTools 回归 |
+| `plugins/resume-companion/src/index.ts` | 四工具资料 MCP |
+| `plugins/resume-companion/src/profile-store.ts` | 本地 schema、原子写入、历史和 revision |
+| `plugins/resume-companion/src/chrome-profile.ts` | 跨平台 Profile 路径与实例锁 |
+| `plugins/resume-companion/src/chrome-launcher.ts` | 官方 MCP 参数、stdio 透传和脱敏诊断 |
+| `plugins/resume-companion/skills` | Agent 工作流与诊断边界 |
+| `plugins/resume-companion/tests` | 资料、锁、策略和真实官方 MCP 集成 |
+| `tests/fixtures` | 本地虚构招聘页面 |
 
-## 扩展驱动约束
+## 构建边界
 
-新增能力应继续满足：
+`plugins/resume-companion/scripts/build.mjs` 生成：
 
-- 对模型只暴露 Resume Companion 的十个稳定工具。
-- 使用不透明引用和页面快照，不接受任意选择器或脚本。
-- 每次写入前校验当前值 token，写入后回读。
-- 有副作用的操作使用 `operation_id` 去重。
-- 保存和页面迁移形成撤销边界。
-- 扩展不保存简历、Cookie、页面正文、表单值或桥接 token。
-- Native Host 只连接当前 MCP 生成的私有 socket，不增加固定 localhost 监听端口。
-- 最终提交及敏感操作保持手动。
+- `server.bundle.mjs`
+- `chrome-launcher.bundle.mjs`
+- `runtime/chrome-devtools-mcp/`
 
-Manifest 的公钥固定扩展 ID，不应在普通版本更新中替换。扩展、共享协议、Native Host 和 MCP 的 bridge protocol 版本必须一致。
+不要手工编辑 bundle 或 runtime。启动器不代理、不改名、不解析上游 MCP 工具，只计算稳定 Profile、获取锁、设置已审查参数、透传 stdio 和脱敏 stderr。
 
-## DevTools 备用驱动
+专用 Profile 不放在插件缓存中。启动器进程一启动就获取锁；第二个任务不会静默改用临时 Profile。正常或信号退出时，锁只在上游进程结束后释放。
 
-`RESUME_COMPANION_BROWSER_DRIVER=devtools` 显式启用 `DevToolsDriver`。它通过固定版本的官方 Chrome DevTools MCP 连接 Chrome。上游运行时在构建时复制到 `runtime/chrome-devtools-mcp`，发布包不依赖全局 `npx` 或运行时下载。
+## 变更规则
 
-默认日常模式不调用该驱动，也不依赖 `DevToolsActivePort`。它仍然保留隔离 Profile、持久专用 Profile、安全错误归一化和连接失败后重建客户端的回归。
+- 新页面能力优先通过官方稳定工具和 skill 组合，不增加站点专用选择器或 API 逆向写入。
+- 固定上游版本；升级前运行完整集成回归并检查工具 schema、默认行为和审批面。
+- 资料 schema 变更需要兼容迁移、原子写入和旧 revision 测试。
+- 浏览器权限变更需要同步 `.mcp.json`、文档和策略测试。
+- 任何真实招聘网站验证先只读；普通填写或草稿保存需要明确的当前账号和范围授权。
 
-## 虚构表单与打包
-
-~~~sh
-npm run lab
-npm run package
-~~~
-
-实验页位于 `http://127.0.0.1:4174/agent-lab.html`。发布包包含自包含 MCP、Chrome 扩展、Native Host、固定 DevTools 备用运行时、skill 和公开文档。不要手工编辑 `server.bundle.mjs`、`host.bundle.mjs` 或扩展构建产物；修改 TypeScript 后运行根目录构建。
+旧版扩展、Native Host 与自研浏览器协议保存在 Git 标签 `archive/extension-0.10.0`，不在 0.11 主线继续维护。

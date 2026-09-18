@@ -1,33 +1,20 @@
 {
   "name": "resume-companion",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "private": true,
   "type": "module",
   "engines": {
     "node": ">=24 <25"
   },
   "scripts": {
-    "build": "node scripts/build-browser.mjs && npm run build --prefix plugins/resume-companion",
-    "build:browser": "node scripts/build-browser.mjs",
-    "typecheck": "tsc --noEmit -p tsconfig.json && npm run typecheck --prefix plugins/resume-companion",
-    "test": "npm run build:browser && vitest run tests/browser && npm run test:unit --prefix plugins/resume-companion",
-    "test:e2e": "playwright test",
+    "build": "npm run build --prefix plugins/resume-companion",
+    "typecheck": "npm run typecheck --prefix plugins/resume-companion",
+    "test": "npm run test --prefix plugins/resume-companion",
+    "test:e2e": "npm run test:devtools --prefix plugins/resume-companion",
     "test:core": "npm run test:core --prefix plugins/resume-companion",
     "test:devtools": "npm run test:devtools --prefix plugins/resume-companion",
     "check": "npm run check --prefix plugins/resume-companion",
     "lab": "node scripts/lab-server.mjs",
-    "package": "node scripts/package.mjs",
-    "install:native-host": "node native-host/install.bundle.mjs"
-  },
-  "dependencies": {
-    "zod": "4.6.1"
-  },
-  "devDependencies": {
-    "@playwright/test": "1.63.0",
-    "@types/chrome": "0.2.9",
-    "@types/node": "22.20.2",
-    "esbuild": "0.28.2",
-    "typescript": "7.0.2",
-    "vitest": "5.0.0"
+    "package": "node scripts/package.mjs"
   }
 }

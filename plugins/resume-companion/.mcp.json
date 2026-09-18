@@ -2,13 +2,46 @@
   "mcpServers": {
     "resume_companion": {
       "command": "node",
-      "args": [
-        "./server.bundle.mjs"
-      ],
+      "args": ["./server.bundle.mjs"],
       "cwd": ".",
       "enabled": true,
       "required": true,
-      "startup_timeout_sec": 30
+      "startup_timeout_sec": 30,
+      "default_tools_approval_mode": "approve"
+    },
+    "chrome_devtools": {
+      "command": "node",
+      "args": ["./chrome-launcher.bundle.mjs"],
+      "cwd": ".",
+      "enabled": true,
+      "required": false,
+      "startup_timeout_sec": 30,
+      "tool_timeout_sec": 120,
+      "disabled_tools": ["upload_file", "lighthouse_audit"],
+      "default_tools_approval_mode": "prompt",
+      "tools": {
+        "list_pages": { "approval_mode": "approve" },
+        "select_page": { "approval_mode": "approve" },
+        "take_snapshot": { "approval_mode": "approve" },
+        "wait_for": { "approval_mode": "approve" },
+        "list_network_requests": { "approval_mode": "approve" },
+        "list_console_messages": { "approval_mode": "approve" },
+        "get_console_message": { "approval_mode": "approve" },
+        "take_screenshot": { "approval_mode": "approve" },
+        "fill_form": { "approval_mode": "approve" },
+        "fill": { "approval_mode": "approve" },
+        "click": { "approval_mode": "approve" },
+        "hover": { "approval_mode": "approve" },
+        "evaluate_script": { "approval_mode": "prompt" },
+        "handle_dialog": { "approval_mode": "prompt" },
+        "get_network_request": { "approval_mode": "prompt" },
+        "navigate_page": { "approval_mode": "prompt" },
+        "new_page": { "approval_mode": "prompt" },
+        "close_page": { "approval_mode": "prompt" },
+        "press_key": { "approval_mode": "prompt" },
+        "type_text": { "approval_mode": "prompt" },
+        "drag": { "approval_mode": "prompt" }
+      }
     }
   }
 }

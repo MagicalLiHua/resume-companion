@@ -282,8 +282,9 @@ function scalarSource(profile: Profile, sourceRef: string): ScalarSource {
   return undefined;
 }
 
-const ReadViewSchema = z.object({
+export const ProfileReadSchema = z.object({
   profile_id: id,
+  expected_revision: z.number().int().positive().optional().describe('首次目录读取后，后续读取填写该次返回的 profile_revision'),
   section: z.enum(['basic', 'education', 'experience', 'projects', 'skills', 'certificates', 'custom_answers', 'supplemental_fields']).optional(),
   record_id: id.optional(),
   source_refs: z.array(z.string().min(1).max(240)).max(100).optional(),
@@ -423,9 +424,12 @@ export class ProfileStore {
   }
 
   async readView(raw: unknown): Promise<Record<string, unknown>> {
-    const params = ReadViewSchema.parse(raw);
+    const params = ProfileReadSchema.parse(raw);
     if (params.record_id && !params.section) throw storageError('invalid_request', 'record_id 需要同时指定 section');
     const stored = await this.get(params.profile_id);
+    if (params.expected_revision !== undefined && params.expected_revision !== stored.revision) {
+      throw storageError('profile_changed', `资料已经更新；当前修订为 ${stored.revision}，请重新读取目录并固定新的修订号`);
+    }
     const base = { profile_id: stored.id, name: stored.name, profile_revision: stored.revision, updated_at: stored.updated_at };
     if (params.source_refs) {
       const entries = params.source_refs.map(source_ref => {

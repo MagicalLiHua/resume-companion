@@ -36,6 +36,7 @@ research/third-party/
 !/docs/mcp-tools.md
 !/docs/development.md
 !/docs/validation.md
+!/docs/migration-evaluation.md
 !/docs/images/
 /plugins/resume-companion/scripts/debug-client.mjs
 /plugins/resume-companion/scripts/model-eval-client.mjs

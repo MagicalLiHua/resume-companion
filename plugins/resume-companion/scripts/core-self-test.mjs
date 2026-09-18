@@ -22,16 +22,12 @@ await client.connect(transport);
 try {
   const listed = (await client.listTools()).tools.map(tool => tool.name).sort();
   assert.deepEqual(listed, [
-    'resume_act', 'resume_activate_tab', 'resume_list_tabs', 'resume_observe',
-    'resume_profile_list', 'resume_profile_read', 'resume_profile_save',
-    'resume_status', 'resume_undo_operations', 'resume_wait',
+    'resume_profile_list', 'resume_profile_read', 'resume_profile_save', 'resume_status',
   ].sort());
 
   const initial = await call('resume_status');
   assert.equal(initial.structuredContent.storage.profile_count, 0);
-  assert.equal(initial.structuredContent.browser.kind, 'extension');
-  assert.equal(initial.structuredContent.browser.ready, true);
-  assert.equal(initial.structuredContent.browser.connected, false);
+  assert.equal(initial.structuredContent.service.role, 'profile_library');
 
   const created = await call('resume_profile_save', {
     name: '合成测试简历',
@@ -48,13 +44,16 @@ try {
   const profile = created.structuredContent.profile;
   assert.equal(profile.revision, 1);
   assert.equal((await call('resume_profile_list')).structuredContent.profiles.length, 1);
-  const basic = await call('resume_profile_read', { profile_id: profile.id, section: 'basic' });
+  const directory = await call('resume_profile_read', { profile_id: profile.id });
+  assert.equal(directory.structuredContent.profile_revision, 1);
+  const basic = await call('resume_profile_read', { profile_id: profile.id, expected_revision: 1, section: 'basic' });
   assert.equal(basic.structuredContent.data.full_name, '测试同学');
   const education = await call('resume_profile_read', { profile_id: profile.id, section: 'education' });
   const educationId = education.structuredContent.data[0].id;
 
   const sources = await call('resume_profile_read', {
     profile_id: profile.id,
+    expected_revision: 1,
     source_refs: ['basic/full_name', `education/${educationId}/school`],
   });
   assert.deepEqual(sources.structuredContent.entries.map(entry => [entry.source_ref, entry.value]), [
@@ -69,8 +68,22 @@ try {
   });
   assert.equal(stale.isError, true);
   assert.equal(stale.structuredContent.error.code, 'profile_changed');
+
+  const updated = await call('resume_profile_save', {
+    profile_id: profile.id,
+    expected_revision: 1,
+    changes: { basic: { city: '上海' } },
+  });
+  assert.equal(updated.structuredContent.profile.revision, 2);
+  const staleRead = await call('resume_profile_read', {
+    profile_id: profile.id,
+    expected_revision: 1,
+    section: 'basic',
+  });
+  assert.equal(staleRead.isError, true);
+  assert.equal(staleRead.structuredContent.error.code, 'profile_changed');
 } finally {
   await client.close();
   await rm(dataDir, { recursive: true, force: true });
 }
-console.log('MCP tool catalog, browser-driver readiness, local storage, source resolution and revision conflicts: OK');
+console.log('Four-tool MCP catalog, local storage, source resolution and read/write revision conflicts: OK');

@@ -15,7 +15,7 @@ await rm(staging, { recursive: true, force: true });
 await mkdir(staging, { recursive: true });
 const packagedPlugin = resolve(staging, 'plugins/resume-companion');
 await mkdir(packagedPlugin, { recursive: true });
-for (const item of ['.codex-plugin', '.mcp.json', 'package.json', 'server.mjs', 'server.bundle.mjs', 'browser-assets', 'runtime', 'skills']) {
+for (const item of ['.codex-plugin', '.mcp.json', 'package.json', 'server.mjs', 'server.bundle.mjs', 'chrome-launcher.bundle.mjs', 'runtime', 'skills']) {
   await cp(resolve(pluginRoot, item), resolve(packagedPlugin, item), { recursive: true });
 }
 await cp(resolve(root, 'LICENSE'), resolve(staging, 'LICENSE'));
@@ -25,16 +25,18 @@ await cp(resolve(root, 'README.md'), resolve(staging, 'README.md'));
 await cp(resolve(root, 'CONTRIBUTING.md'), resolve(staging, 'CONTRIBUTING.md'));
 await cp(resolve(root, 'CHANGELOG.md'), resolve(staging, 'CHANGELOG.md'));
 await mkdir(resolve(staging, 'docs'), { recursive: true });
-for (const file of ['getting-started.md', 'mcp-tools.md', 'development.md', 'validation.md']) {
+for (const file of ['getting-started.md', 'mcp-tools.md', 'development.md', 'validation.md', 'migration-evaluation.md']) {
   await cp(resolve(root, 'docs', file), resolve(staging, 'docs', file));
 }
 execFileSync(process.execPath, [resolve(pluginRoot, 'scripts/package-smoke-test.mjs'), resolve(packagedPlugin, 'server.mjs')], { cwd: root, stdio: 'inherit' });
+execFileSync(process.execPath, [resolve(pluginRoot, 'scripts/chrome-package-smoke-test.mjs'), resolve(packagedPlugin, 'chrome-launcher.bundle.mjs')], { cwd: root, stdio: 'inherit' });
 await writeFile(resolve(staging, 'README.txt'), `简历随行 ${pkg.version} 开发预览版
 
-Codex：按 docs/getting-started.md 安装插件，或直接注册 plugins/resume-companion/server.mjs。
-Chrome：运行 plugins/resume-companion/browser-assets/native-host/install.bundle.mjs，再把 browser-assets/extension 作为未打包扩展加载。扩展直接使用当前 Chrome Profile 的登录状态，无需开启远程调试。
+Codex：按 docs/getting-started.md 安装插件。插件会同时注册本地资料 MCP 和固定版本的官方 Chrome DevTools MCP。
 
-需要 Node.js 24 和 Chrome 116+。MCP 在本机管理多份简历，通过扩展执行受限网页动作；最终申请提交由用户完成。DevTools 专用 Profile 仍作为显式备用和 CI 驱动。
+需要 Node.js 24 和 Chrome 116+。首次网页任务会打开 Resume Companion 专用的持久 Chrome Profile，请在该窗口登录招聘网站一次。后续任务会复用该登录状态，无需安装扩展、Native Host 或开启远程调试。
+
+AI 可以填写、保存普通草稿和进入普通下一步；最终申请提交、声明、验证码、密码和附件上传由用户完成。
 无需授予 ChatGPT 修改 macOS App 的权限。
 
 发布包只包含程序和公开文档，不包含用户资料、密钥或内部调试记录。

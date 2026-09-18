@@ -1,6 +1,6 @@
 {
   "name": "resume-companion-codex-plugin",
-  "version": "0.7.0",
+  "version": "0.11.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -10,8 +10,8 @@
     "build": "node scripts/build.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "npm run typecheck && npm run test:unit",
-    "test:unit": "vitest run --exclude tests/devtools-live.test.ts",
-    "test:devtools": "vitest run tests/devtools-live.test.ts",
+    "test:unit": "vitest run --exclude tests/stage0-direct-devtools.test.ts",
+    "test:devtools": "vitest run tests/stage0-direct-devtools.test.ts",
     "test:core": "node scripts/core-self-test.mjs",
     "check": "npm test && npm run build && npm run test:core && npm run test:devtools"
   },

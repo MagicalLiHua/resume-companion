@@ -1,21 +1,15 @@
-# Security
+# Security Policy
 
-Resume Companion stores resume profiles in the local MCP data directory. The Chrome extension does not store resume profiles, cookies, page bodies, form values, model API keys, or browser credentials.
+Resume Companion stores versioned resume profiles in a local application-data directory. Files are created with owner-only permissions where the platform supports them. A separate dedicated Chrome profile stores that browser's cookies, history, cache and site data so recruitment logins can persist across tasks.
 
-The default browser driver uses Chrome Native Messaging. Chrome accepts only the registered host `com.resume_companion.bridge`, and the native host accepts only the repository's fixed extension origin. The MCP creates an owner-only connection descriptor containing a short-lived random token and a private Unix socket or Windows Named Pipe. The native host validates the descriptor permissions, protocol version, token, origin, and expiration before forwarding any message. No fixed localhost TCP port is opened.
+Local storage is not local inference. Resume fields, page snapshots, screenshots and focused diagnostics used by an Agent enter that model client's context and may be processed by its service provider.
 
-Bridge messages are capped at 512 KiB and use a versioned allowlist of methods. Request identifiers, deadlines, cancellation, operation deduplication, current-value tokens, and readback limit accidental replay. Disconnects cancel pending work, detach debugger sessions, and clear transport state so the next call can create a fresh connection. Diagnostics expose stable error codes and do not log cookies, authorization headers, page content, form values, connection tokens, or DevTools WebSocket endpoints.
+The browser service is the pinned official `chrome-devtools-mcp@1.9.0`, launched through a thin TypeScript wrapper. The wrapper selects a stable profile directory, acquires an instance lock, disables usage statistics and CrUX, enables network-header redaction, limits screenshot dimensions and redacts profile paths and common credential headers from stderr. It does not proxy or reinterpret the upstream MCP protocol.
 
-The extension requests access to ordinary HTTP/HTTPS pages, Native Messaging, tabs, scripting, alarms, storage, and `chrome.debugger`. The debugger API is attached only to the selected tab when trusted click or key input is needed; pause and disconnect paths detach active sessions. The MCP does not expose arbitrary JavaScript evaluation, CSS/XPath selectors, network inspection, file upload, extension management, or the upstream DevTools tool catalog to the model.
+Codex configuration uses `prompt` as the default browser-tool approval mode. It auto-approves a reviewed set of observation and ordinary input tools, prompts for navigation, keyboard, request-detail and JavaScript tools, and disables upload and Lighthouse. Tool-name approval cannot enforce a parameter-level final-submit boundary; this release is intended for supervised use.
 
-The explicit DevTools fallback uses the pinned official Chrome DevTools MCP runtime. Its dedicated profile lives under the Resume Companion data directory and keeps that profile's sessions across launches. Experimental current-Chrome attachment may depend on Chrome's remote-debugging authorization and a readable `DevToolsActivePort`; it is not the default browser route.
+The skill instructs Agents to stop before final submission, declarations, consent, passwords, verification, uploads, payment, signing and irreversible deletion. It treats page, Network and Console content as untrusted data. Focused JavaScript is limited to approved read-only element inspection; Network is not used to replay or directly invoke website write APIs.
 
-Profile files are written atomically and use owner-only permissions where supported. They are not encrypted by the application. Protect the operating-system account and disk, choose a suitable `RESUME_COMPANION_DATA_DIR`, and include the directory in backups intentionally.
+Resume Companion does not intentionally persist page HTML, accessibility snapshots, request/response bodies, cookies, headers, console bodies or temporary form values outside the dedicated Chrome profile and the active model conversation. Debug logs and shared reports should still be reviewed for personal data before disclosure.
 
-The active AI client receives profile fields and webpage excerpts needed for the task. Local storage does not imply offline inference. Review the AI client's data policy before using real personal information.
-
-Browser writes require observed references and current value tokens. Final submission, uploads, CAPTCHAs, passwords, verification codes, declarations, consent, and record deletion remain user actions. Unknown write or save results require fresh observation before retrying.
-
-Do not include real resumes, local data directories, browser profiles, exported files, credentials, cookies, captured applications, or connection descriptors in public bug reports. Use synthetic data.
-
-Report vulnerabilities through [GitHub private vulnerability reporting](https://github.com/MagicalLiHua/resume-companion/security/advisories/new).
+Report vulnerabilities privately through the GitHub repository's security reporting channel. Do not include real resume data, authentication material, cookies, verification codes or production-site response bodies in reports.

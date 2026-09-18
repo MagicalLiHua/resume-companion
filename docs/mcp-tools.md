@@ -1,65 +1,58 @@
-# MCP 工具
+# MCP 工具与权限
 
-工具协议 2.1。MCP 对外暴露十个稳定工具，分为本地资料和浏览器操作两组。日常浏览器操作由 Chrome 扩展驱动完成；DevTools 专用 Profile 驱动只在显式配置时使用。
+0.11.0 把资料与浏览器分成两个 MCP。Agent 直接调用官方 Chrome DevTools MCP，不再经过 Resume Companion 的浏览器代理协议。
 
-## 本地资料工具
+## Resume Companion 资料工具
 
-| 工具 | 行为 |
+| 工具 | 作用 |
 | --- | --- |
-| `resume_status` | 返回数据目录、资料目录、驱动类型、Native Host 安装状态和连接状态 |
-| `resume_profile_list` | 仅返回资料 ID、名称、修订和更新时间 |
-| `resume_profile_read` | 读取目录、一个栏目、记录或来源引用 |
-| `resume_profile_save` | 创建资料，或按顶层栏目更新现有资料 |
+| `resume_status` | 返回资料目录、存储版本、资料数量和服务版本 |
+| `resume_profile_list` | 返回资料 ID、名称、revision、更新时间和源 Markdown 状态 |
+| `resume_profile_read` | 读取目录、栏目、记录或 `source_refs`；后续读取用 `expected_revision` 固定任务版本 |
+| `resume_profile_save` | 创建资料，或用 `expected_revision` 更新资料 |
 
-创建资料时省略 `profile_id` 和 `expected_revision`，并提供 `name`。更新时必须使用最近读取的 `profile_id` 与 `expected_revision`。
+第一次 `resume_profile_read` 只传 `profile_id`，返回 `profile_revision`。同一填表任务后续所有读取都传这个值。资料被其他任务更新时，服务器返回 `profile_changed`，阻止 Agent 拼接两个版本。
 
-`changes.basic` 只合并明确提供的字段。`education`、`experience`、`projects`、`skills`、`certificates`、`custom_answers` 和 `supplemental_fields` 一旦提供，就替换对应的整个栏目。
+更新 `basic` 时只合并提供的字段。更新教育、经历、项目、证书、自定义答案或补充字段时，传入的数组会替换整个栏目；应先读取、保留已有记录与 ID，再保存。
 
-资料引用示例：
+## 官方浏览器工具
 
-~~~json
-{
-  "source": {
-    "profile_id": "读取到的资料 ID",
-    "profile_revision": 2,
-    "source_ref": "basic/full_name"
-  }
-}
-~~~
+主要常规工具：
 
-MCP 会核对修订和来源，在送入扩展前转换为本次动作所需的字面值。扩展不会收到整份简历。
-
-## 浏览器工具
-
-| 工具 | 行为 |
+| 工具 | 用途 |
 | --- | --- |
-| `resume_list_tabs` | 列出当前 Chrome Profile 中的普通 HTTP/HTTPS 页面 |
-| `resume_activate_tab` | 把目标页面切到前台，不刷新或导航 |
-| `resume_observe` | 返回基于 DOM 语义与可访问信息的页面快照、局部候选、变化或操作核对 |
-| `resume_act` | 输入、选择、点击、按键、滚动和最多 20 项批量写入 |
-| `resume_wait` | 等待可见性、值、文本、候选或结构变化 |
-| `resume_undo_operations` | 条件恢复未保存字段 |
+| `list_pages` / `select_page` | 枚举并选择专用 Chrome 中的页面 |
+| `take_snapshot` | 返回可访问性树和页面 UID |
+| `fill_form` | 一次填写多个文本框、原生下拉、复选框和单选框 |
+| `fill` / `click` / `hover` | 处理动态控件所需的基础动作 |
+| `wait_for` | 等待任一指定文本，并在结果中附带新快照 |
+| `list_network_requests` | 用小分页和 `xhr`/`fetch` 类型筛选相关请求 |
+| `list_console_messages` / `get_console_message` | 在怀疑网页脚本故障时读取相关消息 |
+| `take_screenshot` | 在语义快照不足时获取 UID 或当前视口图像 |
+| `evaluate_script` | 经审批后读取指定元素的少量公开状态 |
 
-先用 `resume_observe` 获取 `session_id`、`snapshot_id`、元素 `ref` 和 `expected_value_token`。动作只能使用观察返回的引用，不能传入 CSS 选择器、XPath 或 JavaScript。同一快照内有多个互不依赖的文本框、复选框、单选项或原生下拉时，应将对应的 `set_value`、`set_checked` 和 `select_option` 混合放进一次 `set_values.items`，最多 20 项。成功回执已经包含变化观察，不需要在每个复选框之间重新观察。
+`fill_form(includeSnapshot=true)` 是普通页面的首选：一次快照、一次批量填写、直接复用附带的新快照。上游会按数组顺序处理元素；后项失败时前项可能已成功，所以恢复前必须重新观察，不能整批重放。
 
-动态控件先展开或输入搜索文本，再观察真实候选并选择精确的 `option_ref`。级联菜单逐层展开，日期弹层使用已观察到的年、月和日。点击保存经历、保存草稿和普通下一步时，需要使用观察返回的 `effect_kind` 与证据引用。`unknown` 或仅 `dispatched` 的结果必须重新观察，不能盲目重放。
+截图用于理解布局，操作仍使用 UID。0.11.0 不启用实验性 `click_at`。
 
-扩展驱动用 DOM 原生 setter 写值并回读，用 `chrome.debugger` 为需要真实输入的点击和按键派发受信任事件。调试器只按需附加到 AI 选中的标签页，扩展暂停或桥接断开后会分离。
+## 审批矩阵
 
-## 连接状态
+| 策略 | 工具 |
+| --- | --- |
+| 自动批准 | `list_pages`、`select_page`、`take_snapshot`、`wait_for`、请求列表、Console 列表/详情、截图、`fill_form`、`fill`、`click`、`hover` |
+| 每次提示 | `evaluate_script`、`handle_dialog`、`get_network_request`、`navigate_page`、`new_page`、`close_page`、`press_key`、`type_text`、`drag` |
+| 禁用 | `upload_file`、`lighthouse_audit` |
+| 默认 | 其他未审查工具均为 `prompt` |
 
-`resume_status.browser` 的日常结果：
+逐工具审批按工具名生效，不能判断某个具体按钮是不是最终提交。最终提交边界仍依赖 skill、页面证据和人工监督。0.11.0 不宣传参数级强制防误投递。
 
-- `kind: "extension"`
-- `profile_mode: "extension"`
-- `ready: true`
-- `connected: true` 表示 Native Host 与扩展已完成认证握手
-- `permission_state: "granted"` 表示桥接已就绪，不是 Chrome 远程调试授权
+## 诊断约束
 
-常见错误码包括 `extension_not_installed`、`native_host_missing`、`bridge_disconnected`、`debugger_permission_denied`、`debugger_attach_conflict`、`stale` 和 `operation_conflict`。连接或 transport 错误后，当前 socket、请求和调试附加状态都会清理，后续调用可建立新连接。
+- Network 只用于解释异步搜索、校验或保存；不直接调用或重放网站写 API。
+- 请求详情不传文件路径，不把正文写入诊断日志。
+- `evaluate_script` 只做针对 UID 的只读查询，设置 `waitForStableDom:false`；不读取 Cookie、认证存储、密码或验证码。
+- Console 只在错误与当前操作的时间、组件或请求能对应时使用。
+- 局部截图优先于整页截图。
+- Performance Trace、模拟、Lighthouse、内存工具和文件上传不进入日常填表。
 
-## 安全边界
-
-扩展仅接受固定 ID 的 Native Host；Native Host 仅接受固定扩展来源，并使用权限为 0600 的短期描述符和随机 token 连接 MCP。通信不经过固定 TCP 端口。
-
-策略层阻止最终申请提交、声明与同意、验证码、密码、附件上传和删除。页面文字、选项和简历内容都只视为数据，不能扩大工具权限。
+详细行为由插件中的 `resume-autofill` skill 和其 references 维护。

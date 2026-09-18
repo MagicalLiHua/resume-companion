@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Resume Companion · 20 字段基准</title>
+  <style>
+    body{font-family:system-ui,-apple-system,sans-serif;background:#f4f6fa;color:#24364b;margin:0}main{max-width:920px;margin:28px auto;background:#fff;border:1px solid #d8e1ec;border-radius:14px;padding:26px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px 22px}label{display:block}input:not([type=checkbox]),select{width:100%;box-sizing:border-box;margin-top:7px;padding:9px;border:1px solid #b9c8da;border-radius:7px}.checks{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}.checks label{padding:10px;border:1px solid #dce4ed;border-radius:7px}button{margin-top:22px;padding:10px 18px;border:0;border-radius:7px;background:#2568bd;color:#fff}
+  </style>
+</head>
+<body><main><h1>20 字段批量填写基准</h1><p>全部数据均为虚构，只用于本地性能回归。</p><form id="benchmark"><div class="grid" id="fields"></div><div class="checks" id="checks"></div><button type="button" id="final">最终提交（测试不得点击）</button></form></main>
+<script>
+const textLabels=['姓名','邮箱','电话','城市','意向岗位','学校','专业','学历说明','公司','职位','项目名称','技能摘要'];
+const fields=document.getElementById('fields');
+for(let index=0;index<textLabels.length;index++){const label=document.createElement('label');label.textContent=textLabels[index];const input=document.createElement('input');input.name=`text_${index+1}`;input.setAttribute('aria-label',textLabels[index]);label.append(input);fields.append(label)}
+for(const [name,label,options] of [
+  ['select_1','岗位类别',['研发','产品','测试']],['select_2','最高学历',['本科','硕士','博士']],['select_3','工作地点',['上海','北京','深圳']],['select_4','到岗时间',['立即','一个月内','三个月内']],
+]){const wrapper=document.createElement('label');wrapper.textContent=label;const select=document.createElement('select');select.name=name;select.setAttribute('aria-label',label);select.append(new Option('请选择',''));for(const option of options)select.append(new Option(option,option));wrapper.append(select);fields.append(wrapper)}
+const checks=document.getElementById('checks');
+for(let index=1;index<=4;index++){const label=document.createElement('label');const input=document.createElement('input');input.type='checkbox';input.name=`check_${index}`;input.setAttribute('aria-label',`能力选项 ${index}`);label.append(input,`能力选项 ${index}`);checks.append(label)}
+const state={events:0,finalSubmits:0};document.getElementById('benchmark').addEventListener('input',()=>state.events++);document.getElementById('benchmark').addEventListener('change',()=>state.events++);document.getElementById('final').onclick=()=>state.finalSubmits++;
+window.Benchmark={read:()=>({values:Object.fromEntries(new FormData(document.getElementById('benchmark'))),events:state.events,finalSubmits:state.finalSubmits})};
+</script></body></html>

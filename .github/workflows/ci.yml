@@ -23,14 +23,11 @@ jobs:
       - run: npm ci
       - run: npm ci
         working-directory: plugins/resume-companion
-      - run: npx playwright install --with-deps chromium
       - run: npm run typecheck
       - run: npm run build
       - run: npm test
       - run: npm run test:e2e
       - run: npm run test:core
-      - run: npm run test:devtools
-        working-directory: plugins/resume-companion
       - run: npm run package
       - uses: actions/upload-artifact@v4
         with:

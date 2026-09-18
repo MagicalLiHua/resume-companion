@@ -10,7 +10,6 @@ type ToolResult = Awaited<ReturnType<Client['callTool']>>;
 
 const pluginRoot = resolve(import.meta.dirname, '..');
 const projectRoot = resolve(pluginRoot, '../..');
-const runtime = resolve(pluginRoot, 'runtime/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js');
 const profileDir = await mkdtemp(join(tmpdir(), 'resume-companion-stage0-profile-'));
 let lab: ChildProcess | null = null;
 let client: Client | null = null;
@@ -21,8 +20,8 @@ const textOf = (result: ToolResult): string => Array.isArray(result.content)
   : '';
 
 function uidFor(snapshot: string, name: string): string {
-  const candidates = snapshot.split('\n').filter(candidate => candidate.includes(`\"${name}\"`));
-  const line = candidates.find(candidate => /\b(textbox|combobox|checkbox|radio|button|option)\b/.test(candidate)) ?? candidates[0];
+  const candidates = snapshot.split('\n').filter(candidate => candidate.includes(`\"${name}`));
+  const line = candidates.find(candidate => /\b(textbox|combobox|checkbox|radio|button|option|treeitem|DateTime)\b/.test(candidate)) ?? candidates[0];
   const uid = line?.match(/uid=([^\s]+)/)?.[1];
   if (!uid) throw new Error(`Snapshot did not contain a UID for ${name}:\n${snapshot}`);
   return uid;
@@ -60,34 +59,27 @@ async function ensureLab(): Promise<void> {
   throw new Error('Local form fixture did not start');
 }
 
-beforeAll(async () => {
-  await ensureLab();
+async function connectChromeMcp(): Promise<Client> {
   const environment = Object.fromEntries(Object.entries(process.env).filter((entry): entry is [string, string] => typeof entry[1] === 'string'));
   const transport = new StdioClientTransport({
     command: process.execPath,
-    args: [
-      runtime,
-      '--headless',
-      `--user-data-dir=${profileDir}`,
-      '--no-usage-statistics',
-      '--no-performance-crux',
-      '--no-category-performance',
-      '--no-category-emulation',
-      '--redact-network-headers',
-      '--screenshot-format=webp',
-      '--screenshot-max-width=1440',
-      '--screenshot-max-height=1200',
-    ],
+    args: ['chrome-launcher.bundle.mjs'],
     cwd: pluginRoot,
     env: {
       ...environment,
-      CHROME_DEVTOOLS_MCP_NO_UPDATE_CHECKS: '1',
-      CHROME_DEVTOOLS_MCP_NO_USAGE_STATISTICS: '1',
+      RESUME_COMPANION_CHROME_DATA_DIR: profileDir,
+      RESUME_COMPANION_CHROME_HEADLESS: '1',
     },
     stderr: 'pipe',
   });
-  client = new Client({ name: 'resume-companion-stage0-direct', version: '1.0.0' });
-  await client.connect(transport);
+  const connected = new Client({ name: 'resume-companion-stage0-direct', version: '1.0.0' });
+  await connected.connect(transport);
+  return connected;
+}
+
+beforeAll(async () => {
+  await ensureLab();
+  client = await connectChromeMcp();
   const opened = await call('new_page', {
     url: `http://127.0.0.1:4174/agent-lab.html?run=stage0-${Date.now()}`,
   });
@@ -160,4 +152,160 @@ describe('Stage 0 direct Chrome DevTools MCP validation', () => {
     expect(waited).toContain('保存简历草稿');
     expect(waited).toContain('uid=');
   });
+
+  test('completes a dynamic cascader record without any site-specific browser adapter', async () => {
+    let snapshot = textOf(await call('take_snapshot', { pageId }));
+    snapshot = textOf(await call('click', { pageId, uid: uidFor(snapshot, '下一步'), includeSnapshot: true }));
+    expect(snapshot).toContain('教育背景');
+    snapshot = textOf(await call('click', { pageId, uid: uidFor(snapshot, '添加教育信息'), includeSnapshot: true }));
+    snapshot = textOf(await call('click', { pageId, uid: uidFor(snapshot, '学校名称'), includeSnapshot: true }));
+    snapshot = textOf(await call('wait_for', { pageId, text: ['国内'], timeout: 2_000 }));
+    snapshot = textOf(await call('click', { pageId, uid: uidFor(snapshot, '国内'), includeSnapshot: true }));
+    snapshot = textOf(await call('wait_for', { pageId, text: ['江苏省'], timeout: 2_000 }));
+    snapshot = textOf(await call('click', { pageId, uid: uidFor(snapshot, '江苏省'), includeSnapshot: true }));
+    snapshot = textOf(await call('wait_for', { pageId, text: ['示例理工大学'], timeout: 2_000 }));
+    snapshot = textOf(await call('click', { pageId, uid: uidFor(snapshot, '示例理工大学'), includeSnapshot: true }));
+    const filled = textOf(await call('fill_form', {
+      pageId,
+      includeSnapshot: true,
+      elements: [
+        { uid: uidFor(snapshot, '专业名称 *'), value: '软件工程' },
+        { uid: uidFor(snapshot, '学历'), value: '本科' },
+        { uid: uidFor(snapshot, '入学时间 *'), value: '2020-09' },
+        { uid: uidFor(snapshot, '毕业时间 *'), value: '2024-06' },
+      ],
+    }));
+    snapshot = textOf(await call('click', { pageId, uid: uidFor(filled, '保存教育经历'), includeSnapshot: true }));
+    expect(snapshot).toContain('国内 / 江苏省 / 示例理工大学');
+    const submitCount = textOf(await call('evaluate_script', {
+      pageId,
+      function: `() => window.Lab.read().finalSubmits`,
+      waitForStableDom: false,
+    }));
+    expect(submitCount).toMatch(/\b0\b/);
+  }, 30_000);
+
+  test('fills 20 ordinary controls within the hot-run target and records snapshot cost', async () => {
+    const durations: number[] = [];
+    const responseBytes: number[] = [];
+    const expected: Array<[string, string]> = [
+      ['姓名', '基准同学'], ['邮箱', 'benchmark@example.com'], ['电话', '13800000000'], ['城市', '示例市'],
+      ['意向岗位', '测试开发'], ['学校', '示例大学'], ['专业', '软件工程'], ['学历说明', '本科'],
+      ['公司', '示例科技'], ['职位', '实习生'], ['项目名称', '虚构项目'], ['技能摘要', 'TypeScript'],
+      ['岗位类别', '测试'], ['最高学历', '本科'], ['工作地点', '上海'], ['到岗时间', '一个月内'],
+      ['能力选项 1', 'true'], ['能力选项 2', 'true'], ['能力选项 3', 'true'], ['能力选项 4', 'true'],
+    ];
+    let latest = '';
+    for (let iteration = 0; iteration < 5; iteration++) {
+      const opened = await call('new_page', { url: `http://127.0.0.1:4174/benchmark-form.html?iteration=${iteration}&run=${Date.now()}` });
+      pageId = selectedPageId(textOf(opened));
+      const snapshot = textOf(await call('take_snapshot', { pageId }));
+      const startedAt = performance.now();
+      latest = textOf(await call('fill_form', {
+        pageId,
+        includeSnapshot: true,
+        elements: expected.map(([name, value]) => ({ uid: uidFor(snapshot, name), value })),
+      }));
+      durations.push(performance.now() - startedAt);
+      responseBytes.push(Buffer.byteLength(latest, 'utf8'));
+      expect(latest).toContain('benchmark@example.com');
+      expect(latest).toContain('TypeScript');
+      expect(latest).toMatch(/checked|true/);
+    }
+    const sorted = durations.slice().sort((left, right) => left - right);
+    const p50 = sorted[2]!;
+    const p95 = sorted[4]!;
+    expect(p50).toBeLessThan(15_000);
+    const state = textOf(await call('evaluate_script', {
+      pageId,
+      function: `() => window.Benchmark.read()`,
+      waitForStableDom: false,
+    }));
+    expect(state).toContain('benchmark@example.com');
+    expect(state).toContain('"finalSubmits":0');
+    console.log(JSON.stringify({ benchmark: 'direct-fill-form-20', runs: durations.length, p50_ms: Math.round(p50), p95_ms: Math.round(p95), max_response_bytes: Math.max(...responseBytes) }));
+  }, 60_000);
+
+  test('measures a 12-checkbox batch on the direct upstream route', async () => {
+    const durations: number[] = [];
+    for (let iteration = 0; iteration < 5; iteration++) {
+      const opened = await call('new_page', { url: `http://127.0.0.1:4174/checkbox-benchmark.html?iteration=${iteration}` });
+      pageId = selectedPageId(textOf(opened));
+      const snapshot = textOf(await call('take_snapshot', { pageId }));
+      const startedAt = performance.now();
+      const filled = textOf(await call('fill_form', {
+        pageId,
+        includeSnapshot: true,
+        elements: Array.from({ length: 12 }, (_, index) => ({ uid: uidFor(snapshot, `批量选项 ${index + 1}`), value: 'true' })),
+      }));
+      durations.push(performance.now() - startedAt);
+      expect((filled.match(/checked/g) ?? [])).toHaveLength(12);
+    }
+    const sorted = durations.slice().sort((left, right) => left - right);
+    console.log(JSON.stringify({ benchmark: 'direct-checkboxes-12', runs: durations.length, p50_ms: Math.round(sorted[2]!), p95_ms: Math.round(sorted[4]!) }));
+  }, 45_000);
+
+  test('records the unscoped snapshot cost of a long form', async () => {
+    const opened = await call('new_page', { url: `http://127.0.0.1:4174/long-form.html?run=${Date.now()}` });
+    pageId = selectedPageId(textOf(opened));
+    const snapshot = textOf(await call('take_snapshot', { pageId }));
+    const bytes = Buffer.byteLength(snapshot, 'utf8');
+    expect(snapshot).toContain('字段 219');
+    console.log(JSON.stringify({ benchmark: 'direct-long-snapshot-220', response_bytes: bytes, estimated_tokens: Math.ceil(bytes / 4), truncated: false }));
+  }, 30_000);
+
+  test('supports focused Network, Console, screenshot and read-only element diagnostics', async () => {
+    const opened = await call('new_page', { url: `http://127.0.0.1:4174/diagnostics.html?run=${Date.now()}` });
+    pageId = selectedPageId(textOf(opened));
+    const snapshot = textOf(await call('wait_for', { pageId, text: ['诊断请求完成'], timeout: 3_000 }));
+    const dateUid = uidFor(snapshot, '入学日期');
+
+    const constraints = textOf(await call('evaluate_script', {
+      pageId,
+      function: `(element) => { const input = element.matches('input') ? element : element.querySelector('input'); return { tagName: input?.tagName, min: input?.getAttribute('min'), max: input?.getAttribute('max'), readOnly: Boolean(input?.hasAttribute('readonly')), disabled: Boolean(input?.hasAttribute('disabled')) }; }`,
+      args: [dateUid],
+      waitForStableDom: false,
+    }));
+    expect(constraints).toContain('2020-01-01');
+    expect(constraints).toContain('2030-12-31');
+    expect(constraints).toContain('readOnly');
+
+    const network = textOf(await call('list_network_requests', { pageId, pageSize: 10, pageIdx: 0, resourceTypes: ['fetch'] }));
+    expect(network).toContain('/api/schools');
+    const requestId = network.match(/reqid=(\d+)/)?.[1];
+    expect(requestId).toBeTruthy();
+    const request = textOf(await call('get_network_request', { pageId, reqid: Number(requestId) }));
+    expect(request).toContain('示例大学');
+    expect(request).not.toContain('synthetic-secret');
+
+    const consoleList = textOf(await call('list_console_messages', { pageId, pageSize: 5, pageIdx: 0, types: ['error'] }));
+    expect(consoleList).toContain('合成组件错误');
+    const messageId = consoleList.match(/msgid=(\d+)/)?.[1];
+    expect(messageId).toBeTruthy();
+    expect(textOf(await call('get_console_message', { pageId, msgid: Number(messageId) }))).toContain('合成组件错误');
+
+    const screenshot = await call('take_screenshot', { pageId, uid: dateUid, format: 'webp' });
+    expect(Array.isArray(screenshot.content) && screenshot.content.some(item => item.type === 'image')).toBe(true);
+  }, 30_000);
+
+  test('restarts with the same dedicated profile and keeps site state', async () => {
+    const marker = `kept-${Date.now()}`;
+    const written = textOf(await call('evaluate_script', {
+      pageId,
+      function: `() => { const marker = ${JSON.stringify(marker)}; localStorage.setItem('resume-stage0-persistence', marker); return localStorage.getItem('resume-stage0-persistence'); }`,
+      waitForStableDom: false,
+    }));
+    expect(written).toContain(marker);
+    await client!.close();
+    client = null;
+    client = await connectChromeMcp();
+    const reopened = await call('new_page', { url: `http://127.0.0.1:4174/agent-lab.html?run=persistence-${Date.now()}` });
+    pageId = selectedPageId(textOf(reopened));
+    const read = textOf(await call('evaluate_script', {
+      pageId,
+      function: `() => localStorage.getItem('resume-stage0-persistence')`,
+      waitForStableDom: false,
+    }));
+    expect(read).toContain(marker);
+  }, 30_000);
 });

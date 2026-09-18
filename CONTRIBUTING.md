@@ -1,16 +1,23 @@
-# 参与贡献
+# Contributing
 
-当前路线是 MCP 管资料、AI 负责决策、精简 Chrome 扩展在当前 Profile 执行有限网页动作。官方 Chrome DevTools MCP 作为显式备用和 CI 驱动。欢迎改进资料结构、通用控件、观察语义、可靠回读、跨平台支持和文档。
+The 0.11 architecture keeps Resume Companion small: a versioned local profile MCP, a TypeScript launcher for pinned official Chrome DevTools MCP, and an Agent skill that composes both. Browser automation changes should use upstream stable tools and general decision rules instead of recruitment-site selectors or replaying private APIs.
 
-提交前运行 [开发指南](docs/development.md) 中的完整检查。
+Before a pull request:
 
-- 行为变化应有使用合成资料的有效回归。
-- 新网页能力优先扩展通用观察和基础动作，避免按招聘网站堆整套流程。
-- 保留当前值校验、操作去重、修订冲突和未知结果回读。
-- 扩展保持精简：不增加简历编辑、模型 API Key、投递记录界面或自建业务后端。
-- 修改协议时验证 MCP 输入、字面值浏览器线协议、Native Messaging 中继和两种浏览器驱动。
-- 修改 TypeScript 源码后运行根目录构建；不手工编辑 server、Native Host 或扩展 bundle。
-- 不向模型暴露任意 JavaScript、选择器、上游工具目录或文件上传。
-- 最终提交、上传、验证码、密码、声明与删除仍由用户处理。
+~~~sh
+npm ci
+npm ci --prefix plugins/resume-companion
+npm run typecheck
+npm run build
+npm test
+npm run test:core
+npm run test:e2e
+~~~
 
-Issue 和 PR 只使用合成资料，不提交真实简历、账号、Cookie、网页会话或本地资料库。安全问题使用仓库私密漏洞报告入口。
+Use synthetic data and the local fixture for automated tests. Do not commit real resumes, browser profiles, cookies, tokens, site responses or screenshots containing personal information.
+
+Keep new product code in strict TypeScript. Do not hand-edit generated bundles or the copied upstream runtime. When changing tool permissions, update `.mcp.json`, the skill, security documentation and a policy regression test together. When changing profile data, preserve atomic writes, file permissions, history and revision conflict behavior.
+
+Upstream version upgrades require a deliberate review of CLI options, tool names, schemas, annotations, lifecycle and default browser behavior. Run direct MCP integration tests before changing the pinned version.
+
+The legacy extension and Native Messaging route is frozen at Git tag `archive/extension-0.10.0`; fixes for the current main branch should target the two-MCP architecture.

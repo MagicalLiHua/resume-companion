@@ -1,52 +1,53 @@
 # 简历随行 · Resume Companion
 
-**让你常用的 AI 使用本地简历资料，在你已登录的 Chrome 中连续完成复杂网申。**
+**把本地简历资料交给你常用的 AI，由 AI 在一个持久的专用 Chrome 中连续完成复杂网申。**
 
 [![CI](https://github.com/MagicalLiHua/resume-companion/actions/workflows/ci.yml/badge.svg)](https://github.com/MagicalLiHua/resume-companion/actions/workflows/ci.yml)
 [![MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-简历随行是一个本地 MCP 插件，附带一个精简的 Chrome 执行器。用户在 Codex、Claude Desktop 或其他支持 stdio MCP 的 AI 客户端中发送简历或补充信息；AI 保存明确事实、理解当前页面，并组合观察、输入、选择、点击、等待与核对等基础动作。
+简历随行 0.11.0 是一个面向个人使用、有人监督的开发预览版。它不为每家招聘网站维护脚本，也不自建模型后端。插件提供两个 MCP 服务：一个管理本地多版本简历，另一个直接运行固定版本的官方 [Chrome DevTools MCP](https://github.com/ChromeDevTools/chrome-devtools-mcp)。Codex 或其他 AI Agent 读取需要的资料、理解当前页面，并组合官方浏览器工具完成填写、普通草稿保存和普通下一步。最终投递始终交给用户。
 
-0.10.0 默认使用 **Chrome 扩展 + Native Messaging + 本地 Unix socket / Named Pipe**。它直接复用日常 Chrome Profile 的登录、Cookie 和已打开页面，不需要远程调试开关，也不需要新的 Chrome Profile。固定版本的官方 [Chrome DevTools MCP](https://github.com/ChromeDevTools/chrome-devtools-mcp) 仍作为显式备用驱动和 CI 验收环境。
-
-[安装与使用](docs/getting-started.md) · [MCP 工具](docs/mcp-tools.md) · [验证范围](docs/validation.md) · [参与开发](CONTRIBUTING.md)
+[安装与使用](docs/getting-started.md) · [工具与权限](docs/mcp-tools.md) · [验证范围](docs/validation.md) · [参与开发](CONTRIBUTING.md)
 
 ## 架构
 
 ~~~text
 简历 / Markdown / 用户补充
             ↓
-Codex、Claude Desktop 或其他 MCP 客户端
-            ↓ stdio
-Resume Companion MCP
-  ├─ 本地多版本资料库
-  ├─ 安全策略、快照、回读、撤销
-  └─ 认证的本地 socket
-            ↕ Native Messaging
-精简 Chrome 扩展
-            ↓ 当前 Chrome Profile
-招聘网站
+Codex 或其他支持 stdio MCP 的 AI Agent
+       ↙                         ↘
+Resume Companion MCP          官方 Chrome DevTools MCP 1.9.0
+四个本地资料工具               页面快照、批量填写、Network、Console、截图
+       ↓                         ↓
+本地版本化 JSON               Resume Companion 专用持久 Chrome Profile
+                                 ↓
+                              招聘网站
 ~~~
 
-模型负责理解不同网站的字段含义和规划步骤；MCP 与扩展只提供稳定、有限、可组合的工具。网站改名字段或改变顺序时，AI 可以重新观察和匹配，不需要为每个站点维护整套硬编码流程。
+资料服务与浏览器服务彼此独立。只整理简历不会启动 Chrome；浏览器被其他任务占用时，本地资料仍可正常读写。
+
+## 为什么使用专用 Chrome
+
+Chrome 150+ 默认 Profile 的权限式远程调试与 Agent 沙箱组合并不稳定。0.11.0 不依赖默认 Profile、9222、`DevToolsActivePort`、浏览器扩展或 Native Host。第一次网页任务会打开一个独立 Chrome 窗口，用户在里面登录招聘网站一次；后续任务复用该 Profile 的 Cookie、历史和站点数据。
+
+同一时间只允许一个任务使用这个专用 Profile。关闭占用它的任务后，另一个任务可以继续。Profile 默认位于系统用户数据目录，不放在版本化插件缓存里，升级插件不会清除登录状态。
 
 ## 能做什么
 
-| 能力 | 当前行为 |
+| 能力 | 行为 |
 | --- | --- |
-| 多份本地资料 | 创建、列出、分栏目读取和更新多版本简历 |
-| 复用日常 Chrome | 直接使用当前 Profile 的账号、会话和标签页 |
-| 连续填写 | AI 组合观察、输入、选择、等待、保存经历和普通下一步 |
-| 复杂控件 | 覆盖搜索下拉、级联、年月日、虚拟列表和重复经历 |
-| 可靠停止 | 页面变化、用户手改、旧快照和未知保存结果会阻止盲目重放 |
-| 条件撤销 | 只恢复仍等于工具写入值的未保存字段 |
-| 本地优先 | 资料、修订历史和桥接描述符保留在用户本机 |
+| 多版本本地资料 | 保存、列出、分栏目读取和按 revision 更新多份简历 |
+| 连续复杂填表 | AI 使用页面快照、UID、批量填写、等待和回读完成多步骤表单 |
+| 保护已有答案 | 相同值跳过；已有草稿、用户手填和来源不明的值默认保留 |
+| 局部诊断 | 卡住时按需使用 Network、Console、局部截图或获批的只读脚本 |
+| 部分成功恢复 | 批量中途失败后重新观察，只补缺失字段，不整批重放 |
+| 持久登录 | 专用 Chrome Profile 跨任务保存网站登录状态 |
 
-最终申请提交、声明与同意、验证码、密码、附件上传和删除由用户操作。
+登录、密码、验证码、附件上传、声明与同意、最终申请提交、支付和不可逆删除由用户完成。
 
 ## 快速开始
 
-需要 Node.js 24、Chrome 116+，以及支持本地 stdio MCP 的 AI 客户端。
+需要 Node.js 24、Google Chrome，以及支持本地 stdio MCP 的 Codex。源码安装：
 
 ~~~sh
 git clone https://github.com/MagicalLiHua/resume-companion.git
@@ -54,61 +55,57 @@ cd resume-companion
 npm ci
 npm ci --prefix plugins/resume-companion
 npm run build
-node native-host/install.bundle.mjs
-~~~
-
-然后打开 `chrome://extensions`，开启“开发者模式”，选择“加载已解压的扩展程序”并加载仓库根目录下的 `dist/`。从 Release 压缩包安装时，则加载 `plugins/resume-companion/browser-assets/extension/`。
-
-Codex 插件方式：
-
-~~~sh
 codex plugin marketplace add MagicalLiHua/resume-companion --ref main
 codex plugin add resume-companion@resume-companion
 ~~~
 
-也可以把 `plugins/resume-companion/server.mjs` 按客户端的官方方法注册为 stdio MCP。新开一个 AI 任务后，先发送简历：
+新开一个任务后先保存资料：
 
 > 把这份简历保存为“软件开发版”。只记录明确写出的事实，未知项留空。
 
-打开招聘页面后：
+再打开招聘网站并发送：
 
-> 用“软件开发版”连续完成当前网申。可以保存经历和进入普通下一步，最终提交交给我。
+> 用“软件开发版”连续完成当前网申。可以保存普通草稿和进入普通下一步，最终提交交给我。
+
+首次调用浏览器工具会打开专用 Chrome。请在那个窗口完成登录，再让 Agent 继续。无需安装浏览器扩展、开启远程调试或授予修改 Chrome 应用程序的权限。
 
 ### 复制给 AI 自动配置
 
-下面是一段可选的安装提示词。把它发给具有本地命令执行和 MCP 配置能力的 AI Agent：
+下面是一段可复制给具备本地命令执行和 MCP 配置能力的 AI Agent 的安装提示词：
 
 ~~~text
-请帮我安装并配置 Resume Companion：https://github.com/MagicalLiHua/resume-companion
+请帮我安装并验证 Resume Companion：https://github.com/MagicalLiHua/resume-companion
 
-1. 识别当前系统、AI 客户端、Node.js 和 Chrome 版本；要求 Node.js 24 和 Chrome 116+。
-2. 优先使用最新 GitHub Release 并校验 SHA-256；安装到稳定的用户目录。
-3. 保留现有 MCP 配置。Codex 使用仓库的 plugin/marketplace；其他客户端注册发布包内 plugins/resume-companion/server.mjs 的绝对路径。
-4. 运行 browser-assets/native-host/install.bundle.mjs，再将 browser-assets/extension 加载为 Chrome 未打包扩展。如果需要我在 Chrome 中确认安装，在最后一步提示我。
-5. 验证 resume_status 可调用、工具数为 10、browser.kind 为 extension、connected 为 true；再用虚构资料测试本地资料的创建和读取。
-6. 不开启 Chrome 远程调试，不修改 Chrome App，不使用真实个人信息做测试。
-7. 如果客户端需要重启或新建任务才能加载 MCP，先完成其余步骤，最后汇报安装目录、修改的配置、验证结果和下一条可直接使用的指令。
+1. 识别当前系统、AI 客户端、Node.js 和 Chrome；要求 Node.js 24。
+2. 优先使用最新 GitHub Release 并校验 SHA-256；保留现有 MCP 配置和本地资料。
+3. Codex 优先按仓库的 marketplace/plugin 安装；其他客户端只配置资料 MCP 时，要明确说明浏览器工具审批策略可能需要手动迁移。
+4. 验证 resume_companion 只暴露四个资料工具；验证 chrome_devtools 来自包内固定的 chrome-devtools-mcp 1.9.0，upload_file 和 lighthouse_audit 已禁用，默认工具审批为 prompt。
+5. 用虚构资料测试创建、目录读取、携带 expected_revision 的章节读取和 revision 冲突。
+6. 启动一次专用 Chrome 测试 list_pages 和 take_snapshot；不要接管默认 Chrome，不开启远程调试，不填写真实信息，不执行保存或最终提交。
+7. 如果客户端需要重启或新建任务才能加载 MCP，先完成其余步骤，最后报告安装目录、Profile 目录、修改的配置、验证结果和下一条可直接使用的指令。
 ~~~
 
-## 十个 MCP 工具
+## 两组工具
+
+Resume Companion 自身只有四个工具：
 
 | 工具 | 用途 |
 | --- | --- |
-| `resume_status` | 检查资料库、扩展桥接和备用驱动 |
-| `resume_profile_list` | 列出本地资料元数据 |
-| `resume_profile_read` | 读取目录、栏目、记录或来源 |
-| `resume_profile_save` | 创建或按栏目更新资料 |
-| `resume_list_tabs` | 列出当前 Chrome Profile 中的普通网页 |
-| `resume_activate_tab` | 将目标页面切到前台 |
-| `resume_observe` | 获取结构化页面快照、候选、变化和结果 |
-| `resume_act` | 执行受限的输入、选择、点击、按键和滚动 |
-| `resume_wait` | 等待有界页面条件 |
-| `resume_undo_operations` | 条件撤销未保存字段 |
+| `resume_status` | 检查本地资料服务和数据目录 |
+| `resume_profile_list` | 列出资料元数据和 revision |
+| `resume_profile_read` | 按目录、栏目、记录或来源读取；支持 `expected_revision` |
+| `resume_profile_save` | 创建或按 revision 更新资料 |
 
-## 本地数据与边界
+浏览器能力直接使用官方工具名，例如 `list_pages`、`select_page`、`take_snapshot`、`fill_form`、`click`、`wait_for`、Network、Console、截图和 `evaluate_script`。常规观察与填写可自动批准；导航、按键、请求详情和脚本执行默认逐次提示；`upload_file` 与 `lighthouse_audit` 被禁用。详见 [工具与权限](docs/mcp-tools.md)。
 
-默认数据目录遵循操作系统用户数据位置，也可以设置 `RESUME_COMPANION_DATA_DIR`。每份资料保存为可读 JSON 并保留历史修订。P0 不提供应用级加密，安全性依赖本机账户和磁盘保护。
+## 本地数据、模型和边界
 
-本地存储不代表离线推理：当前 AI 客户端会接触任务需要的简历字段和网页片段。扩展不保存简历、Cookie、页面正文或表单值；Native Host 不开放固定 TCP 端口，只连接当前 MCP 创建的私有 socket。完整说明见 [SECURITY.md](SECURITY.md)。
+简历资料、修订历史和专用 Chrome Profile 默认保存在本机。简历 JSON 权限设为仅当前用户可读写；专用 Chrome 自己保存 Cookie、历史和缓存。插件不会额外持久化页面快照、Network 正文、Cookie、请求头或临时表单值。
 
-产品代码以严格 TypeScript 编写。仓库中的 `server.bundle.mjs`、Native Host bundle 和扩展 `.js` 是构建产物，已标记为 GitHub Linguist generated。
+本地保存不等于本地推理。Agent 为完成任务而读取的简历字段、页面快照、截图和诊断结果会进入当前模型上下文；使用云端模型时，这些信息由对应服务处理。
+
+0.11.0 的边界主要由 skill、客户端工具审批和人工监督共同实现，不宣称代码级绝对防误投递。遇到结果不明、页面跳转异常或最终提交含义不清时，Agent 应停止并交给用户检查。完整说明见 [SECURITY.md](SECURITY.md)。
+
+## 开发与旧路线
+
+新增产品代码使用严格 TypeScript。发布中的 `server.bundle.mjs` 与 `chrome-launcher.bundle.mjs` 是由源码生成的产物，并标记为 GitHub Linguist generated。旧版扩展与 Native Messaging 实现已从主线删除，可从 Git 标签 `archive/extension-0.10.0` 恢复。

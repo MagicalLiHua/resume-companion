@@ -19,15 +19,15 @@ const client = new Client({ name: 'resume-companion-package-smoke', version: '1.
 try {
   await client.connect(transport);
   const tools = await client.listTools();
-  if (tools.tools.length !== 10) throw new Error(`Expected 10 tools, received ${tools.tools.length}`);
+  if (tools.tools.length !== 4) throw new Error(`Expected 4 tools, received ${tools.tools.length}`);
   const status = await client.callTool({ name: 'resume_status', arguments: {} });
-  if (status.isError || status.structuredContent?.browser?.kind !== 'extension') throw new Error('Packaged extension driver is not ready');
+  if (status.isError || status.structuredContent?.service?.role !== 'profile_library') throw new Error('Packaged profile service is not ready');
   const saved = await client.callTool({
     name: 'resume_profile_save',
     arguments: { name: 'Package smoke profile', changes: { basic: { full_name: 'Synthetic User' } } },
   });
   if (saved.isError || saved.structuredContent?.profile?.revision !== 1) throw new Error('Packaged profile store failed');
-  console.log('Packaged MCP starts with 10 tools, extension driver assets and local profile storage: OK');
+  console.log('Packaged MCP starts with four profile tools and local revisioned storage: OK');
 } finally {
   await client.close().catch(() => undefined);
   await rm(dataDir, { recursive: true, force: true });
