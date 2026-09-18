@@ -80,6 +80,21 @@ test('local structure changes stop remaining batch and unrelated scopes stay usa
  await page.goto('/agent-controls.html?mutate=1');const o=await observe(page);const r=await act(page,o,{kind:'set_values',items:[write(element(o,'第一字段','text'),'触发新字段'),write(element(o,'第二字段','text'),'不能继续')]});expect(r.status).toBe('stale');await expect(page.getByRole('textbox',{name:'第二字段',exact:true})).toHaveValue('');
  const checkbox=element(o,'可以出差','checkbox');expect((await act(page,o,{kind:'set_checked',ref:checkbox.ref,expected_value_token:checkbox.expected_value_token,checked:true})).status).toBe('applied');
 });
+test('batches native checkboxes quickly while delayed rejection stops later writes',async({page})=>{
+ await page.goto('/agent-controls.html');
+ await page.evaluate(()=>{const section=document.createElement('section');section.id='checkbox-batch';section.setAttribute('aria-label','批量复选');section.innerHTML='<h2>批量复选</h2>'+Array.from({length:12},(_,i)=>`<label><input type="checkbox" aria-label="批量选项 ${i+1}">批量选项 ${i+1}</label>`).join('');document.body.append(section)});
+ let o=await observe(page),scope=element(o,'批量复选','section');o=await observe(page,{mode:'detail',scope_ref:scope.ref});const checks=o.elements.filter((e:any)=>e.kind==='checkbox'&&e.name.startsWith('批量选项 '));expect(checks).toHaveLength(12);
+ let r=await act(page,o,{kind:'set_values',items:checks.map((e:any)=>({kind:'set_checked',ref:e.ref,expected_value_token:e.expected_value_token,checked:true}))});
+ expect(r.status).toBe('applied');expect(r.results).toHaveLength(12);expect(r.elapsed_ms).toBeLessThan(1400);expect(await page.locator('#checkbox-batch input:checked').count()).toBe(12);
+ await page.evaluate(()=>{const first=document.querySelector<HTMLInputElement>('#checkbox-batch input')!;first.checked=false;first.addEventListener('click',()=>setTimeout(()=>{first.checked=false},40),{once:true});for(const node of document.querySelectorAll<HTMLInputElement>('#checkbox-batch input'))node.checked=false});
+ o=await observe(page);scope=element(o,'批量复选','section');o=await observe(page,{mode:'detail',scope_ref:scope.ref});const current=o.elements.filter((e:any)=>e.kind==='checkbox'&&e.name.startsWith('批量选项 '));r=await act(page,o,{kind:'set_values',items:current.slice(0,2).map((e:any)=>({kind:'set_checked',ref:e.ref,expected_value_token:e.expected_value_token,checked:true}))});
+ expect(r.status).toBe('failed');expect(r.stopped_at).toBe(1);expect(await page.locator('#checkbox-batch input').nth(1).isChecked()).toBe(false);
+});
+test('reuses a scope structure signature within one observation',async({page})=>{
+ await page.goto('/agent-controls.html');
+ const calls=await page.evaluate(async()=>{const section=document.createElement('section');section.id='large-scope';section.setAttribute('aria-label','大栏目');section.innerHTML='<h2>大栏目</h2>'+Array.from({length:120},(_,i)=>`<label>字段 ${i}<input aria-label="性能字段 ${i}"></label>`).join('');document.body.append(section);const engine=(window as any).labEngine,original=engine.observer.structure.bind(engine.observer);let scopeCalls=0;engine.observer.structure=(scope:HTMLElement)=>{if(scope===section)scopeCalls++;return original(scope)};await engine.handle('observe',{tab_id:1,mode:'overview'},'test-epoch');return scopeCalls});
+ expect(calls).toBe(1);
+});
 test('old identical record and error toast do not prove a new save',async({page})=>{
  await page.goto('/agent-controls.html');const o=await observe(page);const r=await act(page,o,click(element(o,'保存记录','button')));expect(r.status).toBe('dispatched');expect(r.persistence).toBe('unconfirmed');await expect(page.getByRole('alert')).toHaveText('保存失败，请重试');
 });

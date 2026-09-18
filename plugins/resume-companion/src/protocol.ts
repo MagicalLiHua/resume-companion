@@ -36,13 +36,13 @@ export function createAutomationSchemas(z: any, options: { allowSources?: boolea
   const effect = z.enum(['interaction', 'save_record', 'save_draft', 'advance_step', 'final_submit', 'unknown']);
   const writes = [
     object({ kind: z.literal('set_value'), ref: id, expected_value_token: id, value }),
-    object({ kind: z.literal('set_checked'), ref: id, expected_value_token: id, checked: z.boolean() }),
+    object({ kind: z.literal('set_checked'), ref: id, expected_value_token: id, checked: z.boolean() }).describe('勾选或取消一个已观察的复选框或单选项；多个独立布尔字段应放进同一个 set_values.items'),
     object({ kind: z.literal('select_option'), ref: id, expected_value_token: id, option_ref: id.optional(), option_value: z.string().max(10_000).optional() }),
   ];
   const write = z.discriminatedUnion('kind', writes);
   const action = z.discriminatedUnion('kind', [
     ...writes,
-    object({ kind: z.literal('set_values'), items: z.array(write).min(1).max(20) }),
+    object({ kind: z.literal('set_values'), items: z.array(write).min(1).max(20).describe('同一快照中的独立 set_value、set_checked 和原生 select_option，可混合批量执行；动态控件必须单独操作') }).describe('一次写入最多 20 个独立字段，复选框和单选项也应在这里批量处理'),
     object({ kind: z.literal('click'), ref: id, effect_kind: effect, evidence_refs: z.array(id).max(10).optional(), expected_value_token: id.optional() }),
     object({ kind: z.literal('press_key'), ref: id, key: z.enum(['Escape', 'ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'Home', 'End']), expected_value_token: id.optional() }),
     object({ kind: z.literal('scroll'), ref: id, direction: z.enum(['up', 'down', 'left', 'right']), pixels: z.number().int().min(1).max(2_000).optional() }),

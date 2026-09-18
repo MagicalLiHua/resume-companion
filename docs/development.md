@@ -1,5 +1,7 @@
 # 开发指南
 
+> 当前正文记录 0.10.0 的扩展主驱动实现基线。下一阶段开发以 [Chrome DevTools MCP 主驱动重构计划](Chrome%20DevTools%20MCP主驱动重构计划.md)为准；完成 0.11.0 迁移时再同步删改这里的扩展、Native Host 和备用驱动说明。
+
 产品逻辑、MCP、Chrome 扩展、Native Host 和页面执行引擎使用严格 TypeScript。只有构建、打包、调试客户端和兼容启动器保留为短小的 `.mjs` 或 shell 脚本。
 
 ## 安装与回归

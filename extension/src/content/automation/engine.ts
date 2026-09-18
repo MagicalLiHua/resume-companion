@@ -244,7 +244,8 @@ export class AutomationEngine {
     else nativeSet(node, value);
     for(const peer of radioPeers)record.changes.push({entry:this.observer.snapshot(snapshot).entries.get(this.observer.id(peer))!,before:true,written:false,channel:'value'});
     const change: Change = { entry, before, written: value, channel }; record.changes.push(change);
-    await pause(160); guard();
+    const settleDelay = node instanceof HTMLInputElement && ['checkbox', 'radio'].includes(node.type) ? 80 : 160;
+    await pause(settleDelay); guard();
     const actual = channel === 'search' ? readSearch(node) : readValue(node);
     // A cascader displays its complete path; verify the selected rendered leaf and path suffix.
     const retained = node.isConnected && (actual === value || Boolean(option && antSelect(node)?.matches('.ant-cascader') && typeof actual === 'string' && actual.split(/\s*\/\s*/).at(-1) === value));

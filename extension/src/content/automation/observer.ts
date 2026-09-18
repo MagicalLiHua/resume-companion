@@ -35,10 +35,18 @@ export class Observer {
   }
   node(ref: string) { const node = this.nodes.get(ref); if (!node) throw new AutomationError('stale', '元素引用不存在，请重新观察'); return node; }
   scope(node: HTMLElement) { return node.parentElement?.closest<HTMLElement>(scopeSelector) ?? document.body; }
-  structure(scope: HTMLElement) {
-    return canonical([...scope.querySelectorAll<HTMLElement>(candidateSelector)].filter(n=>this.scope(n)===scope && visible(n)).map(n=>[this.id(n),semanticSignature(n,scope)]));
-  }
-  describe(node: HTMLElement): Entry {
+    structure(scope: HTMLElement) {
+      return canonical([...scope.querySelectorAll<HTMLElement>(candidateSelector)].filter(n=>this.scope(n)===scope && visible(n)).map(n=>[this.id(n),semanticSignature(n,scope)]));
+    }
+    private cachedStructure(scope: HTMLElement, cache?: Map<HTMLElement, string>) {
+      if (!cache) return this.structure(scope);
+      const cached = cache.get(scope);
+      if (cached !== undefined) return cached;
+      const signature = this.structure(scope);
+      cache.set(scope, signature);
+      return signature;
+    }
+    describe(node: HTMLElement, structureCache?: Map<HTMLElement, string>): Entry {
     const ref = this.id(node), scope = node === document.body ? node : this.scope(node), scopeRef = this.id(scope);
     const p = policy(node), sensitive = p.blocked_reason?.startsWith('restricted:');
     const value = sensitive ? null : readValue(node), search = sensitive ? undefined : readSearch(node);
@@ -64,7 +72,7 @@ export class Observer {
     if (['button','link','tab'].includes(p.kind)) data.evidence_refs = [ref, scopeRef];
     if (node === document.body || scrollable(node)) { const s = node === document.body ? document.scrollingElement! : node; data.scroll = { top: s.scrollTop, left: s.scrollLeft, height: s.scrollHeight, viewport_height: s.clientHeight, more_below: s.scrollTop + s.clientHeight < s.scrollHeight - 2 }; }
     if (node.matches(scopeSelector) || node.matches('[role="status"],[role="alert"],h1,h2,h3,h4,legend,.ant-form-item-explain-error,.ant-empty')) data.text = plainText(node);
-    return { ref, node, scope, scopeRef, signature, scopeSignature: this.structure(scope), childrenSignature: this.structure(node), token: previous.token, value, ...(search !== undefined ? { search } : {}), public: data };
+      return { ref, node, scope, scopeRef, signature, scopeSignature: this.cachedStructure(scope, structureCache), childrenSignature: this.cachedStructure(node, structureCache), token: previous.token, value, ...(search !== undefined ? { search } : {}), public: data };
   }
   private describeOwnerToken(owner: HTMLElement) {
     const scope = this.scope(owner), signature = semanticSignature(owner, scope), value = canonical([readValue(owner), readSearch(owner), signature, this.id(scope)]);
@@ -93,8 +101,8 @@ export class Observer {
       if (root instanceof HTMLSelectElement) Array.from(root.options).forEach(o => nodes.add(o));
     }
     if (nodes.size > 5000) throw new AutomationError('reference_limit', '范围过大，请缩小观察范围');
-    const entries = new Map<string, Entry>();
-    for (const node of nodes) { const e = this.describe(node); entries.set(e.ref, e); }
+      const entries = new Map<string, Entry>(), structureCache = new Map<HTMLElement, string>();
+      for (const node of nodes) { const e = this.describe(node, structureCache); entries.set(e.ref, e); }
     const signature = canonical([...entries.values()].map(e => [e.ref, e.signature, e.public]));
     return { entries, signature };
   }

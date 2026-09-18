@@ -40,7 +40,7 @@ MCP 会核对修订和来源，在送入扩展前转换为本次动作所需的�
 | `resume_wait` | 等待可见性、值、文本、候选或结构变化 |
 | `resume_undo_operations` | 条件恢复未保存字段 |
 
-先用 `resume_observe` 获取 `session_id`、`snapshot_id`、元素 `ref` 和 `expected_value_token`。动作只能使用观察返回的引用，不能传入 CSS 选择器、XPath 或 JavaScript。
+先用 `resume_observe` 获取 `session_id`、`snapshot_id`、元素 `ref` 和 `expected_value_token`。动作只能使用观察返回的引用，不能传入 CSS 选择器、XPath 或 JavaScript。同一快照内有多个互不依赖的文本框、复选框、单选项或原生下拉时，应将对应的 `set_value`、`set_checked` 和 `select_option` 混合放进一次 `set_values.items`，最多 20 项。成功回执已经包含变化观察，不需要在每个复选框之间重新观察。
 
 动态控件先展开或输入搜索文本，再观察真实候选并选择精确的 `option_ref`。级联菜单逐层展开，日期弹层使用已观察到的年、月和日。点击保存经历、保存草稿和普通下一步时，需要使用观察返回的 `effect_kind` 与证据引用。`unknown` 或仅 `dispatched` 的结果必须重新观察，不能盲目重放。
 
