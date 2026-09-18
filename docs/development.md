@@ -17,6 +17,8 @@ npm run package
 
 `test:e2e` 启动本地虚构招聘站点和无头 Chrome，直接调用官方 MCP。测试只使用合成数据。某些受限环境需要允许监听 `127.0.0.1:4174` 和启动 Chrome。
 
+需要在专用持久 Chrome 中进行人工 Agent 验收时，先运行 `npm run lab`，然后把 `tests/fixtures/acceptance-task.md` 作为新会话任务。该任务会读取配套虚构简历并打开四步综合表单；页面最终会显示自动化字段完成率和边界违规计数。
+
 ## 目录
 
 | 目录 | 内容 |

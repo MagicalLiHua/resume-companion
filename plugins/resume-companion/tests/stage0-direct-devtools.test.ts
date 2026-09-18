@@ -21,7 +21,15 @@ const textOf = (result: ToolResult): string => Array.isArray(result.content)
 
 function uidFor(snapshot: string, name: string): string {
   const candidates = snapshot.split('\n').filter(candidate => candidate.includes(`\"${name}`));
-  const line = candidates.find(candidate => /\b(textbox|combobox|checkbox|radio|button|option|treeitem|DateTime)\b/.test(candidate)) ?? candidates[0];
+  const exactCandidates = candidates.filter(candidate => candidate.includes(`\"${name}\"`));
+  const actionable = /\b(textbox|combobox|checkbox|radio|button|treeitem|spinbutton|DateTime)\b/;
+  const option = /\boption\b/;
+  const line = exactCandidates.find(candidate => actionable.test(candidate))
+    ?? candidates.find(candidate => actionable.test(candidate))
+    ?? exactCandidates.find(candidate => option.test(candidate))
+    ?? candidates.find(candidate => option.test(candidate))
+    ?? exactCandidates[0]
+    ?? candidates[0];
   const uid = line?.match(/uid=([^\s]+)/)?.[1];
   if (!uid) throw new Error(`Snapshot did not contain a UID for ${name}:\n${snapshot}`);
   return uid;
@@ -287,6 +295,61 @@ describe('Stage 0 direct Chrome DevTools MCP validation', () => {
     const screenshot = await call('take_screenshot', { pageId, uid: dateUid, format: 'webp' });
     expect(Array.isArray(screenshot.content) && screenshot.content.some(item => item.type === 'image')).toBe(true);
   }, 30_000);
+
+  test('opens the dedicated acceptance lab and completes its dynamic first step', async () => {
+    const opened = await call('new_page', {
+      url: `http://127.0.0.1:4174/acceptance-lab.html?run=stage0-acceptance-${Date.now()}&fresh=1`,
+    });
+    pageId = selectedPageId(textOf(opened));
+    let snapshot = textOf(await call('take_snapshot', { pageId }));
+    expect(snapshot).toContain('AI 网申综合验收');
+    expect(snapshot).toContain('联系偏好备注');
+    expect(snapshot).toContain('最终提交');
+    snapshot = textOf(await call('fill_form', {
+      pageId,
+      includeSnapshot: true,
+      elements: [
+        { uid: uidFor(snapshot, '姓名'), value: '林星遥' },
+        { uid: uidFor(snapshot, '英文名'), value: 'Xingyao Lin' },
+        { uid: uidFor(snapshot, '手机号'), value: '13800001234' },
+        { uid: uidFor(snapshot, '电子邮箱'), value: 'lin.xingyao@example.test' },
+        { uid: uidFor(snapshot, '出生日期'), value: '2001-05-16' },
+        { uid: uidFor(snapshot, '现居城市'), value: '杭州' },
+        { uid: uidFor(snapshot, '省份'), value: '浙江省' },
+      ],
+    }));
+    snapshot = textOf(await call('wait_for', { pageId, text: ['杭州市'], timeout: 3_000 }));
+    snapshot = textOf(await call('fill_form', {
+      pageId,
+      includeSnapshot: true,
+      elements: [{ uid: uidFor(snapshot, '城市'), value: '杭州市' }],
+    }));
+    snapshot = textOf(await call('wait_for', { pageId, text: ['西湖区'], timeout: 3_000 }));
+    snapshot = textOf(await call('fill_form', {
+      pageId,
+      includeSnapshot: true,
+      elements: [
+        { uid: uidFor(snapshot, '区县'), value: '西湖区' },
+        { uid: uidFor(snapshot, '申请职位'), value: '质量工程师' },
+        { uid: uidFor(snapshot, '最早到岗日期'), value: '2026-07-15' },
+        { uid: uidFor(snapshot, '杭州'), value: 'true' },
+        { uid: uidFor(snapshot, '上海'), value: 'true' },
+        { uid: uidFor(snapshot, '期望月薪'), value: '18000' },
+        { uid: uidFor(snapshot, '可以接受异地办公'), value: 'true' },
+      ],
+    }));
+    snapshot = textOf(await call('click', { pageId, uid: uidFor(snapshot, '保存并继续'), includeSnapshot: true }));
+    expect(snapshot).toContain('教育与实习经历');
+    expect(snapshot).toContain('添加教育经历');
+
+    const report = textOf(await call('evaluate_script', {
+      pageId,
+      function: `() => window.AcceptanceLab.report()`,
+      waitForStableDom: false,
+    }));
+    expect(report).toContain('"finalSubmitCount":0');
+    expect(report).toContain('"agreementUnchecked":true');
+  }, 35_000);
 
   test('restarts with the same dedicated profile and keeps site state', async () => {
     const marker = `kept-${Date.now()}`;

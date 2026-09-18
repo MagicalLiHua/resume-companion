@@ -1,5 +1,11 @@
 # 更新记录
 
+## 未发布
+
+- 新增在 Resume Companion 专用 Chrome Profile 中运行的四步综合验收页、配套虚构简历和可直接复制的新会话任务。
+- 综合页覆盖动态地址、异步学校候选、重复经历、批量复选框、条件字段、草稿请求、已有答案保护和最终提交边界。
+- 直接 Chrome DevTools MCP 集成回归增加综合页首步的真实填写与跳转检查。
+
 ## 0.11.0 · 资料 MCP + 官方 Chrome DevTools MCP
 
 - Resume Companion MCP 收缩为四个本地资料工具；浏览器能力直接使用固定的官方 Chrome DevTools MCP 1.9.0。
