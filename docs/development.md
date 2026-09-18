@@ -1,50 +1,52 @@
 # 开发指南
 
+核心 MCP 与浏览器驱动使用严格 TypeScript。只有构建、打包和兼容启动器保留为短小的 `.mjs` 脚本。
+
 ## 安装与回归
 
-使用 Node 24：
+使用 Node.js 24：
 
 ~~~sh
 npm ci
 npm ci --prefix plugins/resume-companion
 npx playwright install chromium
-npm run typecheck
-npm test
-npm run build
-npm run test:e2e
-npm run build --prefix plugins/resume-companion
+npm run check
+npm test --prefix plugins/resume-companion
 npm run test:core --prefix plugins/resume-companion
+npm run test:devtools --prefix plugins/resume-companion
 npm run test:live --prefix plugins/resume-companion
 ~~~
 
-测试只使用合成资料、临时数据目录、隔离 Chrome 配置和本地回环端口。
+`test:devtools` 会启动本地虚构表单和临时隔离 Chrome，通过真正的 Chrome DevTools MCP 填写、核对和撤销字段，不加载项目扩展。`test:live` 验证可选扩展回退。测试只使用合成资料和临时数据目录。
 
 ## 目录
 
 | 目录 | 内容 |
 | --- | --- |
-| extension/src/content/automation | DOM 观察、策略、动作、等待、验证和撤销 |
-| extension/src/background | 标签页协调、本地桥接与操作会话 |
-| extension/src/options | 极简桥接状态页 |
-| plugins/resume-companion | MCP 服务、资料库、共享协议和 skill |
-| tests/unit | 协议、资料库、桥接与标签页单元测试 |
-| tests/e2e | 核心动作和扩展外壳浏览器测试 |
-| tests/fixtures | 虚构多步骤招聘表单 |
+| `plugins/resume-companion/src` | MCP、资料库、协议和浏览器驱动 TypeScript 源码 |
+| `plugins/resume-companion/src/browser` | DevTools 主驱动、扩展回退、快照、安全策略和操作日志 |
+| `extension/src` | 可选 Chrome 扩展回退 |
+| `tests/fixtures` | 虚构多步骤招聘表单 |
+| `tests/unit`、`plugins/resume-companion/tests` | 协议、资料库、驱动和策略测试 |
 
-## 虚构表单
+## 浏览器驱动约束
+
+`DevToolsDriver` 通过官方 Chrome DevTools MCP 的 stdio 客户端连接 Chrome。上游包固定版本并在构建时复制到 `runtime/chrome-devtools-mcp`，发布包不依赖全局 `npx` 或运行时下载。
+
+新增能力时应继续满足：
+
+- 只暴露 Resume Companion 的十个稳定工具，不把上游工具目录直接交给模型。
+- 使用无障碍树快照和不透明引用，不接受任意选择器或脚本。
+- 每次写入前校验当前值 token，写入后回读。
+- 有副作用的操作使用 `operation_id` 去重。
+- 保存和页面迁移形成撤销边界。
+- 最终提交及敏感操作保持手动。
+
+## 虚构表单与打包
 
 ~~~sh
 npm run lab
-~~~
-
-打开 http://127.0.0.1:4174/agent-lab.html。实验页覆盖多步骤、两条教育经历、实习经历、动态学校、保存回显和最终提交边界。agent-controls.html 覆盖搜索、虚拟候选、年月、单选和失败保存。
-
-## 扩展调试与打包
-
-npm run dev:extension 持续构建 dist。Chrome 只需加载一次该目录；修改后点击扩展卡片的重新加载图标。内容脚本只在 MCP 首次观察某个标签页时注入。
-
-~~~sh
 npm run package
 ~~~
 
-发布包包含精简扩展、自包含 MCP、skill、公开文档与第三方许可。修改 server.mjs、profile-store.mjs 或 protocol.ts 后必须重新构建 server.bundle.mjs。
+实验页位于 `http://127.0.0.1:4174/agent-lab.html`。发布包包含自包含 MCP、固定的 DevTools 运行时、skill、公开文档和 `extension-fallback`。不要手工编辑 `server.bundle.mjs`；修改 TypeScript 后运行插件构建。

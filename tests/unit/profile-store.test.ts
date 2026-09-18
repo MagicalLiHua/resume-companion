@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test } from 'vitest';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { ProfileStore } from '../../plugins/resume-companion/profile-store.mjs';
+import { ProfileStore } from '../../plugins/resume-companion/src/profile-store';
 
 const created: string[] = [];
 async function store() {
@@ -37,9 +37,10 @@ describe('MCP local profile store', () => {
     const directoryView = await value.readView({ profile_id: profileId });
     expect(directoryView).toMatchObject({ directory: true, profile_revision: 1, has_source_markdown: true });
     const education = await value.readView({ profile_id: profileId, section: 'education' });
-    expect(education.data[0].id).toMatch(/^[A-Za-z0-9_-]+$/);
+    const educationData = education.data as Array<{ id: string }>;
+    expect(educationData[0]?.id).toMatch(/^[A-Za-z0-9_-]+$/);
     expect(await value.resolveSource({ profile_id: profileId, profile_revision: 1, source_ref: 'basic/full_name' })).toBe('示例同学');
-    expect(await value.resolveSource({ profile_id: profileId, profile_revision: 1, source_ref: `education/${education.data[0].id}/education_level` })).toBe('本科');
+    expect(await value.resolveSource({ profile_id: profileId, profile_revision: 1, source_ref: `education/${educationData[0]?.id}/education_level` })).toBe('本科');
     const mode = (await import('node:fs/promises')).stat(join(directory, 'profiles', `${profileId}.json`));
     expect((await mode).mode & 0o077).toBe(0);
   });

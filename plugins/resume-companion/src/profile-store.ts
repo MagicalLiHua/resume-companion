@@ -7,7 +7,7 @@ import { z } from 'zod';
 const ID_PATTERN = /^[A-Za-z0-9_-]{1,100}$/;
 const id = z.string().regex(ID_PATTERN);
 const optionalId = id.optional();
-const text = z.string().max(6000);
+const text = z.string().max(6_000);
 const nullableText = text.nullable();
 const month = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/).nullable();
 const factInput = z.object({ id: optionalId, text }).strict();
@@ -82,31 +82,32 @@ export const ProfileSchema = z.object({
   certificates: z.array(certificate).max(50),
   custom_answers: z.array(answer).max(50),
   supplemental_fields: z.array(supplemental).max(100),
-}).strict().superRefine((profile, ctx) => {
-  const ids = new Set([profile.profile_id]);
-  const fieldKeys = new Set();
-  for (const [section, records] of Object.entries({
+}).strict().superRefine((profile, context) => {
+  const ids = new Set<string>([profile.profile_id]);
+  const fieldKeys = new Set<string>();
+  const collections = Object.entries({
     education: profile.education,
     experience: profile.experience,
     projects: profile.projects,
     certificates: profile.certificates,
     custom_answers: profile.custom_answers,
     supplemental_fields: profile.supplemental_fields,
-  })) {
+  }) as Array<[string, Array<{ id: string; facts?: Array<{ id: string }>; start_month?: string | null; end_month?: string | null }>] >;
+  for (const [section, records] of collections) {
     records.forEach((record, index) => {
-      const recordIds = [record.id, ...('facts' in record ? record.facts.map(item => item.id) : [])];
+      const recordIds = [record.id, ...(record.facts?.map(item => item.id) ?? [])];
       for (const value of recordIds) {
-        if (ids.has(value)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: [section, index, 'id'], message: '条目和事实 ID 不能重复' });
+        if (ids.has(value)) context.addIssue({ code: z.ZodIssueCode.custom, path: [section, index, 'id'], message: '条目和事实 ID 不能重复' });
         ids.add(value);
       }
-      if ('start_month' in record && record.start_month && record.end_month && record.start_month > record.end_month) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, path: [section, index, 'end_month'], message: '结束时间不能早于开始时间' });
+      if (record.start_month && record.end_month && record.start_month > record.end_month) {
+        context.addIssue({ code: z.ZodIssueCode.custom, path: [section, index, 'end_month'], message: '结束时间不能早于开始时间' });
       }
     });
   }
   profile.supplemental_fields.forEach((field, index) => {
     if (!field.field_key.trim() || !field.label.trim() || fieldKeys.has(field.field_key)) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['supplemental_fields', index], message: '补充资料需要名称和唯一字段标识' });
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ['supplemental_fields', index], message: '补充资料需要名称和唯一字段标识' });
     }
     fieldKeys.add(field.field_key);
   });
@@ -129,11 +130,11 @@ export const ProfileSaveSchema = z.object({
   name: z.string().trim().min(1).max(80).optional(),
   changes: ProfileChangesSchema,
   source_markdown: z.string().max(262_144).nullable().optional(),
-}).strict().superRefine((input, ctx) => {
-  if (input.profile_id && input.expected_revision === undefined) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['expected_revision'], message: '更新资料必须提供 expected_revision' });
-  if (!input.profile_id && input.expected_revision !== undefined) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['expected_revision'], message: '创建资料时不能提供 expected_revision' });
-  if (!input.profile_id && !input.name) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['name'], message: '创建资料必须提供名称' });
-  if (input.profile_id && input.name === undefined && input.source_markdown === undefined && Object.keys(input.changes).length === 0) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['changes'], message: '没有要保存的更改' });
+}).strict().superRefine((input, context) => {
+  if (input.profile_id && input.expected_revision === undefined) context.addIssue({ code: z.ZodIssueCode.custom, path: ['expected_revision'], message: '更新资料必须提供 expected_revision' });
+  if (!input.profile_id && input.expected_revision !== undefined) context.addIssue({ code: z.ZodIssueCode.custom, path: ['expected_revision'], message: '创建资料时不能提供 expected_revision' });
+  if (!input.profile_id && !input.name) context.addIssue({ code: z.ZodIssueCode.custom, path: ['name'], message: '创建资料必须提供名称' });
+  if (input.profile_id && input.name === undefined && input.source_markdown === undefined && Object.keys(input.changes).length === 0) context.addIssue({ code: z.ZodIssueCode.custom, path: ['changes'], message: '没有要保存的更改' });
 });
 
 const StoredProfileSchema = z.object({
@@ -162,7 +163,15 @@ const IndexSchema = z.object({
   profiles: z.array(IndexEntrySchema).max(100),
 }).strict();
 
-const emptyProfile = (profileId, revision) => ({
+export type Profile = z.infer<typeof ProfileSchema>;
+export type ProfileChanges = z.infer<typeof ProfileChangesSchema>;
+export type ProfileSave = z.infer<typeof ProfileSaveSchema>;
+type StoredProfile = z.infer<typeof StoredProfileSchema>;
+type IndexEntry = z.infer<typeof IndexEntrySchema>;
+type Index = z.infer<typeof IndexSchema>;
+type ReadSection = keyof Pick<Profile, 'basic' | 'education' | 'experience' | 'projects' | 'skills' | 'certificates' | 'custom_answers' | 'supplemental_fields'>;
+
+const emptyProfile = (profileId: string, revision: number): Profile => ({
   schema_version: '1.1',
   profile_id: profileId,
   revision,
@@ -176,40 +185,44 @@ const emptyProfile = (profileId, revision) => ({
   supplemental_fields: [],
 });
 
-const ensureId = value => value ?? randomUUID();
-const normalizeFacts = records => records.map(record => ({ ...record, id: ensureId(record.id), facts: record.facts.map(item => ({ ...item, id: ensureId(item.id) })) }));
-const normalizeRecords = records => records.map(record => ({ ...record, id: ensureId(record.id) }));
-function mergeChanges(profile, changes, revision) {
+const ensureId = (value: string | undefined): string => value ?? randomUUID();
+function mergeChanges(profile: Profile, changes: ProfileChanges, revision: number): Profile {
   const next = structuredClone(profile);
-  if (changes.basic) next.basic = { ...next.basic, ...changes.basic };
-  if (changes.education) next.education = normalizeRecords(changes.education);
-  if (changes.experience) next.experience = normalizeFacts(changes.experience);
-  if (changes.projects) next.projects = normalizeFacts(changes.projects);
+  if (changes.basic) next.basic = basic.parse({ ...next.basic, ...changes.basic });
+  if (changes.education) next.education = z.array(education).parse(changes.education.map(record => ({ ...record, id: ensureId(record.id) })));
+  if (changes.experience) next.experience = z.array(experience).parse(changes.experience.map(record => ({ ...record, id: ensureId(record.id), facts: record.facts.map(item => ({ ...item, id: ensureId(item.id) })) })));
+  if (changes.projects) next.projects = z.array(project).parse(changes.projects.map(record => ({ ...record, id: ensureId(record.id), facts: record.facts.map(item => ({ ...item, id: ensureId(item.id) })) })));
   if (changes.skills) next.skills = changes.skills;
-  if (changes.certificates) next.certificates = normalizeRecords(changes.certificates);
-  if (changes.custom_answers) next.custom_answers = normalizeRecords(changes.custom_answers);
-  if (changes.supplemental_fields) next.supplemental_fields = normalizeRecords(changes.supplemental_fields);
+  if (changes.certificates) next.certificates = z.array(certificate).parse(changes.certificates.map(record => ({ ...record, id: ensureId(record.id) })));
+  if (changes.custom_answers) next.custom_answers = z.array(answer).parse(changes.custom_answers.map(record => ({ ...record, id: ensureId(record.id) })));
+  if (changes.supplemental_fields) next.supplemental_fields = z.array(supplemental).parse(changes.supplemental_fields.map(record => ({ ...record, id: ensureId(record.id) })));
   next.revision = revision;
   return ProfileSchema.parse(next);
 }
 
-function defaultDataDir() {
+function defaultDataDir(): string {
   if (process.platform === 'darwin') return join(homedir(), 'Library', 'Application Support', 'Resume Companion');
   if (process.platform === 'win32') return join(process.env.APPDATA || join(homedir(), 'AppData', 'Roaming'), 'Resume Companion');
   return join(process.env.XDG_DATA_HOME || join(homedir(), '.local', 'share'), 'resume-companion');
 }
 
-export function resolveDataDir(value = process.env.RESUME_COMPANION_DATA_DIR) {
+export function resolveDataDir(value = process.env.RESUME_COMPANION_DATA_DIR): string {
   if (!value) return defaultDataDir();
   const expanded = value === '~' ? homedir() : value.startsWith('~/') ? join(homedir(), value.slice(2)) : value;
   return isAbsolute(expanded) ? resolve(expanded) : resolve(process.cwd(), expanded);
 }
 
-async function syncDirectory(path) {
-  try { const handle = await open(path, 'r'); await handle.sync(); await handle.close(); } catch { /* Some platforms do not allow fsync on directories. */ }
+async function syncDirectory(path: string): Promise<void> {
+  try {
+    const handle = await open(path, 'r');
+    await handle.sync();
+    await handle.close();
+  } catch {
+    // Some platforms do not allow fsync on directories.
+  }
 }
 
-async function atomicWrite(path, value) {
+async function atomicWrite(path: string, value: unknown): Promise<void> {
   await mkdir(dirname(path), { recursive: true, mode: 0o700 });
   const temporary = `${path}.tmp-${process.pid}-${randomUUID()}`;
   await writeFile(temporary, `${JSON.stringify(value, null, 2)}\n`, { encoding: 'utf8', mode: 0o600 });
@@ -217,17 +230,20 @@ async function atomicWrite(path, value) {
   await handle.sync();
   await handle.close();
   await rename(temporary, path);
-  await chmod(path, 0o600).catch(() => {});
+  await chmod(path, 0o600).catch(() => undefined);
   await syncDirectory(dirname(path));
 }
 
-function storageError(code, message) {
-  const error = new Error(`${code}: ${message}`);
+type CodedError = Error & { code: string };
+function storageError(code: string, message: string): CodedError {
+  const error = new Error(`${code}: ${message}`) as CodedError;
   error.code = code;
   return error;
 }
-
-function entryFor(stored) {
+function fileErrorCode(error: unknown): string | undefined {
+  return typeof error === 'object' && error !== null && 'code' in error && typeof error.code === 'string' ? error.code : undefined;
+}
+function entryFor(stored: StoredProfile): IndexEntry {
   return {
     id: stored.id,
     name: stored.name,
@@ -238,71 +254,111 @@ function entryFor(stored) {
   };
 }
 
-const displayEnums = {
+const displayEnums: Record<string, string> = {
   associate: '大专', bachelor: '本科', master: '硕士研究生', doctor: '博士研究生',
   full_time: '全日制', part_time: '非全日制', other: '其他', internship: '实习', work: '工作',
 };
-function scalarSource(profile, sourceRef) {
+type ScalarSource = string | boolean | null | undefined;
+function scalarSource(profile: Profile, sourceRef: string): ScalarSource {
   if (sourceRef === 'skills') return profile.skills.join('、');
   const parts = sourceRef.split('/');
-  if (parts[0] === 'basic' && parts.length === 2 && Object.hasOwn(profile.basic, parts[1])) return profile.basic[parts[1]];
-  if (parts[0] === 'custom_answers' && parts.length === 2) return profile.custom_answers.find(item => item.id === parts[1])?.text;
-  if (parts[0] === 'supplemental_fields' && parts.length === 2) return profile.supplemental_fields.find(item => item.id === parts[1])?.value;
-  if (['education', 'experience', 'projects', 'certificates'].includes(parts[0]) && parts.length === 3) {
-    const record = profile[parts[0]].find(item => item.id === parts[1]);
-    if (!record || !Object.hasOwn(record, parts[2])) return undefined;
-    const raw = record[parts[2]];
-    if (Array.isArray(raw)) return raw.map(item => typeof item === 'string' ? item : item.text).join(parts[2] === 'facts' ? '\n' : '、');
+  const section = parts[0];
+  const recordId = parts[1];
+  const field = parts[2];
+  if (section === 'basic' && parts.length === 2 && recordId && Object.hasOwn(profile.basic, recordId)) {
+    return profile.basic[recordId as keyof typeof profile.basic];
+  }
+  if (section === 'custom_answers' && parts.length === 2) return profile.custom_answers.find(item => item.id === recordId)?.text;
+  if (section === 'supplemental_fields' && parts.length === 2) return profile.supplemental_fields.find(item => item.id === recordId)?.value;
+  if (section && recordId && field && ['education', 'experience', 'projects', 'certificates'].includes(section) && parts.length === 3) {
+    const collection = (profile as unknown as Record<string, Array<Record<string, unknown> & { id: string }>>)[section];
+    const record = collection?.find(item => item.id === recordId);
+    if (!record || !Object.hasOwn(record, field)) return undefined;
+    const raw = record[field];
+    if (Array.isArray(raw)) return raw.map(item => typeof item === 'string' ? item : typeof item === 'object' && item !== null && 'text' in item ? String(item.text) : '').join(field === 'facts' ? '\n' : '、');
     if (typeof raw === 'string') return displayEnums[raw] ?? raw;
     if (typeof raw === 'boolean' || raw === null) return raw;
   }
   return undefined;
 }
 
+const ReadViewSchema = z.object({
+  profile_id: id,
+  section: z.enum(['basic', 'education', 'experience', 'projects', 'skills', 'certificates', 'custom_answers', 'supplemental_fields']).optional(),
+  record_id: id.optional(),
+  source_refs: z.array(z.string().min(1).max(240)).max(100).optional(),
+  offset: z.number().int().nonnegative().optional(),
+  limit: z.number().int().min(1).max(50).optional(),
+  include_source_markdown: z.boolean().optional(),
+}).strict();
+
 export class ProfileStore {
+  readonly dataDir: string;
+  private readonly indexPath: string;
+  private queue: Promise<unknown> = Promise.resolve();
+
   constructor(dataDir = resolveDataDir()) {
     this.dataDir = dataDir;
     this.indexPath = join(dataDir, 'index.json');
-    this.queue = Promise.resolve();
   }
 
   async initialize() {
     for (const folder of ['', 'profiles', 'history', 'backups']) await mkdir(join(this.dataDir, folder), { recursive: true, mode: 0o700 });
-    await chmod(this.dataDir, 0o700).catch(() => {});
-    try { await stat(this.indexPath); } catch (error) {
-      if (error?.code !== 'ENOENT') throw error;
+    await chmod(this.dataDir, 0o700).catch(() => undefined);
+    try {
+      await stat(this.indexPath);
+    } catch (error) {
+      if (fileErrorCode(error) !== 'ENOENT') throw error;
       await atomicWrite(this.indexPath, { format: 'resume-companion-index', storage_version: 1, profiles: [] });
     }
     await this.readIndex();
     return this.status();
   }
 
-  exclusive(job) {
+  private exclusive<T>(job: () => Promise<T>): Promise<T> {
     const next = this.queue.then(job, job);
     this.queue = next.catch(() => undefined);
     return next;
   }
 
-  async readIndex() {
-    let raw;
-    try { raw = await readFile(this.indexPath, 'utf8'); } catch (error) { throw storageError('storage_unavailable', `无法读取资料索引：${error.message}`); }
-    const parsed = IndexSchema.safeParse(JSON.parse(raw));
+  private async readIndex(): Promise<Index> {
+    let raw: string;
+    try {
+      raw = await readFile(this.indexPath, 'utf8');
+    } catch (error) {
+      throw storageError('storage_unavailable', `无法读取资料索引：${error instanceof Error ? error.message : String(error)}`);
+    }
+    let value: unknown;
+    try {
+      value = JSON.parse(raw);
+    } catch {
+      throw storageError('storage_corrupt', '资料索引不是有效 JSON，请从 backups 恢复或重建索引');
+    }
+    const parsed = IndexSchema.safeParse(value);
     if (!parsed.success) throw storageError('storage_corrupt', '资料索引格式损坏，请从 backups 恢复或重建索引');
     return parsed.data;
   }
 
-  async readStored(profileId) {
-    let raw;
-    try { raw = await readFile(join(this.dataDir, 'profiles', `${profileId}.json`), 'utf8'); }
-    catch (error) { if (error?.code === 'ENOENT') throw storageError('profile_missing', '指定的本地资料不存在'); throw storageError('storage_unavailable', `无法读取资料：${error.message}`); }
-    let value;
-    try { value = JSON.parse(raw); } catch { throw storageError('storage_corrupt', `资料 ${profileId} 不是有效 JSON`); }
+  private async readStored(profileId: string): Promise<StoredProfile> {
+    let raw: string;
+    try {
+      raw = await readFile(join(this.dataDir, 'profiles', `${profileId}.json`), 'utf8');
+    } catch (error) {
+      if (fileErrorCode(error) === 'ENOENT') throw storageError('profile_missing', '指定的本地资料不存在');
+      throw storageError('storage_unavailable', `无法读取资料：${error instanceof Error ? error.message : String(error)}`);
+    }
+    let value: unknown;
+    try {
+      value = JSON.parse(raw);
+    } catch {
+      throw storageError('storage_corrupt', `资料 ${profileId} 不是有效 JSON`);
+    }
     const parsed = StoredProfileSchema.safeParse(value);
     if (!parsed.success) throw storageError('storage_corrupt', `资料 ${profileId} 格式损坏或版本不支持`);
     return parsed.data;
   }
 
-  async list() {
+  async list(): Promise<IndexEntry[]> {
     await this.initialize();
     const index = await this.readIndex();
     return index.profiles.slice().sort((a, b) => b.updated_at.localeCompare(a.updated_at));
@@ -313,24 +369,24 @@ export class ProfileStore {
     return { data_dir: this.dataDir, storage_version: 1, profile_count: index.profiles.length };
   }
 
-  async get(profileId) {
+  async get(profileId: string): Promise<StoredProfile> {
     await this.initialize();
     return this.readStored(id.parse(profileId));
   }
 
-  async save(rawInput) {
+  async save(rawInput: unknown) {
     const input = ProfileSaveSchema.parse(rawInput);
     return this.exclusive(async () => {
       await this.initialize();
       const index = await this.readIndex();
       const now = new Date().toISOString();
-      let stored;
-      let previous = null;
+      let stored: StoredProfile;
+      let previous: StoredProfile | null = null;
       if (input.profile_id) {
         previous = await this.readStored(input.profile_id);
         if (previous.revision !== input.expected_revision) throw storageError('profile_changed', `资料已经更新；当前修订为 ${previous.revision}，请重新读取后再保存`);
         const name = input.name ?? previous.name;
-        if (index.profiles.some(item => item.id !== previous.id && item.name === name)) throw storageError('name_conflict', '已有同名资料，请换一个名称');
+        if (index.profiles.some(item => item.id !== previous?.id && item.name === name)) throw storageError('name_conflict', '已有同名资料，请换一个名称');
         const revision = previous.revision + 1;
         stored = StoredProfileSchema.parse({
           ...previous,
@@ -366,16 +422,8 @@ export class ProfileStore {
     });
   }
 
-  async readView(raw) {
-    const params = z.object({
-      profile_id: id,
-      section: z.enum(['basic', 'education', 'experience', 'projects', 'skills', 'certificates', 'custom_answers', 'supplemental_fields']).optional(),
-      record_id: id.optional(),
-      source_refs: z.array(z.string().min(1).max(240)).max(100).optional(),
-      offset: z.number().int().nonnegative().optional(),
-      limit: z.number().int().min(1).max(50).optional(),
-      include_source_markdown: z.boolean().optional(),
-    }).strict().parse(raw);
+  async readView(raw: unknown): Promise<Record<string, unknown>> {
+    const params = ReadViewSchema.parse(raw);
     if (params.record_id && !params.section) throw storageError('invalid_request', 'record_id 需要同时指定 section');
     const stored = await this.get(params.profile_id);
     const base = { profile_id: stored.id, name: stored.name, profile_revision: stored.revision, updated_at: stored.updated_at };
@@ -388,16 +436,17 @@ export class ProfileStore {
       return { ...base, directory: false, entries };
     }
     if (!params.section) {
-      const sections = Object.fromEntries(['basic', 'education', 'experience', 'projects', 'skills', 'certificates', 'custom_answers', 'supplemental_fields'].map(section => {
+      const sectionNames: ReadSection[] = ['basic', 'education', 'experience', 'projects', 'skills', 'certificates', 'custom_answers', 'supplemental_fields'];
+      const sections = Object.fromEntries(sectionNames.map(section => {
         const value = stored.profile[section];
         return [section, { records: Array.isArray(value) ? value.length : 1 }];
       }));
       return { ...base, directory: true, sections, has_source_markdown: stored.source_markdown !== null, source_markdown: params.include_source_markdown ? stored.source_markdown : undefined };
     }
-    let value = stored.profile[params.section];
+    let value: unknown = stored.profile[params.section];
     if (params.record_id) {
       if (!Array.isArray(value)) throw storageError('invalid_request', '这个栏目不支持 record_id');
-      value = value.find(item => item.id === params.record_id);
+      value = value.find(item => typeof item === 'object' && item !== null && 'id' in item && item.id === params.record_id);
       if (!value) throw storageError('record_missing', '指定记录不存在');
     }
     if (!Array.isArray(value) || params.record_id) return { ...base, directory: false, section: params.section, data: value, source_markdown: params.include_source_markdown ? stored.source_markdown : undefined };
@@ -407,7 +456,7 @@ export class ProfileStore {
     return { ...base, directory: false, section: params.section, offset, total: value.length, data, next_offset: offset + data.length < value.length ? offset + data.length : null, source_markdown: params.include_source_markdown ? stored.source_markdown : undefined };
   }
 
-  async resolveSource(reference) {
+  async resolveSource(reference: unknown): Promise<string | boolean> {
     const schema = z.object({ profile_id: id, profile_revision: z.number().int().positive(), source_ref: z.string().min(1).max(240) }).strict();
     const source = schema.parse(reference);
     const stored = await this.get(source.profile_id);
@@ -424,20 +473,26 @@ export class ProfileStore {
     return this.exclusive(async () => {
       await mkdir(join(this.dataDir, 'profiles'), { recursive: true, mode: 0o700 });
       const names = (await readdir(join(this.dataDir, 'profiles'))).filter(name => name.endsWith('.json'));
-      const profiles = [];
+      const profiles: IndexEntry[] = [];
       for (const name of names) {
         const profileId = name.slice(0, -5);
         if (!ID_PATTERN.test(profileId)) continue;
-        try { profiles.push(entryFor(await this.readStored(profileId))); } catch { /* Keep corrupt files for manual recovery. */ }
+        try {
+          profiles.push(entryFor(await this.readStored(profileId)));
+        } catch {
+          // Keep corrupt files for manual recovery.
+        }
       }
-      let backup;
+      let backup: string | null;
       try {
         backup = join(this.dataDir, 'backups', `index-${new Date().toISOString().replaceAll(':', '-')}.json`);
         await copyFile(this.indexPath, backup);
-      } catch { backup = null; }
-      const index = { format: 'resume-companion-index', storage_version: 1, profiles };
+      } catch {
+        backup = null;
+      }
+      const index: Index = { format: 'resume-companion-index', storage_version: 1, profiles };
       await atomicWrite(this.indexPath, index);
-      return { rebuilt: true, profiles: profiles.length, backup };
+      return { rebuilt: true as const, profiles: profiles.length, backup };
     });
   }
 }

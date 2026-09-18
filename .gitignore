@@ -39,3 +39,4 @@ research/third-party/
 !/docs/images/
 /plugins/resume-companion/scripts/debug-client.mjs
 /plugins/resume-companion/scripts/model-eval-client.mjs
+/plugins/resume-companion/runtime/

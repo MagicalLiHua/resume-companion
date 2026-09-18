@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "简历随行 · MCP 浏览器执行桥",
-  "version": "0.7.1",
+  "name": "简历随行 · 可选扩展执行桥",
+  "version": "0.8.0",
   "minimum_chrome_version": "116",
-  "description": "通过本地 MCP 让 AI 观察并填写招聘网页；简历资料由 MCP 在本机管理。",
+  "description": "Chrome DevTools 无法使用时，为简历随行 MCP 提供可选的网页执行回退。",
   "permissions": [
     "activeTab",
     "scripting",
@@ -13,7 +13,7 @@
     "default_title": "简历随行"
   },
   "background": {
-    "service_worker": "background-0.7.1.js",
+    "service_worker": "background-0.8.0.js",
     "type": "module"
   },
   "options_page": "options.html",

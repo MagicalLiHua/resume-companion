@@ -54,15 +54,15 @@ function App() {
       <div><strong>简历随行</strong><small>Resume Companion Browser Bridge</small></div>
     </header>
     <section className="hero">
-      <p className="eyebrow">LOCAL MCP BRIDGE</p>
-      <h1>浏览器执行桥</h1>
-      <p>简历和补充资料现在由本地 MCP 管理。这个扩展只在 AI 明确调用工具时观察和操作招聘网页。</p>
+      <p className="eyebrow">OPTIONAL FALLBACK</p>
+      <h1>兼容扩展回退</h1>
+      <p>新版 MCP 默认直接连接当前 Chrome。只有 DevTools 方式不可用时，才需要开启这个扩展桥。</p>
     </section>
     {error && <p role="alert" className="notice error">{error}</p>}
     <section className="card">
       <div className="setting">
         <div>
-          <h2>本地桥接</h2>
+          <h2>扩展回退桥接</h2>
           <p>允许本机的 Resume Companion MCP 通过 <code>127.0.0.1:43117</code> 连接扩展。</p>
         </div>
         <label className="switch">
@@ -74,7 +74,7 @@ function App() {
       {settings?.bridgeEnabled && state !== 'connected' && <p className="hint">在支持 MCP 的 AI 软件中启动 Resume Companion 后，此处会自动变为已连接。</p>}
     </section>
     <section className="card">
-      <h2>资料放在哪里？</h2>
+      <h2>资料仍在本地 MCP</h2>
       <p>资料保存在 MCP 的本地数据目录，不写入浏览器。可在 MCP 配置中通过 <code>RESUME_COMPANION_DATA_DIR</code> 指定目录。</p>
       <p className="hint">在 AI 中发送简历或补充信息，然后让 AI 调用 <code>resume_profile_save</code>。无需在扩展里再次导入。</p>
     </section>

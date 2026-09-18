@@ -20,6 +20,7 @@ const transport = new StdioClientTransport({
     ...baseEnv,
     RESUME_COMPANION_BRIDGE_PORT: String(port),
     RESUME_COMPANION_DATA_DIR: dataDir,
+    RESUME_COMPANION_BROWSER_DRIVER: 'extension',
   },
   stderr: 'pipe',
 });
@@ -69,7 +70,7 @@ try {
     value.once('open', () => resolveSocket(value));
     value.once('error', rejectSocket);
   });
-  socket.send(JSON.stringify({ type: 'hello', extensionId, version: '0.7.1', epoch: 'test-epoch', protocolVersion: '2.0' }));
+  socket.send(JSON.stringify({ type: 'hello', extensionId, version: '0.8.0', epoch: 'test-epoch', protocolVersion: '2.1' }));
   const forwarded = [];
   let cancelled = false;
   socket.on('message', raw => {

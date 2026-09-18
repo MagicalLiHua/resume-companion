@@ -1,8 +1,12 @@
 # Security
 
-Resume Companion stores profiles in the local MCP data directory. The Chrome extension stores only its bridge setting and temporary operation metadata; it does not store resume text or model API keys.
+Resume Companion stores profiles in the local MCP data directory. Its default browser driver connects to Chrome through the official Chrome DevTools protocol. The optional extension fallback stores only its bridge setting and temporary operation metadata; it does not store resume text or model API keys.
 
-The bridge listens on 127.0.0.1:43117, accepts the fixed extension origin, and is disabled by default. Origin checking is not strong isolation from malicious software already running under the same local account. Enable it only on a trusted machine.
+Current-Chrome access requires the user to accept Chrome's own remote-debugging prompt. This grants the MCP visibility into pages in that authorized browser context, including their rendered form content. Close the MCP task or Chrome debugging session when it is no longer needed. Resume Companion does not modify the Chrome application bundle and does not require macOS permission to modify applications.
+
+The DevTools driver exposes only an internal allowlist for page enumeration, selection, accessibility snapshots, filling, clicks and key presses. Arbitrary JavaScript evaluation, network inspection, performance tools, file upload, extension management and upstream tool discovery are disabled. A dedicated Chrome profile remains available for users who prefer stronger browser-context isolation.
+
+The optional extension bridge listens on 127.0.0.1:43117, accepts the fixed extension origin, and is disabled by default. Origin checking is not strong isolation from malicious software already running under the same local account. Enable the fallback only on a trusted machine.
 
 Profile files are written atomically and use owner-only permissions where supported. They are not encrypted by the application. Protect the operating-system account and disk, choose a suitable RESUME_COMPANION_DATA_DIR, and include the directory in backups intentionally.
 

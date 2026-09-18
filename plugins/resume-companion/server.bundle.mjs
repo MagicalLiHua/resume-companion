@@ -2242,8 +2242,8 @@ var require_resolve = __commonJS({
       }
       return count;
     }
-    function getFullPath(resolver, id2 = "", normalize) {
-      if (normalize !== false)
+    function getFullPath(resolver, id2 = "", normalize2) {
+      if (normalize2 !== false)
         id2 = normalizeId(id2);
       const p = resolver.parse(id2);
       return _getFullPath(resolver, p);
@@ -2801,11 +2801,11 @@ var require_validate = __commonJS({
         jsonPointer = $data;
         data = names_1.default.rootData;
       } else {
-        const matches = RELATIVE_JSON_POINTER.exec($data);
-        if (!matches)
+        const matches2 = RELATIVE_JSON_POINTER.exec($data);
+        if (!matches2)
           throw new Error(`Invalid JSON-pointer: ${$data}`);
-        const up = +matches[1];
-        jsonPointer = matches[2];
+        const up = +matches2[1];
+        jsonPointer = matches2[2];
         if (jsonPointer === "#") {
           if (up >= dataLevel)
             throw new Error(errorMsg("property/index", up));
@@ -2991,7 +2991,7 @@ var require_compile = __commonJS({
       const schOrFunc = root.refs[ref];
       if (schOrFunc)
         return schOrFunc;
-      let _sch = resolve2.call(this, root, ref);
+      let _sch = resolve4.call(this, root, ref);
       if (_sch === void 0) {
         const schema = (_a = root.localRefs) === null || _a === void 0 ? void 0 : _a[ref];
         const { schemaId } = this.opts;
@@ -3018,7 +3018,7 @@ var require_compile = __commonJS({
     function sameSchemaEnv(s1, s2) {
       return s1.schema === s2.schema && s1.root === s2.root && s1.baseId === s2.baseId;
     }
-    function resolve2(root, ref) {
+    function resolve4(root, ref) {
       let sch;
       while (typeof (sch = this.refs[ref]) == "string")
         ref = sch;
@@ -3582,12 +3582,12 @@ var require_utils = __commonJS({
         uriTokens.push(host);
       }
       if (typeof component.port === "number" || typeof component.port === "string") {
-        const port2 = String(component.port);
-        if (!isPort(port2)) {
+        const port = String(component.port);
+        if (!isPort(port)) {
           throw new TypeError("URI port is malformed.");
         }
         uriTokens.push(":");
-        uriTokens.push(port2);
+        uriTokens.push(port);
       }
       return uriTokens.length ? uriTokens.join("") : void 0;
     }
@@ -3692,11 +3692,11 @@ var require_schemes = __commonJS({
         urnComponent.error = "URN can not be parsed";
         return urnComponent;
       }
-      const matches = urnComponent.path.match(URN_REG);
-      if (matches && matches[0] === urnComponent.path) {
+      const matches2 = urnComponent.path.match(URN_REG);
+      if (matches2 && matches2[0] === urnComponent.path) {
         const scheme = options.scheme || urnComponent.scheme || "urn";
-        urnComponent.nid = matches[1].toLowerCase();
-        urnComponent.nss = matches[2];
+        urnComponent.nid = matches2[1].toLowerCase();
+        urnComponent.nss = matches2[2];
         const urnScheme = `${scheme}:${options.nid || urnComponent.nid}`;
         const schemeHandler = getSchemeHandler(urnScheme);
         urnComponent.path = void 0;
@@ -3838,7 +3838,7 @@ var require_fast_uri = __commonJS({
       }
       return decodedScheme;
     }
-    function normalize(uri, options) {
+    function normalize2(uri, options) {
       if (typeof uri === "string") {
         uri = /** @type {T} */
         normalizeString(uri, options);
@@ -3848,7 +3848,7 @@ var require_fast_uri = __commonJS({
       }
       return uri;
     }
-    function resolve2(baseURI, relativeURI, options) {
+    function resolve4(baseURI, relativeURI, options) {
       const schemelessOptions = options ? Object.assign({ scheme: "null" }, options) : { scheme: "null" };
       const {
         parsed: baseParsed,
@@ -3874,7 +3874,7 @@ var require_fast_uri = __commonJS({
       const resolvedHost = resolved.host;
       const resolvedHostIsIP = resolvedHost !== void 0 && resolvedHost !== "" && (isIPv4(resolvedHost) || normalizeIPv6(resolvedHost).isIPV6);
       canonicalizeHost(resolved, options || {}, resolvedSchemeHandler, resolvedHostIsIP);
-      const encodedASCIIHost = resolvedHost && resolvedHost.indexOf("%") !== -1 && !/\P{ASCII}/u.test(resolvedHost);
+      const encodedASCIIHost = resolvedHost && resolvedHost.indexOf("%") !== -1 && !new RegExp("\\P{ASCII}", "u").test(resolvedHost);
       if (resolved.error && !encodedASCIIHost) {
         throw new Error(resolved.error);
       }
@@ -4010,8 +4010,8 @@ var require_fast_uri = __commonJS({
     var URI_PARSE = /^(?:([^#/:?]+):)?(?:\/\/((?:([^#/?@]*)@)?(\[[^#/?\]]+\]|[^#/:?]*)(?::(\d*))?))?([^#?]*)(?:\?([^#]*))?(?:#((?:.|[\n\r])*))?/u;
     var AUTHORITY_PREFIX = /^(?:[^#/:?]+:)?\/\/([^/?#]*)/;
     var AUTHORITY_INTRODUCER_REGION = /^(?:[^#/:?]+:)?([/\\\t\n\r]*)/;
-    function getParseError(parsed, matches) {
-      if (matches[2] !== void 0 && parsed.path && parsed.path[0] !== "/") {
+    function getParseError(parsed, matches2) {
+      if (matches2[2] !== void 0 && parsed.path && parsed.path[0] !== "/") {
         return 'URI path must start with "/" when authority is present.';
       }
       if (typeof parsed.port === "number" && (parsed.port < 0 || parsed.port > 65535)) {
@@ -4033,9 +4033,9 @@ var require_fast_uri = __commonJS({
     function isIPLiteral(host) {
       return host[0] === "[" && host[host.length - 1] === "]";
     }
-    function hasMalformedComponentPercentEncoding(matches) {
-      const host = matches[4];
-      return hasMalformedPercentEncoding(matches[3]) || host !== void 0 && !isIPLiteral(host) && hasMalformedPercentEncoding(host) || hasMalformedPercentEncoding(matches[6]) || hasMalformedPercentEncoding(matches[7]) || hasMalformedPercentEncoding(matches[8]);
+    function hasMalformedComponentPercentEncoding(matches2) {
+      const host = matches2[4];
+      return hasMalformedPercentEncoding(matches2[3]) || host !== void 0 && !isIPLiteral(host) && hasMalformedPercentEncoding(host) || hasMalformedPercentEncoding(matches2[6]) || hasMalformedPercentEncoding(matches2[7]) || hasMalformedPercentEncoding(matches2[8]);
     }
     function canonicalizeHost(parsed, options, schemeHandler, isIP) {
       if (!options.unicodeSupport && (!schemeHandler || !schemeHandler.unicodeSupport) && parsed.host && !isIPLiteral(parsed.host) && (options.domainHost || schemeHandler && schemeHandler.domainHost) && isIP === false && nonSimpleDomain(parsed.host)) {
@@ -4092,15 +4092,15 @@ var require_fast_uri = __commonJS({
           }
         }
       }
-      const matches = uri.match(URI_PARSE);
-      if (matches) {
-        parsed.scheme = matches[1];
-        parsed.userinfo = matches[3];
-        parsed.host = matches[4];
-        parsed.port = parseInt(matches[5], 10);
-        parsed.path = matches[6] || "";
-        parsed.query = matches[7];
-        parsed.fragment = matches[8];
+      const matches2 = uri.match(URI_PARSE);
+      if (matches2) {
+        parsed.scheme = matches2[1];
+        parsed.userinfo = matches2[3];
+        parsed.host = matches2[4];
+        parsed.port = parseInt(matches2[5], 10);
+        parsed.path = matches2[6] || "";
+        parsed.query = matches2[7];
+        parsed.fragment = matches2[8];
         if (parsed.scheme !== void 0) {
           const decodedScheme = unescape(parsed.scheme);
           if (VALID_SCHEME.test(decodedScheme)) {
@@ -4110,14 +4110,14 @@ var require_fast_uri = __commonJS({
             malformedScheme = true;
           }
         }
-        malformedPercentEncoding = hasMalformedComponentPercentEncoding(matches);
+        malformedPercentEncoding = hasMalformedComponentPercentEncoding(matches2);
         if (malformedPercentEncoding) {
           parsed.error = parsed.error || "URI contains malformed percent-encoding.";
         }
         if (isNaN(parsed.port)) {
-          parsed.port = matches[5];
+          parsed.port = matches2[5];
         }
-        const parseError = getParseError(parsed, matches);
+        const parseError = getParseError(parsed, matches2);
         if (parseError !== void 0) {
           parsed.error = parsed.error || parseError;
           malformedAuthorityOrPort = true;
@@ -4215,8 +4215,8 @@ var require_fast_uri = __commonJS({
     }
     var fastUri = {
       SCHEMES,
-      normalize,
-      resolve: resolve2,
+      normalize: normalize2,
+      resolve: resolve4,
       resolveComponent,
       equal,
       serialize,
@@ -6966,12 +6966,12 @@ var require_formats = __commonJS({
     var DATE = /^(\d\d\d\d)-(\d\d)-(\d\d)$/;
     var DAYS = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
     function date3(str) {
-      const matches = DATE.exec(str);
-      if (!matches)
+      const matches2 = DATE.exec(str);
+      if (!matches2)
         return false;
-      const year = +matches[1];
-      const month2 = +matches[2];
-      const day = +matches[3];
+      const year = +matches2[1];
+      const month2 = +matches2[2];
+      const day = +matches2[3];
       return month2 >= 1 && month2 <= 12 && day >= 1 && day <= (month2 === 2 && isLeapYear(year) ? 29 : DAYS[month2]);
     }
     function compareDate(d1, d2) {
@@ -6986,16 +6986,16 @@ var require_formats = __commonJS({
     var TIME = /^(\d\d):(\d\d):(\d\d(?:\.\d+)?)(z|([+-])(\d\d)(?::?(\d\d))?)?$/i;
     function getTime(strictTimeZone) {
       return function time3(str) {
-        const matches = TIME.exec(str);
-        if (!matches)
+        const matches2 = TIME.exec(str);
+        if (!matches2)
           return false;
-        const hr = +matches[1];
-        const min = +matches[2];
-        const sec = +matches[3];
-        const tz = matches[4];
-        const tzSign = matches[5] === "-" ? -1 : 1;
-        const tzH = +(matches[6] || 0);
-        const tzM = +(matches[7] || 0);
+        const hr = +matches2[1];
+        const min = +matches2[2];
+        const sec = +matches2[3];
+        const tz = matches2[4];
+        const tzSign = matches2[5] === "-" ? -1 : 1;
+        const tzH = +(matches2[6] || 0);
+        const tzM = +(matches2[7] || 0);
         if (tzH > 23 || tzM > 59 || strictTimeZone && !tz)
           return false;
         if (hr <= 23 && min <= 59 && sec < 60)
@@ -7202,6 +7202,503 @@ var require_dist = __commonJS({
     module.exports = exports = formatsPlugin;
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = formatsPlugin;
+  }
+});
+
+// node_modules/isexe/windows.js
+var require_windows = __commonJS({
+  "node_modules/isexe/windows.js"(exports, module) {
+    module.exports = isexe;
+    isexe.sync = sync;
+    var fs = __require("fs");
+    function checkPathExt(path, options) {
+      var pathext = options.pathExt !== void 0 ? options.pathExt : process.env.PATHEXT;
+      if (!pathext) {
+        return true;
+      }
+      pathext = pathext.split(";");
+      if (pathext.indexOf("") !== -1) {
+        return true;
+      }
+      for (var i = 0; i < pathext.length; i++) {
+        var p = pathext[i].toLowerCase();
+        if (p && path.substr(-p.length).toLowerCase() === p) {
+          return true;
+        }
+      }
+      return false;
+    }
+    function checkStat(stat2, path, options) {
+      if (!stat2.isSymbolicLink() && !stat2.isFile()) {
+        return false;
+      }
+      return checkPathExt(path, options);
+    }
+    function isexe(path, options, cb) {
+      fs.stat(path, function(er, stat2) {
+        cb(er, er ? false : checkStat(stat2, path, options));
+      });
+    }
+    function sync(path, options) {
+      return checkStat(fs.statSync(path), path, options);
+    }
+  }
+});
+
+// node_modules/isexe/mode.js
+var require_mode = __commonJS({
+  "node_modules/isexe/mode.js"(exports, module) {
+    module.exports = isexe;
+    isexe.sync = sync;
+    var fs = __require("fs");
+    function isexe(path, options, cb) {
+      fs.stat(path, function(er, stat2) {
+        cb(er, er ? false : checkStat(stat2, options));
+      });
+    }
+    function sync(path, options) {
+      return checkStat(fs.statSync(path), options);
+    }
+    function checkStat(stat2, options) {
+      return stat2.isFile() && checkMode(stat2, options);
+    }
+    function checkMode(stat2, options) {
+      var mod = stat2.mode;
+      var uid = stat2.uid;
+      var gid = stat2.gid;
+      var myUid = options.uid !== void 0 ? options.uid : process.getuid && process.getuid();
+      var myGid = options.gid !== void 0 ? options.gid : process.getgid && process.getgid();
+      var u = parseInt("100", 8);
+      var g = parseInt("010", 8);
+      var o = parseInt("001", 8);
+      var ug = u | g;
+      var ret = mod & o || mod & g && gid === myGid || mod & u && uid === myUid || mod & ug && myUid === 0;
+      return ret;
+    }
+  }
+});
+
+// node_modules/isexe/index.js
+var require_isexe = __commonJS({
+  "node_modules/isexe/index.js"(exports, module) {
+    var fs = __require("fs");
+    var core;
+    if (process.platform === "win32" || global.TESTING_WINDOWS) {
+      core = require_windows();
+    } else {
+      core = require_mode();
+    }
+    module.exports = isexe;
+    isexe.sync = sync;
+    function isexe(path, options, cb) {
+      if (typeof options === "function") {
+        cb = options;
+        options = {};
+      }
+      if (!cb) {
+        if (typeof Promise !== "function") {
+          throw new TypeError("callback not provided");
+        }
+        return new Promise(function(resolve4, reject) {
+          isexe(path, options || {}, function(er, is) {
+            if (er) {
+              reject(er);
+            } else {
+              resolve4(is);
+            }
+          });
+        });
+      }
+      core(path, options || {}, function(er, is) {
+        if (er) {
+          if (er.code === "EACCES" || options && options.ignoreErrors) {
+            er = null;
+            is = false;
+          }
+        }
+        cb(er, is);
+      });
+    }
+    function sync(path, options) {
+      try {
+        return core.sync(path, options || {});
+      } catch (er) {
+        if (options && options.ignoreErrors || er.code === "EACCES") {
+          return false;
+        } else {
+          throw er;
+        }
+      }
+    }
+  }
+});
+
+// node_modules/which/which.js
+var require_which = __commonJS({
+  "node_modules/which/which.js"(exports, module) {
+    var isWindows = process.platform === "win32" || process.env.OSTYPE === "cygwin" || process.env.OSTYPE === "msys";
+    var path = __require("path");
+    var COLON = isWindows ? ";" : ":";
+    var isexe = require_isexe();
+    var getNotFoundError = (cmd) => Object.assign(new Error(`not found: ${cmd}`), { code: "ENOENT" });
+    var getPathInfo = (cmd, opt) => {
+      const colon = opt.colon || COLON;
+      const pathEnv = cmd.match(/\//) || isWindows && cmd.match(/\\/) ? [""] : [
+        // windows always checks the cwd first
+        ...isWindows ? [process.cwd()] : [],
+        ...(opt.path || process.env.PATH || /* istanbul ignore next: very unusual */
+        "").split(colon)
+      ];
+      const pathExtExe = isWindows ? opt.pathExt || process.env.PATHEXT || ".EXE;.CMD;.BAT;.COM" : "";
+      const pathExt = isWindows ? pathExtExe.split(colon) : [""];
+      if (isWindows) {
+        if (cmd.indexOf(".") !== -1 && pathExt[0] !== "")
+          pathExt.unshift("");
+      }
+      return {
+        pathEnv,
+        pathExt,
+        pathExtExe
+      };
+    };
+    var which = (cmd, opt, cb) => {
+      if (typeof opt === "function") {
+        cb = opt;
+        opt = {};
+      }
+      if (!opt)
+        opt = {};
+      const { pathEnv, pathExt, pathExtExe } = getPathInfo(cmd, opt);
+      const found = [];
+      const step = (i) => new Promise((resolve4, reject) => {
+        if (i === pathEnv.length)
+          return opt.all && found.length ? resolve4(found) : reject(getNotFoundError(cmd));
+        const ppRaw = pathEnv[i];
+        const pathPart = /^".*"$/.test(ppRaw) ? ppRaw.slice(1, -1) : ppRaw;
+        const pCmd = path.join(pathPart, cmd);
+        const p = !pathPart && /^\.[\\\/]/.test(cmd) ? cmd.slice(0, 2) + pCmd : pCmd;
+        resolve4(subStep(p, i, 0));
+      });
+      const subStep = (p, i, ii) => new Promise((resolve4, reject) => {
+        if (ii === pathExt.length)
+          return resolve4(step(i + 1));
+        const ext = pathExt[ii];
+        isexe(p + ext, { pathExt: pathExtExe }, (er, is) => {
+          if (!er && is) {
+            if (opt.all)
+              found.push(p + ext);
+            else
+              return resolve4(p + ext);
+          }
+          return resolve4(subStep(p, i, ii + 1));
+        });
+      });
+      return cb ? step(0).then((res) => cb(null, res), cb) : step(0);
+    };
+    var whichSync = (cmd, opt) => {
+      opt = opt || {};
+      const { pathEnv, pathExt, pathExtExe } = getPathInfo(cmd, opt);
+      const found = [];
+      for (let i = 0; i < pathEnv.length; i++) {
+        const ppRaw = pathEnv[i];
+        const pathPart = /^".*"$/.test(ppRaw) ? ppRaw.slice(1, -1) : ppRaw;
+        const pCmd = path.join(pathPart, cmd);
+        const p = !pathPart && /^\.[\\\/]/.test(cmd) ? cmd.slice(0, 2) + pCmd : pCmd;
+        for (let j = 0; j < pathExt.length; j++) {
+          const cur = p + pathExt[j];
+          try {
+            const is = isexe.sync(cur, { pathExt: pathExtExe });
+            if (is) {
+              if (opt.all)
+                found.push(cur);
+              else
+                return cur;
+            }
+          } catch (ex) {
+          }
+        }
+      }
+      if (opt.all && found.length)
+        return found;
+      if (opt.nothrow)
+        return null;
+      throw getNotFoundError(cmd);
+    };
+    module.exports = which;
+    which.sync = whichSync;
+  }
+});
+
+// node_modules/path-key/index.js
+var require_path_key = __commonJS({
+  "node_modules/path-key/index.js"(exports, module) {
+    "use strict";
+    var pathKey = (options = {}) => {
+      const environment = options.env || process.env;
+      const platform = options.platform || process.platform;
+      if (platform !== "win32") {
+        return "PATH";
+      }
+      return Object.keys(environment).reverse().find((key) => key.toUpperCase() === "PATH") || "Path";
+    };
+    module.exports = pathKey;
+    module.exports.default = pathKey;
+  }
+});
+
+// node_modules/cross-spawn/lib/util/resolveCommand.js
+var require_resolveCommand = __commonJS({
+  "node_modules/cross-spawn/lib/util/resolveCommand.js"(exports, module) {
+    "use strict";
+    var path = __require("path");
+    var which = require_which();
+    var getPathKey = require_path_key();
+    function resolveCommandAttempt(parsed, withoutPathExt) {
+      const env = parsed.options.env || process.env;
+      const cwd = process.cwd();
+      const hasCustomCwd = parsed.options.cwd != null;
+      const shouldSwitchCwd = hasCustomCwd && process.chdir !== void 0 && !process.chdir.disabled;
+      if (shouldSwitchCwd) {
+        try {
+          process.chdir(parsed.options.cwd);
+        } catch (err) {
+        }
+      }
+      let resolved;
+      try {
+        resolved = which.sync(parsed.command, {
+          path: env[getPathKey({ env })],
+          pathExt: withoutPathExt ? path.delimiter : void 0
+        });
+      } catch (e) {
+      } finally {
+        if (shouldSwitchCwd) {
+          process.chdir(cwd);
+        }
+      }
+      if (resolved) {
+        resolved = path.resolve(hasCustomCwd ? parsed.options.cwd : "", resolved);
+      }
+      return resolved;
+    }
+    function resolveCommand(parsed) {
+      return resolveCommandAttempt(parsed) || resolveCommandAttempt(parsed, true);
+    }
+    module.exports = resolveCommand;
+  }
+});
+
+// node_modules/cross-spawn/lib/util/escape.js
+var require_escape = __commonJS({
+  "node_modules/cross-spawn/lib/util/escape.js"(exports, module) {
+    "use strict";
+    var metaCharsRegExp = /([()\][%!^"`<>&|;, *?])/g;
+    function escapeCommand(arg) {
+      arg = arg.replace(metaCharsRegExp, "^$1");
+      return arg;
+    }
+    function escapeArgument(arg, doubleEscapeMetaChars) {
+      arg = `${arg}`;
+      arg = arg.replace(/(?=(\\+?)?)\1"/g, '$1$1\\"');
+      arg = arg.replace(/(?=(\\+?)?)\1$/, "$1$1");
+      arg = `"${arg}"`;
+      arg = arg.replace(metaCharsRegExp, "^$1");
+      if (doubleEscapeMetaChars) {
+        arg = arg.replace(metaCharsRegExp, "^$1");
+      }
+      return arg;
+    }
+    module.exports.command = escapeCommand;
+    module.exports.argument = escapeArgument;
+  }
+});
+
+// node_modules/shebang-regex/index.js
+var require_shebang_regex = __commonJS({
+  "node_modules/shebang-regex/index.js"(exports, module) {
+    "use strict";
+    module.exports = /^#!(.*)/;
+  }
+});
+
+// node_modules/shebang-command/index.js
+var require_shebang_command = __commonJS({
+  "node_modules/shebang-command/index.js"(exports, module) {
+    "use strict";
+    var shebangRegex = require_shebang_regex();
+    module.exports = (string3 = "") => {
+      const match = string3.match(shebangRegex);
+      if (!match) {
+        return null;
+      }
+      const [path, argument] = match[0].replace(/#! ?/, "").split(" ");
+      const binary = path.split("/").pop();
+      if (binary === "env") {
+        return argument;
+      }
+      return argument ? `${binary} ${argument}` : binary;
+    };
+  }
+});
+
+// node_modules/cross-spawn/lib/util/readShebang.js
+var require_readShebang = __commonJS({
+  "node_modules/cross-spawn/lib/util/readShebang.js"(exports, module) {
+    "use strict";
+    var fs = __require("fs");
+    var shebangCommand = require_shebang_command();
+    function readShebang(command) {
+      const size = 150;
+      const buffer = Buffer.alloc(size);
+      let fd;
+      try {
+        fd = fs.openSync(command, "r");
+        fs.readSync(fd, buffer, 0, size, 0);
+        fs.closeSync(fd);
+      } catch (e) {
+      }
+      return shebangCommand(buffer.toString());
+    }
+    module.exports = readShebang;
+  }
+});
+
+// node_modules/cross-spawn/lib/parse.js
+var require_parse = __commonJS({
+  "node_modules/cross-spawn/lib/parse.js"(exports, module) {
+    "use strict";
+    var path = __require("path");
+    var resolveCommand = require_resolveCommand();
+    var escape2 = require_escape();
+    var readShebang = require_readShebang();
+    var isWin = process.platform === "win32";
+    var isExecutableRegExp = /\.(?:com|exe)$/i;
+    var isCmdShimRegExp = /node_modules[\\/].bin[\\/][^\\/]+\.cmd$/i;
+    function detectShebang(parsed) {
+      parsed.file = resolveCommand(parsed);
+      const shebang = parsed.file && readShebang(parsed.file);
+      if (shebang) {
+        parsed.args.unshift(parsed.file);
+        parsed.command = shebang;
+        return resolveCommand(parsed);
+      }
+      return parsed.file;
+    }
+    function parseNonShell(parsed) {
+      if (!isWin) {
+        return parsed;
+      }
+      const commandFile = detectShebang(parsed);
+      const needsShell = !isExecutableRegExp.test(commandFile);
+      if (parsed.options.forceShell || needsShell) {
+        const needsDoubleEscapeMetaChars = isCmdShimRegExp.test(commandFile);
+        parsed.command = path.normalize(parsed.command);
+        parsed.command = escape2.command(parsed.command);
+        parsed.args = parsed.args.map((arg) => escape2.argument(arg, needsDoubleEscapeMetaChars));
+        const shellCommand = [parsed.command].concat(parsed.args).join(" ");
+        parsed.args = ["/d", "/s", "/c", `"${shellCommand}"`];
+        parsed.command = process.env.comspec || "cmd.exe";
+        parsed.options.windowsVerbatimArguments = true;
+      }
+      return parsed;
+    }
+    function parse3(command, args, options) {
+      if (args && !Array.isArray(args)) {
+        options = args;
+        args = null;
+      }
+      args = args ? args.slice(0) : [];
+      options = Object.assign({}, options);
+      const parsed = {
+        command,
+        args,
+        options,
+        file: void 0,
+        original: {
+          command,
+          args
+        }
+      };
+      return options.shell ? parsed : parseNonShell(parsed);
+    }
+    module.exports = parse3;
+  }
+});
+
+// node_modules/cross-spawn/lib/enoent.js
+var require_enoent = __commonJS({
+  "node_modules/cross-spawn/lib/enoent.js"(exports, module) {
+    "use strict";
+    var isWin = process.platform === "win32";
+    function notFoundError(original, syscall) {
+      return Object.assign(new Error(`${syscall} ${original.command} ENOENT`), {
+        code: "ENOENT",
+        errno: "ENOENT",
+        syscall: `${syscall} ${original.command}`,
+        path: original.command,
+        spawnargs: original.args
+      });
+    }
+    function hookChildProcess(cp, parsed) {
+      if (!isWin) {
+        return;
+      }
+      const originalEmit = cp.emit;
+      cp.emit = function(name, arg1) {
+        if (name === "exit") {
+          const err = verifyENOENT(arg1, parsed);
+          if (err) {
+            return originalEmit.call(cp, "error", err);
+          }
+        }
+        return originalEmit.apply(cp, arguments);
+      };
+    }
+    function verifyENOENT(status, parsed) {
+      if (isWin && status === 1 && !parsed.file) {
+        return notFoundError(parsed.original, "spawn");
+      }
+      return null;
+    }
+    function verifyENOENTSync(status, parsed) {
+      if (isWin && status === 1 && !parsed.file) {
+        return notFoundError(parsed.original, "spawnSync");
+      }
+      return null;
+    }
+    module.exports = {
+      hookChildProcess,
+      verifyENOENT,
+      verifyENOENTSync,
+      notFoundError
+    };
+  }
+});
+
+// node_modules/cross-spawn/index.js
+var require_cross_spawn = __commonJS({
+  "node_modules/cross-spawn/index.js"(exports, module) {
+    "use strict";
+    var cp = __require("child_process");
+    var parse3 = require_parse();
+    var enoent = require_enoent();
+    function spawn2(command, args, options) {
+      const parsed = parse3(command, args, options);
+      const spawned = cp.spawn(parsed.command, parsed.args, parsed.options);
+      enoent.hookChildProcess(spawned, parsed);
+      return spawned;
+    }
+    function spawnSync(command, args, options) {
+      const parsed = parse3(command, args, options);
+      const result = cp.spawnSync(parsed.command, parsed.args, parsed.options);
+      result.error = result.error || enoent.verifyENOENTSync(result.status, parsed);
+      return result;
+    }
+    module.exports = spawn2;
+    module.exports.spawn = spawn2;
+    module.exports.sync = spawnSync;
+    module.exports._parse = parse3;
+    module.exports._enoent = enoent;
   }
 });
 
@@ -9417,11 +9914,11 @@ var require_extension = __commonJS({
       return offers;
     }
     function format(extensions) {
-      return Object.keys(extensions).map((extension3) => {
-        let configurations = extensions[extension3];
+      return Object.keys(extensions).map((extension2) => {
+        let configurations = extensions[extension2];
         if (!Array.isArray(configurations)) configurations = [configurations];
         return configurations.map((params) => {
-          return [extension3].concat(
+          return [extension2].concat(
             Object.keys(params).map((k) => {
               let values = params[k];
               if (!Array.isArray(values)) values = [values];
@@ -9444,7 +9941,7 @@ var require_websocket = __commonJS({
     var http = __require("http");
     var net = __require("net");
     var tls = __require("tls");
-    var { randomBytes, createHash } = __require("crypto");
+    var { randomBytes, createHash: createHash2 } = __require("crypto");
     var { Duplex, Readable } = __require("stream");
     var { URL: URL2 } = __require("url");
     var PerMessageDeflate2 = require_permessage_deflate();
@@ -10112,7 +10609,7 @@ var require_websocket = __commonJS({
           abortHandshake(websocket, socket, "Invalid Upgrade header");
           return;
         }
-        const digest = createHash("sha1").update(key + GUID).digest("base64");
+        const digest = createHash2("sha1").update(key + GUID).digest("base64");
         if (res.headers["sec-websocket-accept"] !== digest) {
           abortHandshake(websocket, socket, "Invalid Sec-WebSocket-Accept header");
           return;
@@ -10481,8 +10978,8 @@ var require_websocket_server = __commonJS({
     var EventEmitter = __require("events");
     var http = __require("http");
     var { Duplex } = __require("stream");
-    var { createHash } = __require("crypto");
-    var extension3 = require_extension();
+    var { createHash: createHash2 } = __require("crypto");
+    var extension2 = require_extension();
     var PerMessageDeflate2 = require_permessage_deflate();
     var subprotocol2 = require_subprotocol();
     var WebSocket2 = require_websocket();
@@ -10729,7 +11226,7 @@ var require_websocket_server = __commonJS({
             maxPayload: this.options.maxPayload
           });
           try {
-            const offers = extension3.parse(secWebSocketExtensions);
+            const offers = extension2.parse(secWebSocketExtensions);
             if (offers[PerMessageDeflate2.extensionName]) {
               perMessageDeflate.accept(offers[PerMessageDeflate2.extensionName]);
               extensions[PerMessageDeflate2.extensionName] = perMessageDeflate;
@@ -10788,7 +11285,7 @@ var require_websocket_server = __commonJS({
           );
         }
         if (this._state > RUNNING) return abortHandshake(socket, 503);
-        const digest = createHash("sha1").update(key + GUID).digest("base64");
+        const digest = createHash2("sha1").update(key + GUID).digest("base64");
         const headers = [
           "HTTP/1.1 101 Switching Protocols",
           "Upgrade: websocket",
@@ -10805,7 +11302,7 @@ var require_websocket_server = __commonJS({
         }
         if (extensions[PerMessageDeflate2.extensionName]) {
           const params = extensions[PerMessageDeflate2.extensionName].params;
-          const value = extension3.format({
+          const value = extension2.format({
             [PerMessageDeflate2.extensionName]: [params]
           });
           headers.push(`Sec-WebSocket-Extensions: ${value}`);
@@ -22982,7 +23479,7 @@ var Protocol = class {
           return;
         }
         const pollInterval = task2.pollInterval ?? this._options?.defaultTaskPollInterval ?? 1e3;
-        await new Promise((resolve2) => setTimeout(resolve2, pollInterval));
+        await new Promise((resolve4) => setTimeout(resolve4, pollInterval));
         options?.signal?.throwIfAborted();
       }
     } catch (error2) {
@@ -22999,7 +23496,7 @@ var Protocol = class {
    */
   request(request, resultSchema, options) {
     const { relatedRequestId, resumptionToken, onresumptiontoken, task, relatedTask } = options ?? {};
-    return new Promise((resolve2, reject) => {
+    return new Promise((resolve4, reject) => {
       const earlyReject = (error2) => {
         reject(error2);
       };
@@ -23077,7 +23574,7 @@ var Protocol = class {
           if (!parseResult.success) {
             reject(parseResult.error);
           } else {
-            resolve2(parseResult.data);
+            resolve4(parseResult.data);
           }
         } catch (error2) {
           reject(error2);
@@ -23338,12 +23835,12 @@ var Protocol = class {
       }
     } catch {
     }
-    return new Promise((resolve2, reject) => {
+    return new Promise((resolve4, reject) => {
       if (signal.aborted) {
         reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
         return;
       }
-      const timeoutId = setTimeout(resolve2, interval);
+      const timeoutId = setTimeout(resolve4, interval);
       signal.addEventListener("abort", () => {
         clearTimeout(timeoutId);
         reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
@@ -24434,7 +24931,7 @@ var McpServer = class {
     let task = createTaskResult.task;
     const pollInterval = task.pollInterval ?? 5e3;
     while (task.status !== "completed" && task.status !== "failed" && task.status !== "cancelled") {
-      await new Promise((resolve2) => setTimeout(resolve2, pollInterval));
+      await new Promise((resolve4) => setTimeout(resolve4, pollInterval));
       const updatedTask = await extra.taskStore.getTask(taskId);
       if (!updatedTask) {
         throw new McpError(ErrorCode.InternalError, `Task ${taskId} not found during polling`);
@@ -25098,16 +25595,1817 @@ var StdioServerTransport = class {
     this.onclose?.();
   }
   send(message) {
-    return new Promise((resolve2) => {
+    return new Promise((resolve4) => {
       const json = serializeMessage(message);
       if (this._stdout.write(json)) {
-        resolve2();
+        resolve4();
       } else {
-        this._stdout.once("drain", resolve2);
+        this._stdout.once("drain", resolve4);
       }
     });
   }
 };
+
+// src/browser/driver-factory.ts
+import { existsSync as existsSync2 } from "node:fs";
+import { resolve as resolve2 } from "node:path";
+
+// src/browser/devtools-driver.ts
+import { existsSync } from "node:fs";
+import { mkdir } from "node:fs/promises";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+// node_modules/@modelcontextprotocol/sdk/dist/esm/experimental/tasks/client.js
+var ExperimentalClientTasks = class {
+  constructor(_client) {
+    this._client = _client;
+  }
+  /**
+   * Calls a tool and returns an AsyncGenerator that yields response messages.
+   * The generator is guaranteed to end with either a 'result' or 'error' message.
+   *
+   * This method provides streaming access to tool execution, allowing you to
+   * observe intermediate task status updates for long-running tool calls.
+   * Automatically validates structured output if the tool has an outputSchema.
+   *
+   * @example
+   * ```typescript
+   * const stream = client.experimental.tasks.callToolStream({ name: 'myTool', arguments: {} });
+   * for await (const message of stream) {
+   *   switch (message.type) {
+   *     case 'taskCreated':
+   *       console.log('Tool execution started:', message.task.taskId);
+   *       break;
+   *     case 'taskStatus':
+   *       console.log('Tool status:', message.task.status);
+   *       break;
+   *     case 'result':
+   *       console.log('Tool result:', message.result);
+   *       break;
+   *     case 'error':
+   *       console.error('Tool error:', message.error);
+   *       break;
+   *   }
+   * }
+   * ```
+   *
+   * @param params - Tool call parameters (name and arguments)
+   * @param resultSchema - Zod schema for validating the result (defaults to CallToolResultSchema)
+   * @param options - Optional request options (timeout, signal, task creation params, etc.)
+   * @returns AsyncGenerator that yields ResponseMessage objects
+   *
+   * @experimental
+   */
+  async *callToolStream(params, resultSchema = CallToolResultSchema, options) {
+    const clientInternal = this._client;
+    const optionsWithTask = {
+      ...options,
+      // We check if the tool is known to be a task during auto-configuration, but assume
+      // the caller knows what they're doing if they pass this explicitly
+      task: options?.task ?? (clientInternal.isToolTask(params.name) ? {} : void 0)
+    };
+    const stream = clientInternal.requestStream({ method: "tools/call", params }, resultSchema, optionsWithTask);
+    const validator = clientInternal.getToolOutputValidator(params.name);
+    for await (const message of stream) {
+      if (message.type === "result" && validator) {
+        const result = message.result;
+        if (!result.structuredContent && !result.isError) {
+          yield {
+            type: "error",
+            error: new McpError(ErrorCode.InvalidRequest, `Tool ${params.name} has an output schema but did not return structured content`)
+          };
+          return;
+        }
+        if (result.structuredContent) {
+          try {
+            const validationResult = validator(result.structuredContent);
+            if (!validationResult.valid) {
+              yield {
+                type: "error",
+                error: new McpError(ErrorCode.InvalidParams, `Structured content does not match the tool's output schema: ${validationResult.errorMessage}`)
+              };
+              return;
+            }
+          } catch (error2) {
+            if (error2 instanceof McpError) {
+              yield { type: "error", error: error2 };
+              return;
+            }
+            yield {
+              type: "error",
+              error: new McpError(ErrorCode.InvalidParams, `Failed to validate structured content: ${error2 instanceof Error ? error2.message : String(error2)}`)
+            };
+            return;
+          }
+        }
+      }
+      yield message;
+    }
+  }
+  /**
+   * Gets the current status of a task.
+   *
+   * @param taskId - The task identifier
+   * @param options - Optional request options
+   * @returns The task status
+   *
+   * @experimental
+   */
+  async getTask(taskId, options) {
+    return this._client.getTask({ taskId }, options);
+  }
+  /**
+   * Retrieves the result of a completed task.
+   *
+   * @param taskId - The task identifier
+   * @param resultSchema - Zod schema for validating the result
+   * @param options - Optional request options
+   * @returns The task result
+   *
+   * @experimental
+   */
+  async getTaskResult(taskId, resultSchema, options) {
+    return this._client.getTaskResult({ taskId }, resultSchema, options);
+  }
+  /**
+   * Lists tasks with optional pagination.
+   *
+   * @param cursor - Optional pagination cursor
+   * @param options - Optional request options
+   * @returns List of tasks with optional next cursor
+   *
+   * @experimental
+   */
+  async listTasks(cursor, options) {
+    return this._client.listTasks(cursor ? { cursor } : void 0, options);
+  }
+  /**
+   * Cancels a running task.
+   *
+   * @param taskId - The task identifier
+   * @param options - Optional request options
+   *
+   * @experimental
+   */
+  async cancelTask(taskId, options) {
+    return this._client.cancelTask({ taskId }, options);
+  }
+  /**
+   * Sends a request and returns an AsyncGenerator that yields response messages.
+   * The generator is guaranteed to end with either a 'result' or 'error' message.
+   *
+   * This method provides streaming access to request processing, allowing you to
+   * observe intermediate task status updates for task-augmented requests.
+   *
+   * @param request - The request to send
+   * @param resultSchema - Zod schema for validating the result
+   * @param options - Optional request options (timeout, signal, task creation params, etc.)
+   * @returns AsyncGenerator that yields ResponseMessage objects
+   *
+   * @experimental
+   */
+  requestStream(request, resultSchema, options) {
+    return this._client.requestStream(request, resultSchema, options);
+  }
+};
+
+// node_modules/@modelcontextprotocol/sdk/dist/esm/client/index.js
+function applyElicitationDefaults(schema, data) {
+  if (!schema || data === null || typeof data !== "object")
+    return;
+  if (schema.type === "object" && schema.properties && typeof schema.properties === "object") {
+    const obj = data;
+    const props = schema.properties;
+    for (const key of Object.keys(props)) {
+      const propSchema = props[key];
+      if (obj[key] === void 0 && Object.prototype.hasOwnProperty.call(propSchema, "default")) {
+        obj[key] = propSchema.default;
+      }
+      if (obj[key] !== void 0) {
+        applyElicitationDefaults(propSchema, obj[key]);
+      }
+    }
+  }
+  if (Array.isArray(schema.anyOf)) {
+    for (const sub of schema.anyOf) {
+      if (typeof sub !== "boolean") {
+        applyElicitationDefaults(sub, data);
+      }
+    }
+  }
+  if (Array.isArray(schema.oneOf)) {
+    for (const sub of schema.oneOf) {
+      if (typeof sub !== "boolean") {
+        applyElicitationDefaults(sub, data);
+      }
+    }
+  }
+}
+function getSupportedElicitationModes(capabilities) {
+  if (!capabilities) {
+    return { supportsFormMode: false, supportsUrlMode: false };
+  }
+  const hasFormCapability = capabilities.form !== void 0;
+  const hasUrlCapability = capabilities.url !== void 0;
+  const supportsFormMode = hasFormCapability || !hasFormCapability && !hasUrlCapability;
+  const supportsUrlMode = hasUrlCapability;
+  return { supportsFormMode, supportsUrlMode };
+}
+var Client = class extends Protocol {
+  /**
+   * Initializes this client with the given name and version information.
+   */
+  constructor(_clientInfo, options) {
+    super(options);
+    this._clientInfo = _clientInfo;
+    this._cachedToolOutputValidators = /* @__PURE__ */ new Map();
+    this._cachedKnownTaskTools = /* @__PURE__ */ new Set();
+    this._cachedRequiredTaskTools = /* @__PURE__ */ new Set();
+    this._listChangedDebounceTimers = /* @__PURE__ */ new Map();
+    this._capabilities = options?.capabilities ?? {};
+    this._jsonSchemaValidator = options?.jsonSchemaValidator ?? new AjvJsonSchemaValidator();
+    if (options?.listChanged) {
+      this._pendingListChangedConfig = options.listChanged;
+    }
+  }
+  /**
+   * Set up handlers for list changed notifications based on config and server capabilities.
+   * This should only be called after initialization when server capabilities are known.
+   * Handlers are silently skipped if the server doesn't advertise the corresponding listChanged capability.
+   * @internal
+   */
+  _setupListChangedHandlers(config2) {
+    if (config2.tools && this._serverCapabilities?.tools?.listChanged) {
+      this._setupListChangedHandler("tools", ToolListChangedNotificationSchema, config2.tools, async () => {
+        const result = await this.listTools();
+        return result.tools;
+      });
+    }
+    if (config2.prompts && this._serverCapabilities?.prompts?.listChanged) {
+      this._setupListChangedHandler("prompts", PromptListChangedNotificationSchema, config2.prompts, async () => {
+        const result = await this.listPrompts();
+        return result.prompts;
+      });
+    }
+    if (config2.resources && this._serverCapabilities?.resources?.listChanged) {
+      this._setupListChangedHandler("resources", ResourceListChangedNotificationSchema, config2.resources, async () => {
+        const result = await this.listResources();
+        return result.resources;
+      });
+    }
+  }
+  /**
+   * Access experimental features.
+   *
+   * WARNING: These APIs are experimental and may change without notice.
+   *
+   * @experimental
+   */
+  get experimental() {
+    if (!this._experimental) {
+      this._experimental = {
+        tasks: new ExperimentalClientTasks(this)
+      };
+    }
+    return this._experimental;
+  }
+  /**
+   * Registers new capabilities. This can only be called before connecting to a transport.
+   *
+   * The new capabilities will be merged with any existing capabilities previously given (e.g., at initialization).
+   */
+  registerCapabilities(capabilities) {
+    if (this.transport) {
+      throw new Error("Cannot register capabilities after connecting to transport");
+    }
+    this._capabilities = mergeCapabilities(this._capabilities, capabilities);
+  }
+  /**
+   * Override request handler registration to enforce client-side validation for elicitation.
+   */
+  setRequestHandler(requestSchema, handler) {
+    const shape = getObjectShape(requestSchema);
+    const methodSchema = shape?.method;
+    if (!methodSchema) {
+      throw new Error("Schema is missing a method literal");
+    }
+    const methodValue = getLiteralValue(methodSchema);
+    if (typeof methodValue !== "string") {
+      throw new Error("Schema method literal must be a string");
+    }
+    const method = methodValue;
+    if (method === "elicitation/create") {
+      const wrappedHandler = async (request, extra) => {
+        const validatedRequest = safeParse2(ElicitRequestSchema, request);
+        if (!validatedRequest.success) {
+          const errorMessage = validatedRequest.error instanceof Error ? validatedRequest.error.message : String(validatedRequest.error);
+          throw new McpError(ErrorCode.InvalidParams, `Invalid elicitation request: ${errorMessage}`);
+        }
+        const { params } = validatedRequest.data;
+        params.mode = params.mode ?? "form";
+        const { supportsFormMode, supportsUrlMode } = getSupportedElicitationModes(this._capabilities.elicitation);
+        if (params.mode === "form" && !supportsFormMode) {
+          throw new McpError(ErrorCode.InvalidParams, "Client does not support form-mode elicitation requests");
+        }
+        if (params.mode === "url" && !supportsUrlMode) {
+          throw new McpError(ErrorCode.InvalidParams, "Client does not support URL-mode elicitation requests");
+        }
+        const result = await Promise.resolve(handler(request, extra));
+        if (params.task) {
+          const taskValidationResult = safeParse2(CreateTaskResultSchema, result);
+          if (!taskValidationResult.success) {
+            const errorMessage = taskValidationResult.error instanceof Error ? taskValidationResult.error.message : String(taskValidationResult.error);
+            throw new McpError(ErrorCode.InvalidParams, `Invalid task creation result: ${errorMessage}`);
+          }
+          return taskValidationResult.data;
+        }
+        const validationResult = safeParse2(ElicitResultSchema, result);
+        if (!validationResult.success) {
+          const errorMessage = validationResult.error instanceof Error ? validationResult.error.message : String(validationResult.error);
+          throw new McpError(ErrorCode.InvalidParams, `Invalid elicitation result: ${errorMessage}`);
+        }
+        const validatedResult = validationResult.data;
+        const requestedSchema = params.mode === "form" ? params.requestedSchema : void 0;
+        if (params.mode === "form" && validatedResult.action === "accept" && validatedResult.content && requestedSchema) {
+          if (this._capabilities.elicitation?.form?.applyDefaults) {
+            try {
+              applyElicitationDefaults(requestedSchema, validatedResult.content);
+            } catch {
+            }
+          }
+        }
+        return validatedResult;
+      };
+      return super.setRequestHandler(requestSchema, wrappedHandler);
+    }
+    if (method === "sampling/createMessage") {
+      const wrappedHandler = async (request, extra) => {
+        const validatedRequest = safeParse2(CreateMessageRequestSchema, request);
+        if (!validatedRequest.success) {
+          const errorMessage = validatedRequest.error instanceof Error ? validatedRequest.error.message : String(validatedRequest.error);
+          throw new McpError(ErrorCode.InvalidParams, `Invalid sampling request: ${errorMessage}`);
+        }
+        const { params } = validatedRequest.data;
+        const result = await Promise.resolve(handler(request, extra));
+        if (params.task) {
+          const taskValidationResult = safeParse2(CreateTaskResultSchema, result);
+          if (!taskValidationResult.success) {
+            const errorMessage = taskValidationResult.error instanceof Error ? taskValidationResult.error.message : String(taskValidationResult.error);
+            throw new McpError(ErrorCode.InvalidParams, `Invalid task creation result: ${errorMessage}`);
+          }
+          return taskValidationResult.data;
+        }
+        const hasTools = params.tools || params.toolChoice;
+        const resultSchema = hasTools ? CreateMessageResultWithToolsSchema : CreateMessageResultSchema;
+        const validationResult = safeParse2(resultSchema, result);
+        if (!validationResult.success) {
+          const errorMessage = validationResult.error instanceof Error ? validationResult.error.message : String(validationResult.error);
+          throw new McpError(ErrorCode.InvalidParams, `Invalid sampling result: ${errorMessage}`);
+        }
+        return validationResult.data;
+      };
+      return super.setRequestHandler(requestSchema, wrappedHandler);
+    }
+    return super.setRequestHandler(requestSchema, handler);
+  }
+  assertCapability(capability, method) {
+    if (!this._serverCapabilities?.[capability]) {
+      throw new Error(`Server does not support ${capability} (required for ${method})`);
+    }
+  }
+  async connect(transport2, options) {
+    await super.connect(transport2);
+    if (transport2.sessionId !== void 0) {
+      return;
+    }
+    try {
+      const result = await this.request({
+        method: "initialize",
+        params: {
+          protocolVersion: LATEST_PROTOCOL_VERSION,
+          capabilities: this._capabilities,
+          clientInfo: this._clientInfo
+        }
+      }, InitializeResultSchema, options);
+      if (result === void 0) {
+        throw new Error(`Server sent invalid initialize result: ${result}`);
+      }
+      if (!SUPPORTED_PROTOCOL_VERSIONS.includes(result.protocolVersion)) {
+        throw new Error(`Server's protocol version is not supported: ${result.protocolVersion}`);
+      }
+      this._serverCapabilities = result.capabilities;
+      this._serverVersion = result.serverInfo;
+      if (transport2.setProtocolVersion) {
+        transport2.setProtocolVersion(result.protocolVersion);
+      }
+      this._instructions = result.instructions;
+      await this.notification({
+        method: "notifications/initialized"
+      });
+      if (this._pendingListChangedConfig) {
+        this._setupListChangedHandlers(this._pendingListChangedConfig);
+        this._pendingListChangedConfig = void 0;
+      }
+    } catch (error2) {
+      void this.close();
+      throw error2;
+    }
+  }
+  /**
+   * After initialization has completed, this will be populated with the server's reported capabilities.
+   */
+  getServerCapabilities() {
+    return this._serverCapabilities;
+  }
+  /**
+   * After initialization has completed, this will be populated with information about the server's name and version.
+   */
+  getServerVersion() {
+    return this._serverVersion;
+  }
+  /**
+   * After initialization has completed, this may be populated with information about the server's instructions.
+   */
+  getInstructions() {
+    return this._instructions;
+  }
+  assertCapabilityForMethod(method) {
+    switch (method) {
+      case "logging/setLevel":
+        if (!this._serverCapabilities?.logging) {
+          throw new Error(`Server does not support logging (required for ${method})`);
+        }
+        break;
+      case "prompts/get":
+      case "prompts/list":
+        if (!this._serverCapabilities?.prompts) {
+          throw new Error(`Server does not support prompts (required for ${method})`);
+        }
+        break;
+      case "resources/list":
+      case "resources/templates/list":
+      case "resources/read":
+      case "resources/subscribe":
+      case "resources/unsubscribe":
+        if (!this._serverCapabilities?.resources) {
+          throw new Error(`Server does not support resources (required for ${method})`);
+        }
+        if (method === "resources/subscribe" && !this._serverCapabilities.resources.subscribe) {
+          throw new Error(`Server does not support resource subscriptions (required for ${method})`);
+        }
+        break;
+      case "tools/call":
+      case "tools/list":
+        if (!this._serverCapabilities?.tools) {
+          throw new Error(`Server does not support tools (required for ${method})`);
+        }
+        break;
+      case "completion/complete":
+        if (!this._serverCapabilities?.completions) {
+          throw new Error(`Server does not support completions (required for ${method})`);
+        }
+        break;
+      case "initialize":
+        break;
+      case "ping":
+        break;
+    }
+  }
+  assertNotificationCapability(method) {
+    switch (method) {
+      case "notifications/roots/list_changed":
+        if (!this._capabilities.roots?.listChanged) {
+          throw new Error(`Client does not support roots list changed notifications (required for ${method})`);
+        }
+        break;
+      case "notifications/initialized":
+        break;
+      case "notifications/cancelled":
+        break;
+      case "notifications/progress":
+        break;
+    }
+  }
+  assertRequestHandlerCapability(method) {
+    if (!this._capabilities) {
+      return;
+    }
+    switch (method) {
+      case "sampling/createMessage":
+        if (!this._capabilities.sampling) {
+          throw new Error(`Client does not support sampling capability (required for ${method})`);
+        }
+        break;
+      case "elicitation/create":
+        if (!this._capabilities.elicitation) {
+          throw new Error(`Client does not support elicitation capability (required for ${method})`);
+        }
+        break;
+      case "roots/list":
+        if (!this._capabilities.roots) {
+          throw new Error(`Client does not support roots capability (required for ${method})`);
+        }
+        break;
+      case "tasks/get":
+      case "tasks/list":
+      case "tasks/result":
+      case "tasks/cancel":
+        if (!this._capabilities.tasks) {
+          throw new Error(`Client does not support tasks capability (required for ${method})`);
+        }
+        break;
+      case "ping":
+        break;
+    }
+  }
+  assertTaskCapability(method) {
+    assertToolsCallTaskCapability(this._serverCapabilities?.tasks?.requests, method, "Server");
+  }
+  assertTaskHandlerCapability(method) {
+    if (!this._capabilities) {
+      return;
+    }
+    assertClientRequestTaskCapability(this._capabilities.tasks?.requests, method, "Client");
+  }
+  async ping(options) {
+    return this.request({ method: "ping" }, EmptyResultSchema, options);
+  }
+  async complete(params, options) {
+    return this.request({ method: "completion/complete", params }, CompleteResultSchema, options);
+  }
+  async setLoggingLevel(level, options) {
+    return this.request({ method: "logging/setLevel", params: { level } }, EmptyResultSchema, options);
+  }
+  async getPrompt(params, options) {
+    return this.request({ method: "prompts/get", params }, GetPromptResultSchema, options);
+  }
+  async listPrompts(params, options) {
+    return this.request({ method: "prompts/list", params }, ListPromptsResultSchema, options);
+  }
+  async listResources(params, options) {
+    return this.request({ method: "resources/list", params }, ListResourcesResultSchema, options);
+  }
+  async listResourceTemplates(params, options) {
+    return this.request({ method: "resources/templates/list", params }, ListResourceTemplatesResultSchema, options);
+  }
+  async readResource(params, options) {
+    return this.request({ method: "resources/read", params }, ReadResourceResultSchema, options);
+  }
+  async subscribeResource(params, options) {
+    return this.request({ method: "resources/subscribe", params }, EmptyResultSchema, options);
+  }
+  async unsubscribeResource(params, options) {
+    return this.request({ method: "resources/unsubscribe", params }, EmptyResultSchema, options);
+  }
+  /**
+   * Calls a tool and waits for the result. Automatically validates structured output if the tool has an outputSchema.
+   *
+   * For task-based execution with streaming behavior, use client.experimental.tasks.callToolStream() instead.
+   */
+  async callTool(params, resultSchema = CallToolResultSchema, options) {
+    if (this.isToolTaskRequired(params.name)) {
+      throw new McpError(ErrorCode.InvalidRequest, `Tool "${params.name}" requires task-based execution. Use client.experimental.tasks.callToolStream() instead.`);
+    }
+    const result = await this.request({ method: "tools/call", params }, resultSchema, options);
+    const validator = this.getToolOutputValidator(params.name);
+    if (validator) {
+      if (!result.structuredContent && !result.isError) {
+        throw new McpError(ErrorCode.InvalidRequest, `Tool ${params.name} has an output schema but did not return structured content`);
+      }
+      if (result.structuredContent) {
+        try {
+          const validationResult = validator(result.structuredContent);
+          if (!validationResult.valid) {
+            throw new McpError(ErrorCode.InvalidParams, `Structured content does not match the tool's output schema: ${validationResult.errorMessage}`);
+          }
+        } catch (error2) {
+          if (error2 instanceof McpError) {
+            throw error2;
+          }
+          throw new McpError(ErrorCode.InvalidParams, `Failed to validate structured content: ${error2 instanceof Error ? error2.message : String(error2)}`);
+        }
+      }
+    }
+    return result;
+  }
+  isToolTask(toolName) {
+    if (!this._serverCapabilities?.tasks?.requests?.tools?.call) {
+      return false;
+    }
+    return this._cachedKnownTaskTools.has(toolName);
+  }
+  /**
+   * Check if a tool requires task-based execution.
+   * Unlike isToolTask which includes 'optional' tools, this only checks for 'required'.
+   */
+  isToolTaskRequired(toolName) {
+    return this._cachedRequiredTaskTools.has(toolName);
+  }
+  /**
+   * Cache validators for tool output schemas.
+   * Called after listTools() to pre-compile validators for better performance.
+   */
+  cacheToolMetadata(tools) {
+    this._cachedToolOutputValidators.clear();
+    this._cachedKnownTaskTools.clear();
+    this._cachedRequiredTaskTools.clear();
+    for (const tool of tools) {
+      if (tool.outputSchema) {
+        const toolValidator = this._jsonSchemaValidator.getValidator(tool.outputSchema);
+        this._cachedToolOutputValidators.set(tool.name, toolValidator);
+      }
+      const taskSupport = tool.execution?.taskSupport;
+      if (taskSupport === "required" || taskSupport === "optional") {
+        this._cachedKnownTaskTools.add(tool.name);
+      }
+      if (taskSupport === "required") {
+        this._cachedRequiredTaskTools.add(tool.name);
+      }
+    }
+  }
+  /**
+   * Get cached validator for a tool
+   */
+  getToolOutputValidator(toolName) {
+    return this._cachedToolOutputValidators.get(toolName);
+  }
+  async listTools(params, options) {
+    const result = await this.request({ method: "tools/list", params }, ListToolsResultSchema, options);
+    this.cacheToolMetadata(result.tools);
+    return result;
+  }
+  /**
+   * Set up a single list changed handler.
+   * @internal
+   */
+  _setupListChangedHandler(listType, notificationSchema, options, fetcher) {
+    const parseResult = ListChangedOptionsBaseSchema.safeParse(options);
+    if (!parseResult.success) {
+      throw new Error(`Invalid ${listType} listChanged options: ${parseResult.error.message}`);
+    }
+    if (typeof options.onChanged !== "function") {
+      throw new Error(`Invalid ${listType} listChanged options: onChanged must be a function`);
+    }
+    const { autoRefresh, debounceMs } = parseResult.data;
+    const { onChanged } = options;
+    const refresh = async () => {
+      if (!autoRefresh) {
+        onChanged(null, null);
+        return;
+      }
+      try {
+        const items = await fetcher();
+        onChanged(null, items);
+      } catch (e) {
+        const error2 = e instanceof Error ? e : new Error(String(e));
+        onChanged(error2, null);
+      }
+    };
+    const handler = () => {
+      if (debounceMs) {
+        const existingTimer = this._listChangedDebounceTimers.get(listType);
+        if (existingTimer) {
+          clearTimeout(existingTimer);
+        }
+        const timer = setTimeout(refresh, debounceMs);
+        this._listChangedDebounceTimers.set(listType, timer);
+      } else {
+        refresh();
+      }
+    };
+    this.setNotificationHandler(notificationSchema, handler);
+  }
+  async sendRootsListChanged() {
+    return this.notification({ method: "notifications/roots/list_changed" });
+  }
+};
+
+// node_modules/@modelcontextprotocol/sdk/dist/esm/client/stdio.js
+var import_cross_spawn = __toESM(require_cross_spawn(), 1);
+import process3 from "node:process";
+import { PassThrough } from "node:stream";
+var DEFAULT_INHERITED_ENV_VARS = process3.platform === "win32" ? [
+  "APPDATA",
+  "HOMEDRIVE",
+  "HOMEPATH",
+  "LOCALAPPDATA",
+  "PATH",
+  "PROCESSOR_ARCHITECTURE",
+  "SYSTEMDRIVE",
+  "SYSTEMROOT",
+  "TEMP",
+  "USERNAME",
+  "USERPROFILE",
+  "PROGRAMFILES"
+] : (
+  /* list inspired by the default env inheritance of sudo */
+  ["HOME", "LOGNAME", "PATH", "SHELL", "TERM", "USER"]
+);
+function getDefaultEnvironment() {
+  const env = {};
+  for (const key of DEFAULT_INHERITED_ENV_VARS) {
+    const value = process3.env[key];
+    if (value === void 0) {
+      continue;
+    }
+    if (value.startsWith("()")) {
+      continue;
+    }
+    env[key] = value;
+  }
+  return env;
+}
+var StdioClientTransport = class {
+  constructor(server2) {
+    this._stderrStream = null;
+    this._serverParams = server2;
+    this._readBuffer = new ReadBuffer({ maxBufferSize: server2.maxBufferSize });
+    if (server2.stderr === "pipe" || server2.stderr === "overlapped") {
+      this._stderrStream = new PassThrough();
+    }
+  }
+  /**
+   * Starts the server process and prepares to communicate with it.
+   */
+  async start() {
+    if (this._process) {
+      throw new Error("StdioClientTransport already started! If using Client class, note that connect() calls start() automatically.");
+    }
+    return new Promise((resolve4, reject) => {
+      this._process = (0, import_cross_spawn.default)(this._serverParams.command, this._serverParams.args ?? [], {
+        // merge default env with server env because mcp server needs some env vars
+        env: {
+          ...getDefaultEnvironment(),
+          ...this._serverParams.env
+        },
+        stdio: ["pipe", "pipe", this._serverParams.stderr ?? "inherit"],
+        shell: false,
+        windowsHide: process3.platform === "win32",
+        cwd: this._serverParams.cwd
+      });
+      this._process.on("error", (error2) => {
+        reject(error2);
+        this.onerror?.(error2);
+      });
+      this._process.on("spawn", () => {
+        resolve4();
+      });
+      this._process.on("close", (_code) => {
+        this._process = void 0;
+        this.onclose?.();
+      });
+      this._process.stdin?.on("error", (error2) => {
+        this.onerror?.(error2);
+      });
+      this._process.stdout?.on("data", (chunk) => {
+        try {
+          this._readBuffer.append(chunk);
+          this.processReadBuffer();
+        } catch (error2) {
+          this.onerror?.(error2);
+          this.close().catch(() => {
+          });
+        }
+      });
+      this._process.stdout?.on("error", (error2) => {
+        this.onerror?.(error2);
+      });
+      if (this._stderrStream && this._process.stderr) {
+        this._process.stderr.pipe(this._stderrStream);
+      }
+    });
+  }
+  /**
+   * The stderr stream of the child process, if `StdioServerParameters.stderr` was set to "pipe" or "overlapped".
+   *
+   * If stderr piping was requested, a PassThrough stream is returned _immediately_, allowing callers to
+   * attach listeners before the start method is invoked. This prevents loss of any early
+   * error output emitted by the child process.
+   */
+  get stderr() {
+    if (this._stderrStream) {
+      return this._stderrStream;
+    }
+    return this._process?.stderr ?? null;
+  }
+  /**
+   * The child process pid spawned by this transport.
+   *
+   * This is only available after the transport has been started.
+   */
+  get pid() {
+    return this._process?.pid ?? null;
+  }
+  processReadBuffer() {
+    while (true) {
+      try {
+        const message = this._readBuffer.readMessage();
+        if (message === null) {
+          break;
+        }
+        this.onmessage?.(message);
+      } catch (error2) {
+        this.onerror?.(error2);
+      }
+    }
+  }
+  async close() {
+    if (this._process) {
+      const processToClose = this._process;
+      this._process = void 0;
+      const closePromise = new Promise((resolve4) => {
+        processToClose.once("close", () => {
+          resolve4();
+        });
+      });
+      try {
+        processToClose.stdin?.end();
+      } catch {
+      }
+      await Promise.race([closePromise, new Promise((resolve4) => setTimeout(resolve4, 2e3).unref())]);
+      if (processToClose.exitCode === null) {
+        try {
+          processToClose.kill("SIGTERM");
+        } catch {
+        }
+        await Promise.race([closePromise, new Promise((resolve4) => setTimeout(resolve4, 2e3).unref())]);
+      }
+      if (processToClose.exitCode === null) {
+        try {
+          processToClose.kill("SIGKILL");
+        } catch {
+        }
+      }
+    }
+    this._readBuffer.clear();
+  }
+  send(message) {
+    return new Promise((resolve4) => {
+      if (!this._process?.stdin) {
+        throw new Error("Not connected");
+      }
+      const json = serializeMessage(message);
+      if (this._process.stdin.write(json)) {
+        resolve4();
+      } else {
+        this._process.stdin.once("drain", resolve4);
+      }
+    });
+  }
+};
+
+// src/protocol.ts
+var PROTOCOL_VERSION = "2.1";
+function createAutomationSchemas(z, options = {}) {
+  const id2 = z.string().min(1).max(160);
+  const scalar = z.union([z.string().max(1e4), z.boolean()]);
+  const object3 = (shape) => z.object(shape).strict();
+  const source = object3({ profile_id: id2, profile_revision: z.number().int().positive(), source_ref: z.string().min(1).max(240) });
+  const literal2 = object3({ literal: scalar });
+  const value = options.allowSources === false ? literal2 : z.union([literal2, object3({ source })]);
+  const effect = z.enum(["interaction", "save_record", "save_draft", "advance_step", "final_submit", "unknown"]);
+  const writes = [
+    object3({ kind: z.literal("set_value"), ref: id2, expected_value_token: id2, value }),
+    object3({ kind: z.literal("set_checked"), ref: id2, expected_value_token: id2, checked: z.boolean() }),
+    object3({ kind: z.literal("select_option"), ref: id2, expected_value_token: id2, option_ref: id2.optional(), option_value: z.string().max(1e4).optional() })
+  ];
+  const write = z.discriminatedUnion("kind", writes);
+  const action = z.discriminatedUnion("kind", [
+    ...writes,
+    object3({ kind: z.literal("set_values"), items: z.array(write).min(1).max(20) }),
+    object3({ kind: z.literal("click"), ref: id2, effect_kind: effect, evidence_refs: z.array(id2).max(10).optional(), expected_value_token: id2.optional() }),
+    object3({ kind: z.literal("press_key"), ref: id2, key: z.enum(["Escape", "ArrowDown", "ArrowUp", "ArrowLeft", "ArrowRight", "Home", "End"]), expected_value_token: id2.optional() }),
+    object3({ kind: z.literal("scroll"), ref: id2, direction: z.enum(["up", "down", "left", "right"]), pixels: z.number().int().min(1).max(2e3).optional() })
+  ]);
+  const condition = z.union([
+    object3({ kind: z.enum(["visible", "hidden", "expanded", "options_ready", "structure_changed"]), ref: id2 }),
+    object3({ kind: z.literal("value_equals"), ref: id2, value: scalar }),
+    object3({ kind: z.literal("text_present"), ref: id2, text: z.string().min(1).max(1e3) })
+  ]);
+  return {
+    observe: object3({ tab_id: z.number().int().positive().optional(), session_id: id2.optional(), mode: z.enum(["overview", "detail", "changes", "verify"]).optional(), scope_ref: id2.optional(), snapshot_id: id2.optional(), operation_ids: z.array(id2).min(1).max(20).optional(), limit: z.number().int().min(1).max(80).optional(), cursor: id2.optional() }).superRefine((value2, context) => {
+      if (Number(value2.tab_id !== void 0) + Number(value2.session_id !== void 0) !== 1) context.addIssue({ code: "custom", message: "observe requires exactly one tab_id or session_id" });
+      if (value2.mode === "verify" && !value2.operation_ids?.length) context.addIssue({ code: "custom", path: ["operation_ids"], message: "verify requires operation_ids" });
+    }),
+    act: object3({ session_id: id2, snapshot_id: id2, operation_id: id2, action, wait_for: condition.optional(), timeout_ms: z.number().int().min(100).max(12e3).optional() }).superRefine((value2, context) => {
+      const actions = value2.action.kind === "set_values" ? value2.action.items : [value2.action];
+      for (const item of actions) {
+        if (item.kind === "select_option" && Number(item.option_ref !== void 0) + Number(item.option_value !== void 0) !== 1) {
+          context.addIssue({ code: "custom", path: ["action"], message: "select_option requires exactly one option_ref or option_value" });
+        }
+      }
+    }),
+    wait: object3({ session_id: id2, snapshot_id: id2, condition, timeout_ms: z.number().int().min(100).max(1e4).optional() }),
+    undo_operations: object3({ session_id: id2, operation_ids: z.array(id2).min(1).max(20), operation_id: id2 })
+  };
+}
+function canonical(value) {
+  if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`;
+  if (value && typeof value === "object") {
+    return `{${Object.entries(value).filter(([, item]) => item !== void 0).sort(([a], [b]) => a.localeCompare(b)).map(([key, item]) => `${JSON.stringify(key)}:${canonical(item)}`).join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
+// src/browser/errors.ts
+var BrowserError = class extends Error {
+  constructor(code, message, options) {
+    super(`${code}: ${message}`, options);
+    this.code = code;
+    this.name = "BrowserError";
+  }
+  code;
+};
+function messageOf(error2) {
+  return error2 instanceof Error ? error2.message : String(error2);
+}
+function normalizeBrowserError(error2) {
+  if (error2 instanceof BrowserError) return error2;
+  const message = messageOf(error2);
+  if (/permission|Allow|remote debugging|chrome:\/\/inspect/i.test(message)) return new BrowserError("browser_permission_required", "Chrome \u5C1A\u672A\u5141\u8BB8\u8C03\u8BD5\u8FDE\u63A5\uFF0C\u8BF7\u5728 Chrome \u7684\u6388\u6743\u63D0\u793A\u4E2D\u70B9\u51FB Allow", { cause: error2 });
+  if (/disconnected|closed|ECONN|transport|Not connected|TargetClose/i.test(message)) return new BrowserError("browser_disconnected", "Chrome \u8FDE\u63A5\u5DF2\u65AD\u5F00\uFF0C\u8BF7\u91CD\u65B0\u8FDE\u63A5\u540E\u89C2\u5BDF\u9875\u9762", { cause: error2 });
+  return new BrowserError("driver_unavailable", message || "\u6D4F\u89C8\u5668\u9A71\u52A8\u4E0D\u53EF\u7528", { cause: error2 });
+}
+
+// src/browser/operation-journal.ts
+var OperationJournal = class {
+  records = /* @__PURE__ */ new Map();
+  async run(operationId, input, job) {
+    const signature = canonical(input);
+    const existing = this.records.get(operationId);
+    if (existing) {
+      if (existing.signature !== signature) throw new BrowserError("operation_conflict", "\u76F8\u540C operation_id \u4F7F\u7528\u4E86\u4E0D\u540C\u53C2\u6570\uFF0C\u672A\u91CD\u590D\u6267\u884C");
+      return existing.promise;
+    }
+    let record2;
+    const promise = Promise.resolve().then(() => job(record2)).then((result) => {
+      record2.result = result;
+      return result;
+    });
+    record2 = { signature, promise, changes: [], createdAt: Date.now() };
+    this.records.set(operationId, record2);
+    this.trim();
+    return promise;
+  }
+  get(operationId) {
+    return this.records.get(operationId);
+  }
+  verify(operationIds) {
+    return operationIds.map((operationId) => {
+      const record2 = this.records.get(operationId);
+      if (!record2) return { operation_id: operationId, status: "unknown", message: "\u64CD\u4F5C\u8BB0\u5F55\u5DF2\u8FC7\u671F\u6216\u5C5E\u4E8E\u65E7\u4F1A\u8BDD" };
+      return {
+        operation_id: operationId,
+        status: record2.result?.status ?? "unknown",
+        values: record2.changes.map((change) => ({ ref: change.ref, reversible: change.reversible && !change.undone && !record2.boundary, value_retained: null }))
+      };
+    });
+  }
+  markBoundary() {
+    for (const record2 of this.records.values()) record2.boundary = true;
+  }
+  clear() {
+    this.records.clear();
+  }
+  trim() {
+    if (this.records.size <= 200) return;
+    for (const [id2, record2] of this.records) {
+      if (record2.result) this.records.delete(id2);
+      if (this.records.size <= 200) break;
+    }
+  }
+};
+
+// src/browser/snapshot.ts
+import { createHash, randomUUID } from "node:crypto";
+
+// src/browser/safety-policy.ts
+var normalize = (value) => value.replace(/\s+/g, "").toLocaleLowerCase();
+var matches = (value, patterns) => patterns.some((pattern) => pattern.test(value));
+var finalSubmitPatterns = [
+  /确认.*提交/,
+  /最终.*提交/,
+  /提交.*申请/,
+  /立即.*申请/,
+  /立即.*投递/,
+  /确认.*投递/,
+  /applynow/,
+  /submitapplication/,
+  /completeapplication/
+];
+var finalStagePatterns = [/最终.*核对/, /最终.*确认/, /核对.*申请/, /确认.*申请信息/, /application.*review/i, /review.*application/i];
+var forwardActionPatterns = [/下一步/, /继续/, /完成/, /确认/, /提交/, /申请/, /next/i, /continue/i, /finish/i, /submit/i, /apply/i];
+var declarationPatterns = [/声明/, /承诺/, /本人确认/, /同意.*协议/, /同意.*条款/, /授权/, /电子签名/, /certif/i, /consent/i, /agree.*terms/i];
+var verificationPatterns = [/验证码/, /动态码/, /短信码/, /otp/i, /captcha/i, /人机验证/, /安全验证/];
+var passwordPatterns = [/密码/, /password/i, /passcode/i, /口令/];
+var uploadPatterns = [/上传/, /附件/, /选择文件/, /添加简历/, /upload/i, /attach/i];
+var deletionPatterns = [/删除/, /移除/, /注销/, /清空/, /delete/i, /remove/i];
+function inferEffect(name, declared = "unknown") {
+  const value = normalize(name);
+  if (declared === "final_submit" || matches(value, finalSubmitPatterns)) return "final_submit";
+  if (/保存.*草稿|暂存|savedraft/i.test(value)) return "save_draft";
+  if (/保存|添加.*完成|确认添加|saverecord/i.test(value)) return "save_record";
+  if (/下一步|继续|下一页|next|continue/i.test(value)) return "advance_step";
+  return declared === "unknown" ? "interaction" : declared;
+}
+function evaluateSafety(input) {
+  const name = normalize(`${input.name} ${input.description ?? ""}`);
+  const context = normalize(input.context ?? "");
+  const effect = inferEffect(name, input.effect);
+  if (effect === "final_submit") return { blocked: true, reason: "restricted:final_submit \u6700\u7EC8\u7533\u8BF7\u63D0\u4EA4\u5FC5\u987B\u7531\u7528\u6237\u5B8C\u6210", effect };
+  if (["button", "link"].includes(input.role) && matches(context, finalStagePatterns) && matches(name, forwardActionPatterns)) {
+    return { blocked: true, reason: "restricted:final_submit \u6700\u7EC8\u6838\u5BF9\u9875\u7684\u524D\u8FDB\u64CD\u4F5C\u5FC5\u987B\u7531\u7528\u6237\u5B8C\u6210", effect: "final_submit" };
+  }
+  if (matches(name, verificationPatterns)) return { blocked: true, reason: "restricted:verification \u9A8C\u8BC1\u7801\u548C\u8EAB\u4EFD\u9A8C\u8BC1\u5FC5\u987B\u7531\u7528\u6237\u5B8C\u6210", effect };
+  if (matches(name, passwordPatterns)) return { blocked: true, reason: "restricted:password \u5BC6\u7801\u5B57\u6BB5\u5FC5\u987B\u7531\u7528\u6237\u5B8C\u6210", effect };
+  if (matches(name, uploadPatterns)) return { blocked: true, reason: "restricted:upload \u6587\u4EF6\u4E0A\u4F20\u5FC5\u987B\u7531\u7528\u6237\u5B8C\u6210", effect };
+  if (matches(name, deletionPatterns)) return { blocked: true, reason: "restricted:deletion \u5220\u9664\u64CD\u4F5C\u5FC5\u987B\u7531\u7528\u6237\u5B8C\u6210", effect };
+  if (["checkbox", "radio", "switch"].includes(input.role) && matches(name, declarationPatterns)) {
+    return { blocked: true, reason: "restricted:declaration \u58F0\u660E\u3001\u540C\u610F\u548C\u6388\u6743\u5FC5\u987B\u7531\u7528\u6237\u5B8C\u6210", effect };
+  }
+  return { blocked: false, effect };
+}
+
+// src/browser/snapshot.ts
+var actionableRoles = /* @__PURE__ */ new Set(["textbox", "searchbox", "combobox", "spinbutton", "slider", "checkbox", "radio", "switch", "button", "link", "tab", "option", "treeitem"]);
+var structuralRoles = /* @__PURE__ */ new Set(["RootWebArea", "WebArea", "form", "group", "region", "article", "listitem", "dialog", "alert", "status", "heading", "listbox", "tree"]);
+var scopeRoles = /* @__PURE__ */ new Set(["form", "group", "region", "article", "listitem", "dialog"]);
+function kindFor(node) {
+  switch (node.role) {
+    case "textbox":
+      return node.multiline ? "textarea" : "text";
+    case "searchbox":
+      return "text";
+    case "spinbutton":
+      return "number";
+    case "switch":
+      return "checkbox";
+    case "RootWebArea":
+    case "WebArea":
+      return "document";
+    default:
+      return node.role ?? "unknown";
+  }
+}
+function valueFor(node) {
+  if (typeof node.checked === "boolean") return node.checked;
+  if (typeof node.value === "string") return node.value;
+  if (typeof node.value === "number") return String(node.value);
+  if (node.role === "checkbox" || node.role === "radio" || node.role === "switch") return false;
+  if (node.role === "textbox" || node.role === "searchbox" || node.role === "combobox" || node.role === "spinbutton") return "";
+  return null;
+}
+function tokenFor(node, value) {
+  return createHash("sha256").update(canonical([node.id, node.role, node.name, value, node.disabled, node.expanded, node.selected])).digest("base64url").slice(0, 22);
+}
+function flatten(root, refForUid) {
+  const result = [];
+  const visit = (node, parent) => {
+    const flat = { node, ...parent ? { parent } : {}, children: [], ref: refForUid(node.id) };
+    result.push(flat);
+    flat.children = (node.children ?? []).map((child) => visit(child, flat));
+    return flat;
+  };
+  visit(root);
+  return result;
+}
+function scopeOf(flat) {
+  let current = flat.parent;
+  while (current) {
+    if (scopeRoles.has(current.node.role ?? "")) return current;
+    current = current.parent;
+  }
+  let root = flat;
+  while (root.parent) root = root.parent;
+  return root;
+}
+function nearestOwner(flat, all) {
+  let current = flat.parent;
+  while (current) {
+    if (current.node.role === "combobox" || current.node.role === "listbox") return current;
+    current = current.parent;
+  }
+  const expanded = all.filter((candidate) => candidate.node.role === "combobox" && candidate.node.expanded === true);
+  return expanded.length === 1 ? expanded[0] : void 0;
+}
+function contextOf(flat) {
+  const names = [];
+  let current = flat.parent;
+  while (current) {
+    const name = String(current.node.name ?? "").trim();
+    if (name && !names.includes(name)) names.push(name);
+    current = current.parent;
+  }
+  return names.slice(0, 5).join(" / ");
+}
+function allowedActions(kind, blocked, node) {
+  if (blocked || node.disabled) return [];
+  if (["text", "textarea", "number", "slider"].includes(kind)) return ["set_value", "press_key"];
+  if (kind === "combobox") return ["set_value", "select_option", "click", "press_key"];
+  if (kind === "checkbox" || kind === "radio") return ["set_checked", "click"];
+  if (["button", "link", "tab", "option", "treeitem"].includes(kind)) return ["click"];
+  return [];
+}
+var ReferenceBook = class {
+  refs = /* @__PURE__ */ new Map();
+  sequence = 0;
+  refForUid = (uid) => {
+    const existing = this.refs.get(uid);
+    if (existing) return existing;
+    const ref = `e${++this.sequence}`;
+    this.refs.set(uid, ref);
+    return ref;
+  };
+};
+function normalizeSnapshot(input) {
+  const flat = flatten(input.root, input.references.refForUid);
+  const entries = /* @__PURE__ */ new Map();
+  const uidToRef = /* @__PURE__ */ new Map();
+  for (const item of flat) uidToRef.set(item.node.id, item.ref);
+  for (const item of flat) {
+    const node = item.node;
+    const role = node.role ?? "unknown";
+    const name = String(node.name ?? "").trim();
+    if (!actionableRoles.has(role) && !structuralRoles.has(role) && !name) continue;
+    const kind = kindFor(node);
+    const scope = scopeOf(item);
+    const value = valueFor(node);
+    const token = tokenFor(node, value);
+    const safety = evaluateSafety({ name, role: kind, context: contextOf(item), ...node.description ? { description: node.description } : {} });
+    const owner = role === "option" || role === "treeitem" ? nearestOwner(item, flat) : void 0;
+    const element = {
+      ref: item.ref,
+      uid: node.id,
+      role,
+      kind,
+      name,
+      scope_ref: scope.ref,
+      value,
+      allowed_actions: allowedActions(kind, safety.blocked, node),
+      effect_kind: safety.effect,
+      in_viewport: true
+    };
+    if (actionableRoles.has(role) && !safety.blocked) element.expected_value_token = token;
+    if (safety.reason) element.blocked_reason = safety.reason;
+    if (node.expanded !== void 0) element.expanded = node.expanded;
+    if (node.selected !== void 0) element.selected = node.selected;
+    if (node.required !== void 0) element.required = node.required;
+    if (node.disabled !== void 0) element.disabled = node.disabled;
+    if (node.description) element.description = node.description;
+    if (["text", "textarea", "number", "combobox", "checkbox", "radio", "slider"].includes(kind)) element.validation = { state: "unknown", messages: [] };
+    if (owner) {
+      element.owner_ref = owner.ref;
+      element.option_ref = item.ref;
+    }
+    if (["button", "link", "tab"].includes(kind)) element.evidence_refs = [item.ref, scope.ref];
+    entries.set(item.ref, { node, flat: item, public: element, token, value });
+  }
+  const order = [...entries.keys()];
+  return {
+    id: randomUUID(),
+    pageId: input.pageId,
+    url: input.url,
+    title: input.title,
+    entries,
+    uidToRef,
+    order,
+    signature: createHash("sha256").update(canonical(order.map((ref) => entries.get(ref)?.public))).digest("base64url"),
+    createdAt: Date.now(),
+    exposed: /* @__PURE__ */ new Set()
+  };
+}
+function assertSnapshotEntry(snapshot, ref, expectedToken, requireExposed = true) {
+  const entry = snapshot.entries.get(ref);
+  if (!entry || requireExposed && !snapshot.exposed.has(ref)) throw new BrowserError("stale", "\u5143\u7D20\u6CA1\u6709\u51FA\u73B0\u5728\u6307\u5B9A\u89C2\u5BDF\u8303\u56F4\u4E2D\uFF0C\u8BF7\u91CD\u65B0\u89C2\u5BDF");
+  if (expectedToken !== void 0 && entry.token !== expectedToken) throw new BrowserError("stale", "\u89C2\u5BDF\u540E\u5B57\u6BB5\u5185\u5BB9\u5DF2\u6539\u53D8\uFF0C\u5DF2\u4FDD\u7559\u5F53\u524D\u503C");
+  if (entry.public.blocked_reason) throw new BrowserError("blocked", entry.public.blocked_reason);
+  return entry;
+}
+function descendantsOf(entry, snapshot) {
+  const refs = /* @__PURE__ */ new Set([entry.public.ref]);
+  const walk = (node) => {
+    for (const child of node.children) {
+      refs.add(child.ref);
+      walk(child);
+    }
+  };
+  walk(entry.flat);
+  for (const candidate of snapshot.entries.values()) if (candidate.public.owner_ref === entry.public.ref) refs.add(candidate.public.ref);
+  return refs;
+}
+
+// src/browser/devtools-driver.ts
+var moduleDirectory = dirname(fileURLToPath(import.meta.url));
+var DEFAULT_RUNTIME = [
+  resolve(moduleDirectory, "runtime/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js"),
+  resolve(moduleDirectory, "node_modules/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js"),
+  resolve(moduleDirectory, "../../runtime/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js"),
+  resolve(moduleDirectory, "../../node_modules/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js")
+].find(existsSync) ?? resolve(moduleDirectory, "runtime/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js");
+var sleep = (milliseconds) => new Promise((resolveDelay) => setTimeout(resolveDelay, milliseconds));
+var byteSize = (value) => Buffer.byteLength(JSON.stringify(value), "utf8");
+var DevToolsDriver = class {
+  kind = "devtools";
+  runtimePath;
+  profileMode;
+  dataDir;
+  client = null;
+  transport = null;
+  connecting = null;
+  connected = false;
+  permissionState;
+  seededStartPage = false;
+  sessions = /* @__PURE__ */ new Map();
+  pageSessions = /* @__PURE__ */ new Map();
+  constructor(options) {
+    this.runtimePath = options.runtimePath ?? process.env.RESUME_COMPANION_DEVTOOLS_RUNTIME ?? DEFAULT_RUNTIME;
+    this.profileMode = options.profileMode ?? parseProfileMode(process.env.RESUME_COMPANION_CHROME_PROFILE_MODE);
+    this.dataDir = options.dataDir;
+    this.permissionState = this.profileMode === "auto_connect" ? "unknown" : "not_required";
+  }
+  async status() {
+    const runtimeReady = existsSync(this.runtimePath);
+    return {
+      kind: this.kind,
+      ready: runtimeReady,
+      connected: this.connected,
+      compatible: runtimeReady,
+      profile_mode: this.profileMode,
+      permission_state: this.permissionState,
+      runtime_version: "1.9.0",
+      capabilities: {
+        coreProtocol: "2.1",
+        continuousForms: true,
+        finalSubmit: false,
+        trustedEvents: true,
+        verticalScroll: true,
+        horizontalScroll: false,
+        frames: "accessibility-tree",
+        shadowDOM: "accessibility-tree",
+        activateTab: true
+      },
+      message: !runtimeReady ? "Chrome DevTools MCP \u8FD0\u884C\u5305\u7F3A\u5931\uFF0C\u8BF7\u91CD\u65B0\u6784\u5EFA\u6216\u5B89\u88C5\u5B8C\u6574\u53D1\u884C\u5305" : this.connected ? "Chrome DevTools \u9A71\u52A8\u5DF2\u8FDE\u63A5" : this.profileMode === "auto_connect" ? "\u7F51\u9875\u5DE5\u5177\u9996\u6B21\u8C03\u7528\u65F6\u8FDE\u63A5\u5F53\u524D Chrome\uFF1B\u5982\u51FA\u73B0\u63D0\u793A\uFF0C\u8BF7\u5728 Chrome \u4E2D\u70B9\u51FB Allow" : "\u7F51\u9875\u5DE5\u5177\u9996\u6B21\u8C03\u7528\u65F6\u542F\u52A8 Chrome"
+    };
+  }
+  async listTabs(input, signal) {
+    const pages = await this.pages(signal);
+    const needle = input.url_contains?.toLocaleLowerCase();
+    const matching = pages.filter((page) => /^https?:\/\//.test(page.url) && (!needle || `${page.title}
+${page.url}`.toLocaleLowerCase().includes(needle)));
+    const tabs = matching.slice(0, 100).map((page, index) => ({
+      tabId: page.id,
+      windowId: 0,
+      index,
+      active: Boolean(page.selected),
+      title: page.title,
+      url: page.url
+    }));
+    return {
+      currentWindowOnly: false,
+      requestedCurrentWindowOnly: input.current_window_only !== false,
+      total: matching.length,
+      truncated: matching.length > tabs.length,
+      tabs,
+      notice: input.current_window_only !== false ? "DevTools \u534F\u8BAE\u6309\u5DF2\u6388\u6743\u6D4F\u89C8\u5668\u4E0A\u4E0B\u6587\u5217\u51FA\u6807\u7B7E\u9875\uFF0C\u4E0D\u533A\u5206 Chrome \u7A97\u53E3\u3002" : void 0
+    };
+  }
+  async activateTab(input, signal) {
+    const structured = await this.call("select_page", { pageId: input.tab_id, bringToFront: true }, signal);
+    const page = extractPages(structured).find((item) => item.id === input.tab_id);
+    if (!page || !/^https?:\/\//.test(page.url)) throw new BrowserError("blocked", "\u6307\u5B9A\u6807\u7B7E\u9875\u4E0D\u662F\u666E\u901A HTTP/HTTPS \u7F51\u9875");
+    return {
+      tabId: page.id,
+      windowId: 0,
+      status: "visible",
+      pageState: { visibility: "visible", focused: true },
+      note: "\u9875\u9762\u5DF2\u5207\u5230\u524D\u53F0\uFF0C\u53EF\u4EE5\u7EE7\u7EED\u89C2\u5BDF"
+    };
+  }
+  async observe(input, signal) {
+    const session = await this.sessionForObserve(input, signal);
+    const mode = input.mode ?? "overview";
+    if (mode === "verify") {
+      const snapshot2 = await this.capture(session, signal);
+      const operations = this.verifyOperations(session, input.operation_ids ?? [], snapshot2);
+      return this.formatObservation(session, snapshot2, input, { operations, remaining_operation_ids: [] });
+    }
+    if (input.cursor) {
+      const cursor = session.cursors.get(input.cursor);
+      if (!cursor || cursor.mode !== mode || cursor.scopeRef !== input.scope_ref) throw new BrowserError("stale", "\u5206\u9875\u6761\u4EF6\u53D8\u5316\u6216\u6E38\u6807\u5DF2\u8FC7\u671F");
+      const stored = session.snapshots.get(cursor.snapshotId);
+      if (!stored) throw new BrowserError("stale", "\u5206\u9875\u5FEB\u7167\u5DF2\u8FC7\u671F\uFF0C\u8BF7\u91CD\u65B0\u89C2\u5BDF");
+      const current = await this.capture(session, signal);
+      if (current.signature !== stored.signature) throw new BrowserError("stale", "\u9875\u9762\u5DF2\u53D8\u5316\uFF0C\u8BF7\u91CD\u65B0\u89C2\u5BDF\uFF0C\u4E0D\u62FC\u63A5\u65E7\u5206\u9875");
+      return this.formatObservation(session, stored, input, {}, cursor.offset);
+    }
+    const snapshot = await this.capture(session, signal);
+    return this.formatObservation(session, snapshot, input);
+  }
+  async act(input, signal) {
+    const session = this.requireSession(input.session_id);
+    return session.journal.run(input.operation_id, input, async (record2) => {
+      this.throwIfAborted(signal);
+      const source = session.snapshots.get(input.snapshot_id);
+      if (!source) throw new BrowserError("stale", "\u52A8\u4F5C\u5F15\u7528\u7684\u5FEB\u7167\u5DF2\u8FC7\u671F\uFF0C\u8BF7\u91CD\u65B0\u89C2\u5BDF");
+      const writes = input.action.kind === "set_values" ? input.action.items : isWrite(input.action) ? [input.action] : [];
+      for (const write of writes) this.preflightWrite(source, write);
+      if (input.action.kind === "click" || input.action.kind === "press_key" || input.action.kind === "scroll") {
+        assertSnapshotEntry(source, input.action.ref, "expected_value_token" in input.action ? input.action.expected_value_token : void 0);
+      }
+      const before = await this.capture(session, signal);
+      if (before.url !== source.url) throw new BrowserError("stale", "\u9875\u9762\u5DF2\u7ECF\u5BFC\u822A\uFF0C\u8BF7\u91CD\u65B0\u679A\u4E3E\u6216\u89C2\u5BDF\u6807\u7B7E\u9875");
+      const changes = writes.map((write) => this.changeForWrite(before, source, write));
+      record2.changes.push(...changes);
+      try {
+        const dispatched = await this.dispatchAction(session, source, before, input, signal);
+        const after = await this.capture(session, signal, true);
+        const receipt = this.receiptForAction(input, before, after, record2.changes, dispatched);
+        if (input.action.kind === "click" && ["save_record", "save_draft", "advance_step"].includes(String(receipt.effect_kind))) session.journal.markBoundary();
+        return receipt;
+      } catch (error2) {
+        if (error2 instanceof BrowserError) throw error2;
+        try {
+          const after = await this.capture(session, signal, true);
+          const results = this.readBack(record2.changes, after);
+          return { operation_id: input.operation_id, status: results.some((item) => item.value_retained) ? "unknown" : "failed", dispatched: true, side_effects: "possible", results, message: messageOf(error2) };
+        } catch {
+          return { operation_id: input.operation_id, status: "unknown", dispatched: true, side_effects: "possible", results: [], message: messageOf(error2) };
+        }
+      }
+    });
+  }
+  async wait(input, signal) {
+    const session = this.requireSession(input.session_id);
+    const source = session.snapshots.get(input.snapshot_id);
+    if (!source) throw new BrowserError("stale", "\u7B49\u5F85\u5F15\u7528\u7684\u5FEB\u7167\u5DF2\u8FC7\u671F\uFF0C\u8BF7\u91CD\u65B0\u89C2\u5BDF");
+    if (input.condition.kind !== "structure_changed") assertSnapshotEntry(source, input.condition.ref);
+    const deadline = Date.now() + (input.timeout_ms ?? 5e3);
+    do {
+      this.throwIfAborted(signal);
+      const current = await this.capture(session, signal);
+      const result = evaluateCondition(input.condition, source, current);
+      if (result.ready) return { status: "ready", reason: result.reason, snapshot_id: current.id, condition: input.condition };
+      await sleep(120);
+    } while (Date.now() < deadline);
+    return { status: "unknown", reason: "timeout", snapshot_id: source.id, condition: input.condition };
+  }
+  async undo(input, signal) {
+    const session = this.requireSession(input.session_id);
+    return session.journal.run(input.operation_id, input, async () => {
+      const results = [];
+      for (const operationId of [...input.operation_ids].reverse()) {
+        this.throwIfAborted(signal);
+        const record2 = session.journal.get(operationId);
+        if (!record2) {
+          results.push({ operation_id: operationId, status: "unknown", message: "\u64CD\u4F5C\u8BB0\u5F55\u4E0D\u5B58\u5728\u6216\u5DF2\u7ECF\u8FC7\u671F" });
+          continue;
+        }
+        if (record2.boundary) {
+          results.push({ operation_id: operationId, status: "blocked", message: "\u8BE5\u64CD\u4F5C\u4F4D\u4E8E\u4FDD\u5B58\u6216\u9875\u9762\u8FC1\u79FB\u8FB9\u754C\u4E4B\u524D\uFF0C\u4E0D\u80FD\u5B89\u5168\u64A4\u9500" });
+          continue;
+        }
+        for (const change of [...record2.changes].reverse()) {
+          if (change.undone || !change.reversible) continue;
+          const current = await this.capture(session, signal);
+          const entry = current.entries.get(change.ref);
+          if (!entry || entry.value !== change.written) {
+            results.push({ operation_id: operationId, ref: change.ref, status: "blocked", message: "\u5B57\u6BB5\u5DF2\u88AB\u7528\u6237\u6216\u540E\u7EED\u64CD\u4F5C\u4FEE\u6539\uFF0C\u672A\u8986\u76D6\u5F53\u524D\u503C" });
+            continue;
+          }
+          await this.call("fill", { pageId: session.pageId, uid: entry.node.id, value: scalarToFill(change.before ?? ""), includeSnapshot: false }, signal);
+          change.undone = true;
+          results.push({ operation_id: operationId, ref: change.ref, status: "applied" });
+        }
+      }
+      const applied = results.some((result) => result.status === "applied");
+      return { operation_id: input.operation_id, status: applied ? "applied" : "blocked", results };
+    });
+  }
+  async close() {
+    this.sessions.clear();
+    this.pageSessions.clear();
+    const client = this.client;
+    this.client = null;
+    this.transport = null;
+    this.connecting = null;
+    this.connected = false;
+    await client?.close().catch(() => void 0);
+  }
+  async ensureClient() {
+    if (this.client) return this.client;
+    if (this.connecting) return this.connecting;
+    this.connecting = this.startClient();
+    try {
+      return await this.connecting;
+    } finally {
+      this.connecting = null;
+    }
+  }
+  async startClient() {
+    if (!existsSync(this.runtimePath)) throw new BrowserError("driver_unavailable", `Chrome DevTools MCP \u8FD0\u884C\u5305\u4E0D\u5B58\u5728\uFF1A${this.runtimePath}`);
+    if (this.profileMode === "dedicated") await mkdir(join(this.dataDir, "chrome-profile"), { recursive: true, mode: 448 });
+    const transport2 = new StdioClientTransport({
+      command: process.execPath,
+      args: [this.runtimePath, ...this.upstreamArguments()],
+      cwd: dirname(this.runtimePath),
+      env: {
+        ...stringEnvironment(),
+        CHROME_DEVTOOLS_MCP_NO_USAGE_STATISTICS: "1",
+        CHROME_DEVTOOLS_MCP_NO_UPDATE_CHECKS: "1"
+      },
+      stderr: "pipe"
+    });
+    const client = new Client({ name: "resume-companion-browser-driver", version: "0.5.0" });
+    try {
+      await client.connect(transport2);
+    } catch (error2) {
+      await client.close().catch(() => void 0);
+      throw normalizeBrowserError(error2);
+    }
+    this.transport = transport2;
+    this.client = client;
+    return client;
+  }
+  upstreamArguments() {
+    const args = [
+      "--experimental-structured-content",
+      "--no-usage-statistics",
+      "--no-performance-crux",
+      "--no-javascript-evaluation",
+      "--no-source-maps",
+      "--redact-network-headers",
+      "--no-category-emulation",
+      "--no-category-performance",
+      "--no-category-network",
+      "--no-category-memory",
+      "--no-category-extensions",
+      "--no-category-experimental-third-party",
+      "--no-category-experimental-webmcp",
+      "--no-category-pwa"
+    ];
+    const browserUrl = process.env.RESUME_COMPANION_DEVTOOLS_BROWSER_URL;
+    if (browserUrl) args.push(`--browser-url=${browserUrl}`);
+    else if (this.profileMode === "auto_connect") args.push("--auto-connect", "--channel=stable");
+    else if (this.profileMode === "isolated") args.push("--isolated");
+    else args.push(`--user-data-dir=${join(this.dataDir, "chrome-profile")}`, "--channel=stable");
+    if (process.env.RESUME_COMPANION_DEVTOOLS_HEADLESS === "1") args.push("--headless");
+    const executable = process.env.RESUME_COMPANION_CHROME_EXECUTABLE;
+    if (executable && !browserUrl && this.profileMode !== "auto_connect") args.push(`--executable-path=${executable}`);
+    return args;
+  }
+  async call(name, arguments_, signal) {
+    const allowed = /* @__PURE__ */ new Set(["list_pages", "select_page", "take_snapshot", "fill", "fill_form", "click", "press_key"]);
+    if (name === "new_page" && process.env.RESUME_COMPANION_DEVTOOLS_START_URL) allowed.add("new_page");
+    if (!allowed.has(name)) throw new BrowserError("blocked", `\u5185\u90E8\u6D4F\u89C8\u5668\u5DE5\u5177\u4E0D\u5728\u5141\u8BB8\u5217\u8868\uFF1A${name}`);
+    this.throwIfAborted(signal);
+    const client = await this.ensureClient();
+    let result;
+    try {
+      result = await client.callTool({ name, arguments: arguments_ }, void 0, signal ? { signal } : void 0);
+    } catch (error2) {
+      this.connected = false;
+      throw normalizeBrowserError(error2);
+    }
+    if (result.isError) {
+      const text2 = result.content?.map((item) => item.text ?? "").filter(Boolean).join("\n") || `${name} \u6267\u884C\u5931\u8D25`;
+      if (/permission|Allow|remote debugging|chrome:\/\/inspect/i.test(text2)) this.permissionState = "required";
+      throw normalizeBrowserError(new Error(text2));
+    }
+    this.connected = true;
+    if (this.profileMode === "auto_connect") this.permissionState = "granted";
+    const structured = isRecord(result.structuredContent) ? result.structuredContent : {};
+    if (structured.reconnected === true) this.invalidateSessions();
+    return structured;
+  }
+  async pages(signal) {
+    let structured = await this.call("list_pages", {}, signal);
+    let pages = extractPages(structured);
+    const startUrl = process.env.RESUME_COMPANION_DEVTOOLS_START_URL;
+    if (startUrl && !this.seededStartPage && !pages.some((page) => /^https?:\/\//.test(page.url))) {
+      const url = new URL(startUrl);
+      if (!["http:", "https:"].includes(url.protocol)) throw new BrowserError("invalid_request", "RESUME_COMPANION_DEVTOOLS_START_URL \u53EA\u5141\u8BB8 HTTP/HTTPS");
+      this.seededStartPage = true;
+      structured = await this.call("new_page", { url: url.href, background: false, timeout: 1e4 }, signal);
+      pages = extractPages(structured);
+    }
+    return pages;
+  }
+  async sessionForObserve(input, signal) {
+    if (input.session_id) return this.requireSession(input.session_id);
+    const pageId = input.tab_id;
+    if (!pageId) throw new BrowserError("invalid_request", "observe \u9700\u8981 tab_id \u6216 session_id");
+    const pages = await this.pages(signal);
+    const page = pages.find((item) => item.id === pageId);
+    if (!page || !/^https?:\/\//.test(page.url)) throw new BrowserError("blocked", "\u6307\u5B9A\u6807\u7B7E\u9875\u4E0D\u662F\u666E\u901A HTTP/HTTPS \u7F51\u9875");
+    const existing = this.pageSessions.get(pageId);
+    if (existing && !existing.invalidated && existing.url === page.url) return existing;
+    if (existing) this.dropSession(existing);
+    const session = {
+      id: crypto.randomUUID(),
+      pageId,
+      url: page.url,
+      title: page.title,
+      invalidated: false,
+      references: new ReferenceBook(),
+      snapshots: /* @__PURE__ */ new Map(),
+      cursors: /* @__PURE__ */ new Map(),
+      journal: new OperationJournal()
+    };
+    this.sessions.set(session.id, session);
+    this.pageSessions.set(pageId, session);
+    return session;
+  }
+  requireSession(sessionId) {
+    const session = this.sessions.get(sessionId);
+    if (!session || session.invalidated) throw new BrowserError("stale", "\u9875\u9762\u3001\u5BFC\u822A\u6216\u6D4F\u89C8\u5668\u8FDE\u63A5\u5DF2\u7ECF\u53D8\u5316\uFF0C\u8BF7\u4F7F\u7528 tab_id \u91CD\u65B0\u89C2\u5BDF");
+    return session;
+  }
+  async capture(session, signal, allowNavigation = false) {
+    const pages = await this.pages(signal);
+    const page = pages.find((item) => item.id === session.pageId);
+    if (!page) {
+      this.dropSession(session);
+      throw new BrowserError("stale", "\u6807\u7B7E\u9875\u5DF2\u7ECF\u5173\u95ED\uFF0C\u8BF7\u91CD\u65B0\u679A\u4E3E\u6807\u7B7E\u9875");
+    }
+    const navigated = page.url !== session.url;
+    if (navigated && !allowNavigation) {
+      this.dropSession(session);
+      throw new BrowserError("stale", "\u9875\u9762\u5DF2\u7ECF\u5BFC\u822A\uFF0C\u8BF7\u4F7F\u7528 tab_id \u91CD\u65B0\u89C2\u5BDF");
+    }
+    await this.call("select_page", { pageId: session.pageId, bringToFront: false }, signal);
+    const structured = await this.call("take_snapshot", { pageId: session.pageId, verbose: false }, signal);
+    const root = structured.snapshot;
+    if (!isAxNode(root)) throw new BrowserError("unknown", "Chrome \u6CA1\u6709\u8FD4\u56DE\u53EF\u89E3\u6790\u7684\u65E0\u969C\u788D\u5FEB\u7167");
+    const snapshot = normalizeSnapshot({ root, pageId: session.pageId, url: page.url, title: page.title, references: session.references });
+    session.snapshots.set(snapshot.id, snapshot);
+    while (session.snapshots.size > 20) {
+      const oldest = session.snapshots.keys().next().value;
+      if (!oldest) break;
+      session.snapshots.delete(oldest);
+      for (const [cursor, state] of session.cursors) if (state.snapshotId === oldest) session.cursors.delete(cursor);
+    }
+    if (navigated) session.invalidated = true;
+    else {
+      session.url = page.url;
+      session.title = page.title;
+    }
+    return snapshot;
+  }
+  formatObservation(session, snapshot, input, extra = {}, forcedOffset) {
+    const mode = input.mode ?? "overview";
+    let elements = snapshot.order.map((ref) => snapshot.entries.get(ref)?.public).filter((item) => Boolean(item));
+    if (mode === "detail" && input.scope_ref) {
+      const source = this.findExposedEntry(session, input.scope_ref);
+      const refs = descendantsOf(source, snapshot);
+      elements = elements.filter((element) => refs.has(element.ref));
+    }
+    const old = input.snapshot_id ? session.snapshots.get(input.snapshot_id) : void 0;
+    const removedRefs = mode === "changes" && old ? old.order.filter((ref) => !snapshot.entries.has(ref)).slice(0, 80) : [];
+    if (mode === "changes" && old) elements = elements.filter((element) => canonical(element) !== canonical(old.entries.get(element.ref)?.public));
+    const cursorState = input.cursor ? session.cursors.get(input.cursor) : void 0;
+    const offset = forcedOffset ?? cursorState?.offset ?? 0;
+    const limit = input.limit ?? (mode === "overview" ? 80 : 50);
+    const response = {
+      protocol_version: "2.1",
+      driver: "devtools",
+      session_id: session.id,
+      snapshot_id: snapshot.id,
+      page: { url: snapshot.url, title: snapshot.title, page_id: snapshot.pageId, visibility: "visible", focused: true },
+      mode,
+      scope_ref: input.scope_ref ?? elements[0]?.scope_ref ?? null,
+      elements: [],
+      total: elements.length,
+      offset,
+      removed_refs: removedRefs,
+      requires_full_observation: mode === "changes" && !old,
+      rendered_only: true,
+      notices: [],
+      ...extra
+    };
+    const output = response.elements;
+    while (offset + output.length < elements.length && output.length < limit) {
+      const element = elements[offset + output.length];
+      if (!element) break;
+      output.push(stripInternal(element));
+      if (byteSize(response) > 11200) {
+        output.pop();
+        break;
+      }
+    }
+    for (const element of output) {
+      for (const ref of [element.ref, element.scope_ref, element.owner_ref, ...Array.isArray(element.evidence_refs) ? element.evidence_refs : []]) {
+        if (typeof ref === "string" && snapshot.entries.has(ref)) snapshot.exposed.add(ref);
+      }
+    }
+    const next = offset + output.length;
+    response.truncated = next < elements.length;
+    if (response.truncated) {
+      const cursor = crypto.randomUUID();
+      session.cursors.set(cursor, { snapshotId: snapshot.id, offset: next, mode, ...input.scope_ref ? { scopeRef: input.scope_ref } : {} });
+      response.next_cursor = cursor;
+    }
+    response.response_bytes = byteSize(response);
+    return response;
+  }
+  findExposedEntry(session, ref) {
+    for (const snapshot of [...session.snapshots.values()].reverse()) {
+      if (snapshot.exposed.has(ref)) {
+        const entry = snapshot.entries.get(ref);
+        if (entry) return entry;
+      }
+    }
+    throw new BrowserError("stale", "\u8BF7\u5148\u89C2\u5BDF\u9875\u9762\u540E\u518D\u4F7F\u7528\u8303\u56F4\u5F15\u7528");
+  }
+  preflightWrite(source, write) {
+    const entry = assertSnapshotEntry(source, write.ref, write.expected_value_token);
+    const required2 = write.kind === "set_checked" ? "set_checked" : write.kind === "select_option" ? "select_option" : "set_value";
+    if (!entry.public.allowed_actions.includes(required2)) throw new BrowserError("blocked", `\u5B57\u6BB5\u4E0D\u5141\u8BB8 ${required2} \u64CD\u4F5C`);
+    if (write.kind === "select_option" && write.option_ref) {
+      const option = assertSnapshotEntry(source, write.option_ref);
+      if (option.public.owner_ref && option.public.owner_ref !== write.ref) throw new BrowserError("blocked", "\u5019\u9009\u9879\u4E0D\u5C5E\u4E8E\u76EE\u6807\u5B57\u6BB5");
+    }
+  }
+  changeForWrite(current, source, write) {
+    const old = assertSnapshotEntry(source, write.ref, write.expected_value_token);
+    const entry = assertSnapshotEntry(current, write.ref, write.expected_value_token, false);
+    if (entry.node.id !== old.node.id) throw new BrowserError("stale", "\u5B57\u6BB5\u5F15\u7528\u5DF2\u7ECF\u66FF\u6362\uFF0C\u8BF7\u91CD\u65B0\u89C2\u5BDF");
+    return { ref: write.ref, before: entry.value, written: intendedValue(write, source), reversible: true };
+  }
+  async dispatchAction(session, source, current, input, signal) {
+    const action = input.action;
+    if (action.kind === "set_values") {
+      const elements = action.items.map((write) => this.fillElement(current, source, write));
+      return this.call("fill_form", { pageId: session.pageId, elements, includeSnapshot: false }, signal);
+    }
+    if (isWrite(action)) {
+      const element = this.fillElement(current, source, action);
+      return this.call("fill", { pageId: session.pageId, ...element, includeSnapshot: false }, signal);
+    }
+    const entry = assertSnapshotEntry(current, action.ref, "expected_value_token" in action ? action.expected_value_token : void 0, false);
+    if (action.kind === "click") {
+      if (action.effect_kind === "final_submit" || entry.public.effect_kind === "final_submit") throw new BrowserError("blocked", "\u6700\u7EC8\u7533\u8BF7\u63D0\u4EA4\u5FC5\u987B\u7531\u7528\u6237\u5B8C\u6210");
+      if (!entry.public.allowed_actions.includes("click")) throw new BrowserError("blocked", "\u8BE5\u5143\u7D20\u4E0D\u5141\u8BB8\u70B9\u51FB");
+      return this.call("click", { pageId: session.pageId, uid: entry.node.id, includeSnapshot: false }, signal);
+    }
+    if (action.kind === "press_key") {
+      if (!entry.public.allowed_actions.includes("press_key")) throw new BrowserError("blocked", "\u8BE5\u5143\u7D20\u4E0D\u5141\u8BB8\u952E\u76D8\u64CD\u4F5C");
+      await this.call("click", { pageId: session.pageId, uid: entry.node.id, includeSnapshot: false }, signal);
+      return this.call("press_key", { pageId: session.pageId, key: action.key, includeSnapshot: false }, signal);
+    }
+    if (action.direction === "left" || action.direction === "right") {
+      throw new BrowserError("unsupported_capability", "\u5F53\u524D DevTools \u9A71\u52A8\u4E0D\u63D0\u4F9B\u6A2A\u5411\u6EDA\u52A8\uFF1B\u8BF7\u7531\u7528\u6237\u5904\u7406\u8BE5\u6A2A\u5411\u63A7\u4EF6");
+    }
+    const key = action.direction === "down" ? "PageDown" : "PageUp";
+    const count = Math.max(1, Math.min(4, Math.ceil((action.pixels ?? 600) / 600)));
+    let result = {};
+    for (let index = 0; index < count; index++) {
+      result = await this.call("press_key", { pageId: session.pageId, key, includeSnapshot: false }, signal);
+    }
+    return { ...result, scroll_direction: action.direction, requested_pixels: action.pixels ?? null, key_presses: count };
+  }
+  fillElement(current, source, write) {
+    const entry = assertSnapshotEntry(current, write.ref, write.expected_value_token, false);
+    if (write.kind === "set_value") return { uid: entry.node.id, value: scalarToFill(write.value.literal) };
+    if (write.kind === "set_checked") return { uid: entry.node.id, value: String(write.checked) };
+    if (write.option_ref) {
+      const option = assertSnapshotEntry(source, write.option_ref);
+      return { uid: entry.node.id, value: option.public.name };
+    }
+    return { uid: entry.node.id, value: write.option_value ?? "" };
+  }
+  receiptForAction(input, before, after, changes, dispatched) {
+    const action = input.action;
+    if (isWrite(action) || action.kind === "set_values") {
+      const results = this.readBack(changes, after);
+      const all = results.length > 0 && results.every((item) => item.value_retained === true);
+      return { operation_id: input.operation_id, status: all ? "applied" : "failed", dispatched: true, side_effects: all ? "confirmed" : "possible", results };
+    }
+    if (action.kind === "click") {
+      const navigated = before.url !== after.url || after.signature !== before.signature;
+      const effect = action.effect_kind === "unknown" ? String(assertSnapshotEntry(before, action.ref).public.effect_kind ?? "interaction") : action.effect_kind;
+      return {
+        operation_id: input.operation_id,
+        status: navigated ? "applied" : "dispatched",
+        dispatched: true,
+        effect_kind: effect,
+        persistence: ["save_record", "save_draft"].includes(effect) ? "unconfirmed" : void 0,
+        transition: effect === "advance_step" ? { requires_observe: true, page_changed: before.url !== after.url || before.signature !== after.signature } : void 0,
+        upstream: dispatched.message
+      };
+    }
+    return { operation_id: input.operation_id, status: "applied", dispatched: true, side_effects: "confirmed" };
+  }
+  readBack(changes, after) {
+    return changes.map((change) => {
+      const actual = after.entries.get(change.ref)?.value;
+      return {
+        ref: change.ref,
+        value_retained: actual === change.written,
+        actual_value: actual ?? null,
+        validation: after.entries.get(change.ref)?.public.validation ?? { state: "unknown", messages: [] },
+        reversible: change.reversible && actual === change.written
+      };
+    });
+  }
+  verifyOperations(session, operationIds, snapshot) {
+    return operationIds.map((operationId) => {
+      const record2 = session.journal.get(operationId);
+      if (!record2) return { operation_id: operationId, status: "unknown", message: "\u64CD\u4F5C\u8BB0\u5F55\u5DF2\u8FC7\u671F\u6216\u5C5E\u4E8E\u65E7\u9875\u9762" };
+      return {
+        operation_id: operationId,
+        status: record2.result?.status ?? "unknown",
+        values: record2.changes.map((change) => {
+          const current = snapshot.entries.get(change.ref);
+          return {
+            ref: change.ref,
+            value_retained: current?.value === change.written,
+            validation: current?.public.validation ?? { state: "unknown", messages: [] },
+            reversible: Boolean(current && current.value === change.written && change.reversible && !change.undone && !record2.boundary)
+          };
+        })
+      };
+    });
+  }
+  dropSession(session) {
+    session.invalidated = true;
+    session.journal.clear();
+    this.sessions.delete(session.id);
+    if (this.pageSessions.get(session.pageId) === session) this.pageSessions.delete(session.pageId);
+  }
+  invalidateSessions() {
+    for (const session of this.sessions.values()) session.invalidated = true;
+    this.sessions.clear();
+    this.pageSessions.clear();
+  }
+  throwIfAborted(signal) {
+    if (signal?.aborted) throw new BrowserError("cancelled", "\u8BF7\u6C42\u5DF2\u53D6\u6D88\uFF1B\u8BF7\u5148\u56DE\u8BFB\u5DF2\u6D3E\u53D1\u52A8\u4F5C\u7684\u7ED3\u679C");
+  }
+};
+function parseProfileMode(value) {
+  if (!value) return "auto_connect";
+  if (value === "auto_connect" || value === "dedicated" || value === "isolated") return value;
+  throw new Error("RESUME_COMPANION_CHROME_PROFILE_MODE \u5FC5\u987B\u662F auto_connect\u3001dedicated \u6216 isolated");
+}
+function stringEnvironment() {
+  return Object.fromEntries(Object.entries(process.env).filter((entry) => typeof entry[1] === "string"));
+}
+function isRecord(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function isAxNode(value) {
+  return isRecord(value) && typeof value.id === "string";
+}
+function extractPages(value) {
+  if (!Array.isArray(value.pages)) return [];
+  return value.pages.filter(isRecord).flatMap((page) => {
+    if (typeof page.id !== "number" || typeof page.url !== "string") return [];
+    return [{ id: page.id, url: page.url, title: typeof page.title === "string" ? page.title : "", selected: page.selected === true }];
+  });
+}
+function stripInternal(element) {
+  const { uid: _uid, ...publicElement } = element;
+  return publicElement;
+}
+function isWrite(action) {
+  return action.kind === "set_value" || action.kind === "set_checked" || action.kind === "select_option";
+}
+function intendedValue(write, source) {
+  if (write.kind === "set_value") return write.value.literal;
+  if (write.kind === "set_checked") return write.checked;
+  if (write.option_ref) return assertSnapshotEntry(source, write.option_ref).public.name;
+  return write.option_value ?? "";
+}
+function scalarToFill(value) {
+  return typeof value === "boolean" ? String(value) : value ?? "";
+}
+function evaluateCondition(condition, source, current) {
+  const entry = current.entries.get(condition.ref);
+  switch (condition.kind) {
+    case "visible":
+      return { ready: Boolean(entry), reason: entry ? "visible" : "waiting" };
+    case "hidden":
+      return { ready: !entry, reason: entry ? "waiting" : "hidden" };
+    case "expanded":
+      return { ready: entry?.public.expanded === true, reason: entry?.public.expanded === true ? "expanded" : "waiting" };
+    case "value_equals":
+      return { ready: entry?.value === condition.value, reason: entry?.value === condition.value ? "value_equals" : "waiting" };
+    case "structure_changed":
+      return { ready: current.signature !== source.signature, reason: current.signature !== source.signature ? "structure_changed" : "waiting" };
+    case "options_ready": {
+      const options = [...current.entries.values()].filter((candidate) => candidate.public.owner_ref === condition.ref && candidate.public.option_ref);
+      if (options.length > 0) return { ready: true, reason: "options_ready" };
+      if (entry?.public.expanded === true) return { ready: true, reason: "empty" };
+      return { ready: false, reason: "waiting" };
+    }
+    case "text_present": {
+      if (!entry) return { ready: false, reason: "waiting" };
+      const refs = descendantsOf(entry, current);
+      const found = [...refs].some((ref) => current.entries.get(ref)?.public.name.includes(condition.text));
+      return { ready: found, reason: found ? "text_present" : "waiting" };
+    }
+  }
+}
 
 // node_modules/ws/wrapper.mjs
 var import_stream = __toESM(require_stream(), 1);
@@ -25118,12 +27416,213 @@ var import_sender = __toESM(require_sender(), 1);
 var import_subprotocol = __toESM(require_subprotocol(), 1);
 var import_websocket = __toESM(require_websocket(), 1);
 var import_websocket_server = __toESM(require_websocket_server(), 1);
+var wrapper_default = import_websocket.default;
 
-// profile-store.mjs
-import { randomUUID } from "node:crypto";
-import { chmod, copyFile, mkdir, open, readFile, readdir, rename, stat, writeFile } from "node:fs/promises";
+// src/browser/extension-driver.ts
+var ExtensionDriver = class {
+  kind = "extension";
+  port;
+  extensionId;
+  expectedOrigin;
+  timeoutMs;
+  bridge;
+  extension = null;
+  extensionInfo = null;
+  sequence = 0;
+  pending = /* @__PURE__ */ new Map();
+  constructor(options = {}) {
+    this.port = options.port ?? parsePort(process.env.RESUME_COMPANION_BRIDGE_PORT ?? "43117");
+    this.extensionId = options.extensionId ?? process.env.RESUME_COMPANION_EXTENSION_ID ?? "feifaflnkjdihpbbhnihidjjkeapamnh";
+    this.expectedOrigin = `chrome-extension://${this.extensionId}`;
+    this.timeoutMs = options.timeoutMs ?? 6e4;
+    const verifyClient = (info, done) => {
+      const accepted = info.origin === this.expectedOrigin;
+      done(accepted, accepted ? 101 : 403, "Forbidden");
+    };
+    this.bridge = new import_websocket_server.default({ host: "127.0.0.1", port: this.port, verifyClient });
+    this.bridge.on("connection", (socket) => this.onConnection(socket));
+    this.bridge.on("error", (error2) => console.error(`[resume-companion] extension bridge error: ${error2.message}`));
+  }
+  async status(signal) {
+    const base = {
+      kind: this.kind,
+      ready: true,
+      connected: false,
+      compatible: false,
+      profile_mode: "extension",
+      permission_state: "not_required",
+      bridgePort: this.port,
+      capabilities: { coreProtocol: PROTOCOL_VERSION, trustedEvents: false, frames: "top-only", shadowDOM: false },
+      message: "Chrome \u6269\u5C55\u5C1A\u672A\u8FDE\u63A5\uFF1B\u672C\u5730\u8D44\u6599\u5DE5\u5177\u4ECD\u53EF\u4F7F\u7528"
+    };
+    if (!this.extension || this.extension.readyState !== wrapper_default.OPEN || !this.extensionInfo) return base;
+    try {
+      const remote = await this.call("status", {}, signal);
+      return {
+        ...base,
+        ...remote,
+        kind: this.kind,
+        ready: true,
+        connected: true,
+        compatible: this.extensionInfo.protocolVersion === PROTOCOL_VERSION,
+        protocolVersion: this.extensionInfo.protocolVersion,
+        expectedProtocolVersion: PROTOCOL_VERSION,
+        bridgeEpoch: this.extensionInfo.epoch,
+        profile_mode: "extension",
+        permission_state: "not_required",
+        message: this.extensionInfo.protocolVersion === PROTOCOL_VERSION ? "\u6269\u5C55\u56DE\u9000\u9A71\u52A8\u5DF2\u8FDE\u63A5" : "\u6269\u5C55\u4E0E MCP \u534F\u8BAE\u7248\u672C\u4E0D\u4E00\u81F4"
+      };
+    } catch (error2) {
+      return { ...base, connected: true, message: error2 instanceof Error ? error2.message : "\u6D4F\u89C8\u5668\u72B6\u6001\u8BFB\u53D6\u5931\u8D25" };
+    }
+  }
+  listTabs(input, signal) {
+    return this.call("tabs", input, signal);
+  }
+  activateTab(input, signal) {
+    return this.call("activate_tab", input, signal);
+  }
+  observe(input, signal) {
+    return this.call("observe", input, signal);
+  }
+  act(input, signal) {
+    return this.call("act", input, signal);
+  }
+  wait(input, signal) {
+    return this.call("wait", input, signal);
+  }
+  undo(input, signal) {
+    return this.call("undo_operations", input, signal);
+  }
+  async close() {
+    this.failPending(new BrowserError("browser_disconnected", "MCP \u670D\u52A1\u6B63\u5728\u5173\u95ED"));
+    for (const socket of this.bridge.clients) socket.close(1001, "Server shutdown");
+    await new Promise((resolve4) => this.bridge.close(() => resolve4()));
+  }
+  onConnection(socket) {
+    if (this.extension?.readyState === wrapper_default.OPEN) {
+      socket.close(1013, "Another browser is already connected");
+      return;
+    }
+    this.extension = socket;
+    this.extensionInfo = null;
+    socket.on("message", (raw) => {
+      let message;
+      try {
+        message = JSON.parse(raw.toString());
+      } catch {
+        return;
+      }
+      if (message.type === "hello" && message.extensionId === this.extensionId) {
+        this.extensionInfo = {
+          extensionId: this.extensionId,
+          version: String(message.version ?? "unknown"),
+          epoch: message.epoch ?? null,
+          protocolVersion: message.protocolVersion ?? null
+        };
+        return;
+      }
+      if (message.type === "ping") {
+        socket.send(JSON.stringify({ type: "pong" }));
+        return;
+      }
+      if (typeof message.id !== "string") return;
+      const request = this.pending.get(message.id);
+      if (!request) return;
+      this.pending.delete(message.id);
+      clearTimeout(request.timer);
+      if (message.ok) request.resolve(message.result);
+      else request.reject(new BrowserError("browser_disconnected", typeof message.error === "string" ? message.error : "Chrome \u6269\u5C55\u6267\u884C\u5931\u8D25"));
+    });
+    socket.on("close", () => {
+      if (this.extension !== socket) return;
+      this.extension = null;
+      this.extensionInfo = null;
+      this.failPending(new BrowserError("browser_disconnected", "Chrome \u6269\u5C55\u5DF2\u65AD\u5F00"));
+    });
+  }
+  call(method, params = {}, signal) {
+    if (!this.extension || this.extension.readyState !== wrapper_default.OPEN || !this.extensionInfo) {
+      throw new BrowserError("driver_unavailable", "Chrome \u6269\u5C55\u672A\u8FDE\u63A5\uFF1B\u53EF\u5207\u6362\u5230 DevTools \u9A71\u52A8\u6216\u5F00\u542F\u6269\u5C55\u6865\u63A5");
+    }
+    if (method !== "status" && this.extensionInfo.protocolVersion !== PROTOCOL_VERSION) {
+      throw new BrowserError("unsupported_capability", "\u6D4F\u89C8\u5668\u6269\u5C55\u4E0E MCP \u534F\u8BAE\u7248\u672C\u4E0D\u4E00\u81F4\uFF0C\u8BF7\u91CD\u65B0\u52A0\u8F7D\u914D\u5957\u6269\u5C55");
+    }
+    const socket = this.extension;
+    const id2 = `mcp-${Date.now()}-${++this.sequence}`;
+    return new Promise((resolve4, reject) => {
+      const cleanup = () => signal?.removeEventListener("abort", abort);
+      const timer = setTimeout(() => {
+        this.pending.delete(id2);
+        cleanup();
+        if (this.extension?.readyState === wrapper_default.OPEN) this.extension.send(JSON.stringify({ type: "cancel", id: id2 }));
+        reject(new BrowserError("timeout", "Chrome \u6269\u5C55\u54CD\u5E94\u8D85\u65F6\uFF0C\u8BF7\u4FDD\u6301\u76EE\u6807\u6807\u7B7E\u9875\u6253\u5F00\u540E\u91CD\u8BD5"));
+      }, this.timeoutMs);
+      const abort = () => {
+        if (!this.pending.has(id2)) return;
+        this.pending.delete(id2);
+        clearTimeout(timer);
+        cleanup();
+        if (this.extension?.readyState === wrapper_default.OPEN) this.extension.send(JSON.stringify({ type: "cancel", id: id2 }));
+        reject(new BrowserError("cancelled", "\u8BF7\u6C42\u5DF2\u53D6\u6D88\uFF1B\u8BF7\u5148\u56DE\u8BFB\u5DF2\u6D3E\u53D1\u52A8\u4F5C\u7684\u7ED3\u679C"));
+      };
+      this.pending.set(id2, {
+        resolve: (value) => {
+          cleanup();
+          resolve4(value);
+        },
+        reject: (error2) => {
+          cleanup();
+          reject(error2);
+        },
+        timer
+      });
+      signal?.addEventListener("abort", abort, { once: true });
+      if (signal?.aborted) {
+        abort();
+        return;
+      }
+      socket.send(JSON.stringify({ id: id2, method, params }));
+    });
+  }
+  failPending(error2) {
+    for (const request of this.pending.values()) {
+      clearTimeout(request.timer);
+      request.reject(error2);
+    }
+    this.pending.clear();
+  }
+};
+function parsePort(value) {
+  const port = Number.parseInt(value, 10);
+  if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error("RESUME_COMPANION_BRIDGE_PORT \u4E0D\u662F\u6709\u6548\u7AEF\u53E3");
+  return port;
+}
+
+// src/browser/driver-factory.ts
+function configuredDriver(value = process.env.RESUME_COMPANION_BROWSER_DRIVER) {
+  if (!value) return "devtools";
+  if (value === "devtools" || value === "extension" || value === "auto") return value;
+  throw new Error("RESUME_COMPANION_BROWSER_DRIVER \u5FC5\u987B\u662F devtools\u3001extension \u6216 auto");
+}
+function createBrowserDriver(dataDir) {
+  const selection = configuredDriver();
+  if (selection === "extension") return new ExtensionDriver();
+  const runtimePath = process.env.RESUME_COMPANION_DEVTOOLS_RUNTIME ?? [
+    resolve2(import.meta.dirname, "runtime/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js"),
+    resolve2(import.meta.dirname, "node_modules/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js"),
+    resolve2(import.meta.dirname, "../../runtime/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js"),
+    resolve2(import.meta.dirname, "../../node_modules/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js")
+  ].find(existsSync2) ?? resolve2(import.meta.dirname, "runtime/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js");
+  if (selection === "auto" && !existsSync2(runtimePath)) return new ExtensionDriver();
+  return new DevToolsDriver({ dataDir, runtimePath });
+}
+
+// src/profile-store.ts
+import { randomUUID as randomUUID2 } from "node:crypto";
+import { chmod, copyFile, mkdir as mkdir2, open, readFile, readdir, rename, stat, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
-import { dirname, isAbsolute, join, resolve } from "node:path";
+import { dirname as dirname2, isAbsolute, join as join2, resolve as resolve3 } from "node:path";
 var ID_PATTERN = /^[A-Za-z0-9_-]{1,100}$/;
 var id = external_exports.string().regex(ID_PATTERN);
 var optionalId = id.optional();
@@ -25200,31 +27699,32 @@ var ProfileSchema = external_exports.object({
   certificates: external_exports.array(certificate).max(50),
   custom_answers: external_exports.array(answer).max(50),
   supplemental_fields: external_exports.array(supplemental).max(100)
-}).strict().superRefine((profile, ctx) => {
+}).strict().superRefine((profile, context) => {
   const ids = /* @__PURE__ */ new Set([profile.profile_id]);
   const fieldKeys = /* @__PURE__ */ new Set();
-  for (const [section, records] of Object.entries({
+  const collections = Object.entries({
     education: profile.education,
     experience: profile.experience,
     projects: profile.projects,
     certificates: profile.certificates,
     custom_answers: profile.custom_answers,
     supplemental_fields: profile.supplemental_fields
-  })) {
+  });
+  for (const [section, records] of collections) {
     records.forEach((record2, index) => {
-      const recordIds = [record2.id, ..."facts" in record2 ? record2.facts.map((item) => item.id) : []];
+      const recordIds = [record2.id, ...record2.facts?.map((item) => item.id) ?? []];
       for (const value of recordIds) {
-        if (ids.has(value)) ctx.addIssue({ code: external_exports.ZodIssueCode.custom, path: [section, index, "id"], message: "\u6761\u76EE\u548C\u4E8B\u5B9E ID \u4E0D\u80FD\u91CD\u590D" });
+        if (ids.has(value)) context.addIssue({ code: external_exports.ZodIssueCode.custom, path: [section, index, "id"], message: "\u6761\u76EE\u548C\u4E8B\u5B9E ID \u4E0D\u80FD\u91CD\u590D" });
         ids.add(value);
       }
-      if ("start_month" in record2 && record2.start_month && record2.end_month && record2.start_month > record2.end_month) {
-        ctx.addIssue({ code: external_exports.ZodIssueCode.custom, path: [section, index, "end_month"], message: "\u7ED3\u675F\u65F6\u95F4\u4E0D\u80FD\u65E9\u4E8E\u5F00\u59CB\u65F6\u95F4" });
+      if (record2.start_month && record2.end_month && record2.start_month > record2.end_month) {
+        context.addIssue({ code: external_exports.ZodIssueCode.custom, path: [section, index, "end_month"], message: "\u7ED3\u675F\u65F6\u95F4\u4E0D\u80FD\u65E9\u4E8E\u5F00\u59CB\u65F6\u95F4" });
       }
     });
   }
   profile.supplemental_fields.forEach((field, index) => {
     if (!field.field_key.trim() || !field.label.trim() || fieldKeys.has(field.field_key)) {
-      ctx.addIssue({ code: external_exports.ZodIssueCode.custom, path: ["supplemental_fields", index], message: "\u8865\u5145\u8D44\u6599\u9700\u8981\u540D\u79F0\u548C\u552F\u4E00\u5B57\u6BB5\u6807\u8BC6" });
+      context.addIssue({ code: external_exports.ZodIssueCode.custom, path: ["supplemental_fields", index], message: "\u8865\u5145\u8D44\u6599\u9700\u8981\u540D\u79F0\u548C\u552F\u4E00\u5B57\u6BB5\u6807\u8BC6" });
     }
     fieldKeys.add(field.field_key);
   });
@@ -25245,11 +27745,11 @@ var ProfileSaveSchema = external_exports.object({
   name: external_exports.string().trim().min(1).max(80).optional(),
   changes: ProfileChangesSchema,
   source_markdown: external_exports.string().max(262144).nullable().optional()
-}).strict().superRefine((input, ctx) => {
-  if (input.profile_id && input.expected_revision === void 0) ctx.addIssue({ code: external_exports.ZodIssueCode.custom, path: ["expected_revision"], message: "\u66F4\u65B0\u8D44\u6599\u5FC5\u987B\u63D0\u4F9B expected_revision" });
-  if (!input.profile_id && input.expected_revision !== void 0) ctx.addIssue({ code: external_exports.ZodIssueCode.custom, path: ["expected_revision"], message: "\u521B\u5EFA\u8D44\u6599\u65F6\u4E0D\u80FD\u63D0\u4F9B expected_revision" });
-  if (!input.profile_id && !input.name) ctx.addIssue({ code: external_exports.ZodIssueCode.custom, path: ["name"], message: "\u521B\u5EFA\u8D44\u6599\u5FC5\u987B\u63D0\u4F9B\u540D\u79F0" });
-  if (input.profile_id && input.name === void 0 && input.source_markdown === void 0 && Object.keys(input.changes).length === 0) ctx.addIssue({ code: external_exports.ZodIssueCode.custom, path: ["changes"], message: "\u6CA1\u6709\u8981\u4FDD\u5B58\u7684\u66F4\u6539" });
+}).strict().superRefine((input, context) => {
+  if (input.profile_id && input.expected_revision === void 0) context.addIssue({ code: external_exports.ZodIssueCode.custom, path: ["expected_revision"], message: "\u66F4\u65B0\u8D44\u6599\u5FC5\u987B\u63D0\u4F9B expected_revision" });
+  if (!input.profile_id && input.expected_revision !== void 0) context.addIssue({ code: external_exports.ZodIssueCode.custom, path: ["expected_revision"], message: "\u521B\u5EFA\u8D44\u6599\u65F6\u4E0D\u80FD\u63D0\u4F9B expected_revision" });
+  if (!input.profile_id && !input.name) context.addIssue({ code: external_exports.ZodIssueCode.custom, path: ["name"], message: "\u521B\u5EFA\u8D44\u6599\u5FC5\u987B\u63D0\u4F9B\u540D\u79F0" });
+  if (input.profile_id && input.name === void 0 && input.source_markdown === void 0 && Object.keys(input.changes).length === 0) context.addIssue({ code: external_exports.ZodIssueCode.custom, path: ["changes"], message: "\u6CA1\u6709\u8981\u4FDD\u5B58\u7684\u66F4\u6539" });
 });
 var StoredProfileSchema = external_exports.object({
   format: external_exports.literal("resume-companion-profile"),
@@ -25288,31 +27788,29 @@ var emptyProfile = (profileId, revision) => ({
   custom_answers: [],
   supplemental_fields: []
 });
-var ensureId = (value) => value ?? randomUUID();
-var normalizeFacts = (records) => records.map((record2) => ({ ...record2, id: ensureId(record2.id), facts: record2.facts.map((item) => ({ ...item, id: ensureId(item.id) })) }));
-var normalizeRecords = (records) => records.map((record2) => ({ ...record2, id: ensureId(record2.id) }));
+var ensureId = (value) => value ?? randomUUID2();
 function mergeChanges(profile, changes, revision) {
   const next = structuredClone(profile);
-  if (changes.basic) next.basic = { ...next.basic, ...changes.basic };
-  if (changes.education) next.education = normalizeRecords(changes.education);
-  if (changes.experience) next.experience = normalizeFacts(changes.experience);
-  if (changes.projects) next.projects = normalizeFacts(changes.projects);
+  if (changes.basic) next.basic = basic.parse({ ...next.basic, ...changes.basic });
+  if (changes.education) next.education = external_exports.array(education).parse(changes.education.map((record2) => ({ ...record2, id: ensureId(record2.id) })));
+  if (changes.experience) next.experience = external_exports.array(experience).parse(changes.experience.map((record2) => ({ ...record2, id: ensureId(record2.id), facts: record2.facts.map((item) => ({ ...item, id: ensureId(item.id) })) })));
+  if (changes.projects) next.projects = external_exports.array(project).parse(changes.projects.map((record2) => ({ ...record2, id: ensureId(record2.id), facts: record2.facts.map((item) => ({ ...item, id: ensureId(item.id) })) })));
   if (changes.skills) next.skills = changes.skills;
-  if (changes.certificates) next.certificates = normalizeRecords(changes.certificates);
-  if (changes.custom_answers) next.custom_answers = normalizeRecords(changes.custom_answers);
-  if (changes.supplemental_fields) next.supplemental_fields = normalizeRecords(changes.supplemental_fields);
+  if (changes.certificates) next.certificates = external_exports.array(certificate).parse(changes.certificates.map((record2) => ({ ...record2, id: ensureId(record2.id) })));
+  if (changes.custom_answers) next.custom_answers = external_exports.array(answer).parse(changes.custom_answers.map((record2) => ({ ...record2, id: ensureId(record2.id) })));
+  if (changes.supplemental_fields) next.supplemental_fields = external_exports.array(supplemental).parse(changes.supplemental_fields.map((record2) => ({ ...record2, id: ensureId(record2.id) })));
   next.revision = revision;
   return ProfileSchema.parse(next);
 }
 function defaultDataDir() {
-  if (process.platform === "darwin") return join(homedir(), "Library", "Application Support", "Resume Companion");
-  if (process.platform === "win32") return join(process.env.APPDATA || join(homedir(), "AppData", "Roaming"), "Resume Companion");
-  return join(process.env.XDG_DATA_HOME || join(homedir(), ".local", "share"), "resume-companion");
+  if (process.platform === "darwin") return join2(homedir(), "Library", "Application Support", "Resume Companion");
+  if (process.platform === "win32") return join2(process.env.APPDATA || join2(homedir(), "AppData", "Roaming"), "Resume Companion");
+  return join2(process.env.XDG_DATA_HOME || join2(homedir(), ".local", "share"), "resume-companion");
 }
 function resolveDataDir(value = process.env.RESUME_COMPANION_DATA_DIR) {
   if (!value) return defaultDataDir();
-  const expanded = value === "~" ? homedir() : value.startsWith("~/") ? join(homedir(), value.slice(2)) : value;
-  return isAbsolute(expanded) ? resolve(expanded) : resolve(process.cwd(), expanded);
+  const expanded = value === "~" ? homedir() : value.startsWith("~/") ? join2(homedir(), value.slice(2)) : value;
+  return isAbsolute(expanded) ? resolve3(expanded) : resolve3(process.cwd(), expanded);
 }
 async function syncDirectory(path) {
   try {
@@ -25323,22 +27821,24 @@ async function syncDirectory(path) {
   }
 }
 async function atomicWrite(path, value) {
-  await mkdir(dirname(path), { recursive: true, mode: 448 });
-  const temporary = `${path}.tmp-${process.pid}-${randomUUID()}`;
+  await mkdir2(dirname2(path), { recursive: true, mode: 448 });
+  const temporary = `${path}.tmp-${process.pid}-${randomUUID2()}`;
   await writeFile(temporary, `${JSON.stringify(value, null, 2)}
 `, { encoding: "utf8", mode: 384 });
   const handle = await open(temporary, "r");
   await handle.sync();
   await handle.close();
   await rename(temporary, path);
-  await chmod(path, 384).catch(() => {
-  });
-  await syncDirectory(dirname(path));
+  await chmod(path, 384).catch(() => void 0);
+  await syncDirectory(dirname2(path));
 }
 function storageError(code, message) {
   const error2 = new Error(`${code}: ${message}`);
   error2.code = code;
   return error2;
+}
+function fileErrorCode(error2) {
+  return typeof error2 === "object" && error2 !== null && "code" in error2 && typeof error2.code === "string" ? error2.code : void 0;
 }
 function entryFor(stored) {
   return {
@@ -25364,33 +27864,49 @@ var displayEnums = {
 function scalarSource(profile, sourceRef) {
   if (sourceRef === "skills") return profile.skills.join("\u3001");
   const parts = sourceRef.split("/");
-  if (parts[0] === "basic" && parts.length === 2 && Object.hasOwn(profile.basic, parts[1])) return profile.basic[parts[1]];
-  if (parts[0] === "custom_answers" && parts.length === 2) return profile.custom_answers.find((item) => item.id === parts[1])?.text;
-  if (parts[0] === "supplemental_fields" && parts.length === 2) return profile.supplemental_fields.find((item) => item.id === parts[1])?.value;
-  if (["education", "experience", "projects", "certificates"].includes(parts[0]) && parts.length === 3) {
-    const record2 = profile[parts[0]].find((item) => item.id === parts[1]);
-    if (!record2 || !Object.hasOwn(record2, parts[2])) return void 0;
-    const raw = record2[parts[2]];
-    if (Array.isArray(raw)) return raw.map((item) => typeof item === "string" ? item : item.text).join(parts[2] === "facts" ? "\n" : "\u3001");
+  const section = parts[0];
+  const recordId = parts[1];
+  const field = parts[2];
+  if (section === "basic" && parts.length === 2 && recordId && Object.hasOwn(profile.basic, recordId)) {
+    return profile.basic[recordId];
+  }
+  if (section === "custom_answers" && parts.length === 2) return profile.custom_answers.find((item) => item.id === recordId)?.text;
+  if (section === "supplemental_fields" && parts.length === 2) return profile.supplemental_fields.find((item) => item.id === recordId)?.value;
+  if (section && recordId && field && ["education", "experience", "projects", "certificates"].includes(section) && parts.length === 3) {
+    const collection = profile[section];
+    const record2 = collection?.find((item) => item.id === recordId);
+    if (!record2 || !Object.hasOwn(record2, field)) return void 0;
+    const raw = record2[field];
+    if (Array.isArray(raw)) return raw.map((item) => typeof item === "string" ? item : typeof item === "object" && item !== null && "text" in item ? String(item.text) : "").join(field === "facts" ? "\n" : "\u3001");
     if (typeof raw === "string") return displayEnums[raw] ?? raw;
     if (typeof raw === "boolean" || raw === null) return raw;
   }
   return void 0;
 }
+var ReadViewSchema = external_exports.object({
+  profile_id: id,
+  section: external_exports.enum(["basic", "education", "experience", "projects", "skills", "certificates", "custom_answers", "supplemental_fields"]).optional(),
+  record_id: id.optional(),
+  source_refs: external_exports.array(external_exports.string().min(1).max(240)).max(100).optional(),
+  offset: external_exports.number().int().nonnegative().optional(),
+  limit: external_exports.number().int().min(1).max(50).optional(),
+  include_source_markdown: external_exports.boolean().optional()
+}).strict();
 var ProfileStore = class {
+  dataDir;
+  indexPath;
+  queue = Promise.resolve();
   constructor(dataDir = resolveDataDir()) {
     this.dataDir = dataDir;
-    this.indexPath = join(dataDir, "index.json");
-    this.queue = Promise.resolve();
+    this.indexPath = join2(dataDir, "index.json");
   }
   async initialize() {
-    for (const folder of ["", "profiles", "history", "backups"]) await mkdir(join(this.dataDir, folder), { recursive: true, mode: 448 });
-    await chmod(this.dataDir, 448).catch(() => {
-    });
+    for (const folder of ["", "profiles", "history", "backups"]) await mkdir2(join2(this.dataDir, folder), { recursive: true, mode: 448 });
+    await chmod(this.dataDir, 448).catch(() => void 0);
     try {
       await stat(this.indexPath);
     } catch (error2) {
-      if (error2?.code !== "ENOENT") throw error2;
+      if (fileErrorCode(error2) !== "ENOENT") throw error2;
       await atomicWrite(this.indexPath, { format: "resume-companion-index", storage_version: 1, profiles: [] });
     }
     await this.readIndex();
@@ -25406,19 +27922,25 @@ var ProfileStore = class {
     try {
       raw = await readFile(this.indexPath, "utf8");
     } catch (error2) {
-      throw storageError("storage_unavailable", `\u65E0\u6CD5\u8BFB\u53D6\u8D44\u6599\u7D22\u5F15\uFF1A${error2.message}`);
+      throw storageError("storage_unavailable", `\u65E0\u6CD5\u8BFB\u53D6\u8D44\u6599\u7D22\u5F15\uFF1A${error2 instanceof Error ? error2.message : String(error2)}`);
     }
-    const parsed = IndexSchema.safeParse(JSON.parse(raw));
+    let value;
+    try {
+      value = JSON.parse(raw);
+    } catch {
+      throw storageError("storage_corrupt", "\u8D44\u6599\u7D22\u5F15\u4E0D\u662F\u6709\u6548 JSON\uFF0C\u8BF7\u4ECE backups \u6062\u590D\u6216\u91CD\u5EFA\u7D22\u5F15");
+    }
+    const parsed = IndexSchema.safeParse(value);
     if (!parsed.success) throw storageError("storage_corrupt", "\u8D44\u6599\u7D22\u5F15\u683C\u5F0F\u635F\u574F\uFF0C\u8BF7\u4ECE backups \u6062\u590D\u6216\u91CD\u5EFA\u7D22\u5F15");
     return parsed.data;
   }
   async readStored(profileId) {
     let raw;
     try {
-      raw = await readFile(join(this.dataDir, "profiles", `${profileId}.json`), "utf8");
+      raw = await readFile(join2(this.dataDir, "profiles", `${profileId}.json`), "utf8");
     } catch (error2) {
-      if (error2?.code === "ENOENT") throw storageError("profile_missing", "\u6307\u5B9A\u7684\u672C\u5730\u8D44\u6599\u4E0D\u5B58\u5728");
-      throw storageError("storage_unavailable", `\u65E0\u6CD5\u8BFB\u53D6\u8D44\u6599\uFF1A${error2.message}`);
+      if (fileErrorCode(error2) === "ENOENT") throw storageError("profile_missing", "\u6307\u5B9A\u7684\u672C\u5730\u8D44\u6599\u4E0D\u5B58\u5728");
+      throw storageError("storage_unavailable", `\u65E0\u6CD5\u8BFB\u53D6\u8D44\u6599\uFF1A${error2 instanceof Error ? error2.message : String(error2)}`);
     }
     let value;
     try {
@@ -25455,7 +27977,7 @@ var ProfileStore = class {
         previous = await this.readStored(input.profile_id);
         if (previous.revision !== input.expected_revision) throw storageError("profile_changed", `\u8D44\u6599\u5DF2\u7ECF\u66F4\u65B0\uFF1B\u5F53\u524D\u4FEE\u8BA2\u4E3A ${previous.revision}\uFF0C\u8BF7\u91CD\u65B0\u8BFB\u53D6\u540E\u518D\u4FDD\u5B58`);
         const name = input.name ?? previous.name;
-        if (index.profiles.some((item) => item.id !== previous.id && item.name === name)) throw storageError("name_conflict", "\u5DF2\u6709\u540C\u540D\u8D44\u6599\uFF0C\u8BF7\u6362\u4E00\u4E2A\u540D\u79F0");
+        if (index.profiles.some((item) => item.id !== previous?.id && item.name === name)) throw storageError("name_conflict", "\u5DF2\u6709\u540C\u540D\u8D44\u6599\uFF0C\u8BF7\u6362\u4E00\u4E2A\u540D\u79F0");
         const revision = previous.revision + 1;
         stored = StoredProfileSchema.parse({
           ...previous,
@@ -25468,7 +27990,7 @@ var ProfileStore = class {
       } else {
         if (index.profiles.length >= 100) throw storageError("profile_limit", "\u672C\u5730\u8D44\u6599\u5DF2\u8FBE\u5230 100 \u4EFD\u4E0A\u9650");
         if (index.profiles.some((item) => item.name === input.name)) throw storageError("name_conflict", "\u5DF2\u6709\u540C\u540D\u8D44\u6599\uFF0C\u8BF7\u6362\u4E00\u4E2A\u540D\u79F0");
-        const profileId = randomUUID();
+        const profileId = randomUUID2();
         stored = StoredProfileSchema.parse({
           format: "resume-companion-profile",
           storage_version: 1,
@@ -25484,11 +28006,11 @@ var ProfileStore = class {
       const serialized = JSON.stringify(stored);
       if (Buffer.byteLength(serialized, "utf8") > 1048576) throw storageError("profile_too_large", "\u5355\u4EFD\u8D44\u6599\u8D85\u8FC7 1 MiB\uFF0C\u8BF7\u7CBE\u7B80\u540E\u518D\u4FDD\u5B58");
       if (previous) {
-        const historyDir = join(this.dataDir, "history", previous.id);
-        await mkdir(historyDir, { recursive: true, mode: 448 });
-        await atomicWrite(join(historyDir, `${previous.revision}.json`), previous);
+        const historyDir = join2(this.dataDir, "history", previous.id);
+        await mkdir2(historyDir, { recursive: true, mode: 448 });
+        await atomicWrite(join2(historyDir, `${previous.revision}.json`), previous);
       }
-      await atomicWrite(join(this.dataDir, "profiles", `${stored.id}.json`), stored);
+      await atomicWrite(join2(this.dataDir, "profiles", `${stored.id}.json`), stored);
       const nextEntries = index.profiles.filter((item) => item.id !== stored.id);
       nextEntries.push(entryFor(stored));
       await atomicWrite(this.indexPath, { ...index, profiles: nextEntries });
@@ -25496,15 +28018,7 @@ var ProfileStore = class {
     });
   }
   async readView(raw) {
-    const params = external_exports.object({
-      profile_id: id,
-      section: external_exports.enum(["basic", "education", "experience", "projects", "skills", "certificates", "custom_answers", "supplemental_fields"]).optional(),
-      record_id: id.optional(),
-      source_refs: external_exports.array(external_exports.string().min(1).max(240)).max(100).optional(),
-      offset: external_exports.number().int().nonnegative().optional(),
-      limit: external_exports.number().int().min(1).max(50).optional(),
-      include_source_markdown: external_exports.boolean().optional()
-    }).strict().parse(raw);
+    const params = ReadViewSchema.parse(raw);
     if (params.record_id && !params.section) throw storageError("invalid_request", "record_id \u9700\u8981\u540C\u65F6\u6307\u5B9A section");
     const stored = await this.get(params.profile_id);
     const base = { profile_id: stored.id, name: stored.name, profile_revision: stored.revision, updated_at: stored.updated_at };
@@ -25517,7 +28031,8 @@ var ProfileStore = class {
       return { ...base, directory: false, entries };
     }
     if (!params.section) {
-      const sections = Object.fromEntries(["basic", "education", "experience", "projects", "skills", "certificates", "custom_answers", "supplemental_fields"].map((section) => {
+      const sectionNames = ["basic", "education", "experience", "projects", "skills", "certificates", "custom_answers", "supplemental_fields"];
+      const sections = Object.fromEntries(sectionNames.map((section) => {
         const value2 = stored.profile[section];
         return [section, { records: Array.isArray(value2) ? value2.length : 1 }];
       }));
@@ -25526,7 +28041,7 @@ var ProfileStore = class {
     let value = stored.profile[params.section];
     if (params.record_id) {
       if (!Array.isArray(value)) throw storageError("invalid_request", "\u8FD9\u4E2A\u680F\u76EE\u4E0D\u652F\u6301 record_id");
-      value = value.find((item) => item.id === params.record_id);
+      value = value.find((item) => typeof item === "object" && item !== null && "id" in item && item.id === params.record_id);
       if (!value) throw storageError("record_missing", "\u6307\u5B9A\u8BB0\u5F55\u4E0D\u5B58\u5728");
     }
     if (!Array.isArray(value) || params.record_id) return { ...base, directory: false, section: params.section, data: value, source_markdown: params.include_source_markdown ? stored.source_markdown : void 0 };
@@ -25549,8 +28064,8 @@ var ProfileStore = class {
   }
   async rebuildIndex() {
     return this.exclusive(async () => {
-      await mkdir(join(this.dataDir, "profiles"), { recursive: true, mode: 448 });
-      const names = (await readdir(join(this.dataDir, "profiles"))).filter((name) => name.endsWith(".json"));
+      await mkdir2(join2(this.dataDir, "profiles"), { recursive: true, mode: 448 });
+      const names = (await readdir(join2(this.dataDir, "profiles"))).filter((name) => name.endsWith(".json"));
       const profiles = [];
       for (const name of names) {
         const profileId = name.slice(0, -5);
@@ -25562,7 +28077,7 @@ var ProfileStore = class {
       }
       let backup;
       try {
-        backup = join(this.dataDir, "backups", `index-${(/* @__PURE__ */ new Date()).toISOString().replaceAll(":", "-")}.json`);
+        backup = join2(this.dataDir, "backups", `index-${(/* @__PURE__ */ new Date()).toISOString().replaceAll(":", "-")}.json`);
         await copyFile(this.indexPath, backup);
       } catch {
         backup = null;
@@ -25574,186 +28089,10 @@ var ProfileStore = class {
   }
 };
 
-// protocol.ts
-var PROTOCOL_VERSION = "2.0";
-function createAutomationSchemas(z, options = {}) {
-  const id2 = z.string().min(1).max(160), scalar = z.union([z.string().max(1e4), z.boolean()]);
-  const object3 = (shape) => z.object(shape).strict();
-  const source = object3({ profile_id: id2, profile_revision: z.number().int().positive(), source_ref: z.string().min(1).max(240) });
-  const literal2 = object3({ literal: scalar });
-  const value = options.allowSources === false ? literal2 : z.union([literal2, object3({ source })]);
-  const effect = z.enum(["interaction", "save_record", "save_draft", "advance_step", "final_submit", "unknown"]);
-  const writes = [
-    object3({ kind: z.literal("set_value"), ref: id2, expected_value_token: id2, value }),
-    object3({ kind: z.literal("set_checked"), ref: id2, expected_value_token: id2, checked: z.boolean() }),
-    object3({ kind: z.literal("select_option"), ref: id2, expected_value_token: id2, option_ref: id2.optional(), option_value: z.string().max(1e4).optional() })
-  ];
-  const write = z.discriminatedUnion("kind", writes);
-  const action = z.discriminatedUnion("kind", [
-    ...writes,
-    object3({ kind: z.literal("set_values"), items: z.array(write).min(1).max(20) }),
-    object3({ kind: z.literal("click"), ref: id2, effect_kind: effect, evidence_refs: z.array(id2).max(10).optional(), expected_value_token: id2.optional() }),
-    object3({ kind: z.literal("press_key"), ref: id2, key: z.enum(["Escape", "ArrowDown", "ArrowUp", "ArrowLeft", "ArrowRight", "Home", "End"]), expected_value_token: id2.optional() }),
-    object3({ kind: z.literal("scroll"), ref: id2, direction: z.enum(["up", "down", "left", "right"]), pixels: z.number().int().min(1).max(2e3).optional() })
-  ]);
-  const condition = z.union([
-    object3({ kind: z.enum(["visible", "hidden", "expanded", "options_ready", "structure_changed"]), ref: id2 }),
-    object3({ kind: z.literal("value_equals"), ref: id2, value: scalar }),
-    object3({ kind: z.literal("text_present"), ref: id2, text: z.string().min(1).max(1e3) })
-  ]);
-  return {
-    observe: object3({ tab_id: z.number().int().positive().optional(), session_id: id2.optional(), mode: z.enum(["overview", "detail", "changes", "verify"]).optional(), scope_ref: id2.optional(), snapshot_id: id2.optional(), operation_ids: z.array(id2).min(1).max(20).optional(), limit: z.number().int().min(1).max(80).optional(), cursor: id2.optional() }).superRefine((v, ctx) => {
-      if (Number(v.tab_id !== void 0) + Number(v.session_id !== void 0) !== 1) ctx.addIssue({ code: "custom", message: "observe requires exactly one tab_id or session_id" });
-      if (v.mode === "verify" && !v.operation_ids?.length) ctx.addIssue({ code: "custom", path: ["operation_ids"], message: "verify requires operation_ids" });
-    }),
-    act: object3({ session_id: id2, snapshot_id: id2, operation_id: id2, action, wait_for: condition.optional(), timeout_ms: z.number().int().min(100).max(12e3).optional() }).superRefine((v, ctx) => {
-      for (const item of v.action.kind === "set_values" ? v.action.items : [v.action]) if (item.kind === "select_option" && Number(item.option_ref !== void 0) + Number(item.option_value !== void 0) !== 1) ctx.addIssue({ code: "custom", path: ["action"], message: "select_option requires exactly one option_ref or option_value" });
-    }),
-    wait: object3({ session_id: id2, snapshot_id: id2, condition, timeout_ms: z.number().int().min(100).max(1e4).optional() }),
-    undo_operations: object3({ session_id: id2, operation_ids: z.array(id2).min(1).max(20), operation_id: id2 })
-  };
-}
-
-// server.mjs
-var port = Number.parseInt(process.env.RESUME_COMPANION_BRIDGE_PORT ?? "43117", 10);
-if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error("RESUME_COMPANION_BRIDGE_PORT \u4E0D\u662F\u6709\u6548\u7AEF\u53E3");
-var extensionId = process.env.RESUME_COMPANION_EXTENSION_ID ?? "feifaflnkjdihpbbhnihidjjkeapamnh";
-var expectedOrigin = `chrome-extension://${extensionId}`;
-var timeoutMs = 6e4;
+// src/index.ts
 var store = new ProfileStore();
 await store.initialize();
-var extension2 = null;
-var extensionInfo = null;
-var sequence = 0;
-var pending = /* @__PURE__ */ new Map();
-function failPending(message) {
-  for (const { reject, timer } of pending.values()) {
-    clearTimeout(timer);
-    reject(new Error(message));
-  }
-  pending.clear();
-}
-var bridge = new import_websocket_server.default({
-  host: "127.0.0.1",
-  port,
-  verifyClient(info, done) {
-    const accepted = info.origin === expectedOrigin;
-    done(accepted, accepted ? 101 : 403, "Forbidden");
-  }
-});
-bridge.on("connection", (socket) => {
-  if (extension2 && extension2.readyState === extension2.OPEN) {
-    socket.close(1013, "Another browser is already connected");
-    return;
-  }
-  extension2 = socket;
-  extensionInfo = null;
-  socket.on("message", (raw) => {
-    let message;
-    try {
-      message = JSON.parse(raw.toString());
-    } catch {
-      return;
-    }
-    if (message?.type === "hello" && message.extensionId === extensionId) {
-      extensionInfo = {
-        extensionId,
-        version: String(message.version ?? "unknown"),
-        epoch: message.epoch ?? null,
-        protocolVersion: message.protocolVersion ?? null
-      };
-      return;
-    }
-    if (message?.type === "ping") {
-      socket.send(JSON.stringify({ type: "pong" }));
-      return;
-    }
-    if (typeof message?.id !== "string") return;
-    const request = pending.get(message.id);
-    if (!request) return;
-    pending.delete(message.id);
-    clearTimeout(request.timer);
-    if (message.ok) request.resolve(message.result);
-    else request.reject(new Error(typeof message.error === "string" ? message.error : "Chrome \u6269\u5C55\u6267\u884C\u5931\u8D25"));
-  });
-  socket.on("close", () => {
-    if (extension2 === socket) {
-      extension2 = null;
-      extensionInfo = null;
-      failPending("bridge_error: \u7B80\u5386\u968F\u884C Chrome \u6269\u5C55\u5DF2\u65AD\u5F00");
-    }
-  });
-});
-bridge.on("error", (error2) => {
-  console.error(`[resume-companion] bridge error: ${error2.message}`);
-});
-function callExtension(method, params = {}, signal) {
-  if (!extension2 || extension2.readyState !== extension2.OPEN || !extensionInfo) {
-    throw new Error("bridge_error: Chrome \u6269\u5C55\u672A\u8FDE\u63A5\uFF1B\u8D44\u6599\u5DE5\u5177\u4ECD\u53EF\u4F7F\u7528\uFF0C\u7F51\u9875\u5DE5\u5177\u9700\u8981\u5148\u5F00\u542F\u6D4F\u89C8\u5668\u6865\u63A5");
-  }
-  if (method !== "status" && extensionInfo.protocolVersion !== PROTOCOL_VERSION) {
-    throw new Error("unsupported_capability: \u6D4F\u89C8\u5668\u6269\u5C55\u4E0E MCP \u534F\u8BAE\u7248\u672C\u4E0D\u4E00\u81F4\uFF0C\u8BF7\u91CD\u65B0\u52A0\u8F7D\u914D\u5957\u6269\u5C55");
-  }
-  const id2 = `mcp-${Date.now()}-${++sequence}`;
-  return new Promise((resolve2, reject) => {
-    const timer = setTimeout(() => {
-      pending.delete(id2);
-      if (extension2?.readyState === extension2.OPEN) extension2.send(JSON.stringify({ type: "cancel", id: id2 }));
-      reject(new Error("bridge_error: Chrome \u6269\u5C55\u54CD\u5E94\u8D85\u65F6\uFF0C\u8BF7\u4FDD\u6301\u76EE\u6807\u6807\u7B7E\u9875\u6253\u5F00\u540E\u91CD\u8BD5"));
-    }, timeoutMs);
-    const abort = () => {
-      if (!pending.has(id2)) return;
-      pending.delete(id2);
-      clearTimeout(timer);
-      if (extension2?.readyState === extension2.OPEN) extension2.send(JSON.stringify({ type: "cancel", id: id2 }));
-      reject(new Error("cancelled: \u8BF7\u6C42\u5DF2\u53D6\u6D88\uFF1B\u8BF7\u56DE\u8BFB\u5DF2\u6D3E\u53D1\u52A8\u4F5C\u7684\u7ED3\u679C"));
-    };
-    const cleanup = (fn) => (value) => {
-      signal?.removeEventListener("abort", abort);
-      fn(value);
-    };
-    pending.set(id2, { resolve: cleanup(resolve2), reject: cleanup(reject), timer });
-    signal?.addEventListener("abort", abort, { once: true });
-    if (signal?.aborted) {
-      abort();
-      return;
-    }
-    extension2.send(JSON.stringify({ id: id2, method, params }));
-  });
-}
-function toolResult(data) {
-  return {
-    content: [{ type: "text", text: JSON.stringify(data) }],
-    structuredContent: data
-  };
-}
-function errorResult(error2, sideEffects = "none") {
-  const message = error2 instanceof Error ? error2.message : "\u5DE5\u5177\u6267\u884C\u5931\u8D25";
-  const prefixed = /^([a-z_]+):/.exec(message)?.[1];
-  const code = prefixed ?? (error2?.name === "ZodError" ? "invalid_request" : "internal_error");
-  const data = {
-    status: code === "stale" ? "stale" : "blocked",
-    error: { code, message },
-    side_effects: sideEffects
-  };
-  return { isError: true, ...toolResult(data) };
-}
-async function runLocal(job) {
-  try {
-    return toolResult(await job());
-  } catch (error2) {
-    return errorResult(error2);
-  }
-}
-async function runBrowser(method, params, extra) {
-  try {
-    return toolResult(await callExtension(method, params, extra?.signal));
-  } catch (error2) {
-    const message = error2 instanceof Error ? error2.message : "";
-    const possible = ["act", "undo_operations"].includes(method) && message.startsWith("bridge_error:");
-    return errorResult(error2, possible ? "possible" : "none");
-  }
-}
+var driver = createBrowserDriver(store.dataDir);
 var clientSchemas = createAutomationSchemas(external_exports);
 var wireSchemas = createAutomationSchemas(external_exports, { allowSources: false });
 var profileReadSchema = external_exports.object({
@@ -25765,6 +28104,35 @@ var profileReadSchema = external_exports.object({
   limit: external_exports.number().int().min(1).max(50).optional(),
   include_source_markdown: external_exports.boolean().optional()
 }).strict();
+function toolResult(data) {
+  const structuredContent = isRecord2(data) ? data : { value: data };
+  return { content: [{ type: "text", text: JSON.stringify(data) }], structuredContent };
+}
+function errorResult(error2, sideEffects = "none") {
+  const message = messageOf(error2) || "\u5DE5\u5177\u6267\u884C\u5931\u8D25";
+  const prefixed = /^([a-z_]+):/.exec(message)?.[1];
+  const name = typeof error2 === "object" && error2 !== null && "name" in error2 ? error2.name : void 0;
+  const code = prefixed ?? (name === "ZodError" ? "invalid_request" : "internal_error");
+  const status = code === "stale" ? "stale" : code === "unknown" || code === "timeout" ? "unknown" : "blocked";
+  const data = { status, error: { code, message }, side_effects: sideEffects };
+  return { isError: true, ...toolResult(data) };
+}
+async function runLocal(job) {
+  try {
+    return toolResult(await job());
+  } catch (error2) {
+    return errorResult(error2);
+  }
+}
+async function runBrowser(method, params, signal) {
+  try {
+    const fn = driver[method];
+    return toolResult(await fn.call(driver, params, signal));
+  } catch (error2) {
+    const possible = (method === "act" || method === "undo") && /disconnected|timeout|cancelled|unknown/i.test(messageOf(error2));
+    return errorResult(error2, possible ? "possible" : "none");
+  }
+}
 async function resolveActionSources(params) {
   const resolved = structuredClone(params);
   const resolveValue = async (value) => {
@@ -25775,34 +28143,13 @@ async function resolveActionSources(params) {
   for (const write of writes) if (write.kind === "set_value") write.value = await resolveValue(write.value);
   return wireSchemas.act.parse(resolved);
 }
-var server = new McpServer({ name: "resume-companion", version: "0.4.1" });
+var server = new McpServer({ name: "resume-companion", version: "0.5.0" });
 server.registerTool("resume_status", {
   title: "\u68C0\u67E5\u7B80\u5386\u968F\u884C\u72B6\u6001",
-  description: "\u8FD4\u56DE MCP \u672C\u5730\u8D44\u6599\u5E93\u4F4D\u7F6E\u3001\u7B80\u5386\u76EE\u5F55\u4EE5\u53CA Chrome \u6267\u884C\u6865\u72B6\u6001\u3002Chrome \u672A\u8FDE\u63A5\u65F6\u8D44\u6599\u7BA1\u7406\u4ECD\u53EF\u6B63\u5E38\u4F7F\u7528\u3002",
+  description: "\u8FD4\u56DE MCP \u672C\u5730\u8D44\u6599\u5E93\u3001\u5DF2\u4FDD\u5B58\u7B80\u5386\u548C\u6D4F\u89C8\u5668\u9A71\u52A8\u72B6\u6001\u3002\u6D4F\u89C8\u5668\u5C1A\u672A\u8FDE\u63A5\u65F6\u8D44\u6599\u7BA1\u7406\u4ECD\u53EF\u6B63\u5E38\u4F7F\u7528\uFF1B\u7F51\u9875\u5DE5\u5177\u9996\u6B21\u8C03\u7528\u4F1A\u6309\u9700\u8FDE\u63A5 Chrome\u3002",
   annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true }
-}, async (_input, extra) => runLocal(async () => {
-  const [storage, profiles] = await Promise.all([store.status(), store.list()]);
-  let browser = {
-    connected: false,
-    compatible: false,
-    bridgePort: port,
-    message: "Chrome \u6269\u5C55\u5C1A\u672A\u8FDE\u63A5\uFF1B\u4EC5\u7F51\u9875\u5DE5\u5177\u4E0D\u53EF\u7528"
-  };
-  if (extension2 && extension2.readyState === extension2.OPEN && extensionInfo) {
-    try {
-      const status = await callExtension("status", {}, extra?.signal);
-      browser = {
-        ...status,
-        connected: true,
-        compatible: extensionInfo.protocolVersion === PROTOCOL_VERSION,
-        protocolVersion: extensionInfo.protocolVersion,
-        expectedProtocolVersion: PROTOCOL_VERSION,
-        bridgeEpoch: extensionInfo.epoch
-      };
-    } catch (error2) {
-      browser = { ...browser, connected: true, message: error2 instanceof Error ? error2.message : "\u6D4F\u89C8\u5668\u72B6\u6001\u8BFB\u53D6\u5931\u8D25" };
-    }
-  }
+}, async () => runLocal(async () => {
+  const [storage, profiles, browser] = await Promise.all([store.status(), store.list(), driver.status()]);
   return { storage, profiles, browser };
 }));
 server.registerTool("resume_profile_list", {
@@ -25812,47 +28159,48 @@ server.registerTool("resume_profile_list", {
 }, async () => runLocal(async () => ({ profiles: await store.list() })));
 server.registerTool("resume_profile_read", {
   title: "\u8BFB\u53D6\u672C\u5730\u7B80\u5386\u8D44\u6599",
-  description: "\u8BFB\u53D6\u6307\u5B9A\u8D44\u6599\u7684\u76EE\u5F55\u3001\u67D0\u4E2A\u680F\u76EE\u3001\u8BB0\u5F55\u6216\u6765\u6E90\u5F15\u7528\u3002\u7701\u7565 section \u65F6\u53EA\u8FD4\u56DE\u76EE\u5F55\uFF1B\u672A\u77E5\u503C\u4FDD\u6301 null\u3002include_source_markdown \u53EA\u5728\u786E\u6709\u9700\u8981\u65F6\u4F7F\u7528\u3002",
+  description: "\u8BFB\u53D6\u6307\u5B9A\u8D44\u6599\u7684\u76EE\u5F55\u3001\u67D0\u4E2A\u680F\u76EE\u3001\u8BB0\u5F55\u6216\u6765\u6E90\u5F15\u7528\u3002\u7701\u7565 section \u65F6\u53EA\u8FD4\u56DE\u76EE\u5F55\uFF1B\u672A\u77E5\u503C\u4FDD\u6301 null\u3002",
   inputSchema: profileReadSchema,
   annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true }
 }, async (input) => runLocal(() => store.readView(profileReadSchema.parse(input))));
 server.registerTool("resume_profile_save", {
   title: "\u521B\u5EFA\u6216\u66F4\u65B0\u672C\u5730\u7B80\u5386\u8D44\u6599",
-  description: "\u521B\u5EFA\u65F6\u7701\u7565 profile_id \u5E76\u63D0\u4F9B\u540D\u79F0\uFF1B\u66F4\u65B0\u65F6\u63D0\u4F9B profile_id \u548C\u6700\u8FD1\u8BFB\u53D6\u7684 expected_revision\u3002changes \u53EA\u66FF\u6362\u660E\u786E\u63D0\u4F9B\u7684\u9876\u5C42\u680F\u76EE\uFF0Cbasic \u53EA\u5408\u5E76\u63D0\u4F9B\u7684\u5B57\u6BB5\u3002\u6570\u7EC4\u8BB0\u5F55\u7684 id \u53EF\u7701\u7565\uFF0C\u7531\u8D44\u6599\u5E93\u751F\u6210\u3002\u672A\u77E5\u4E8B\u5B9E\u4F7F\u7528 null\uFF0C\u4E0D\u5F97\u8865\u9020\u3002",
+  description: "\u521B\u5EFA\u65F6\u7701\u7565 profile_id \u5E76\u63D0\u4F9B\u540D\u79F0\uFF1B\u66F4\u65B0\u65F6\u63D0\u4F9B profile_id \u548C\u6700\u8FD1\u8BFB\u53D6\u7684 expected_revision\u3002\u53EA\u4FDD\u5B58\u7528\u6237\u660E\u786E\u63D0\u4F9B\u7684\u4E8B\u5B9E\uFF0C\u672A\u77E5\u503C\u4F7F\u7528 null\u3002",
   inputSchema: ProfileSaveSchema,
   annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false }
 }, async (input) => runLocal(() => store.save(ProfileSaveSchema.parse(input))));
 server.registerTool("resume_list_tabs", {
   title: "\u5217\u51FA\u53EF\u5904\u7406\u7684 Chrome \u6807\u7B7E\u9875",
-  description: "\u5217\u51FA\u666E\u901A HTTP/HTTPS \u6807\u7B7E\u9875\uFF0C\u53EA\u8FD4\u56DE\u6807\u9898\u3001\u7F51\u5740\u548C\u6807\u7B7E\u9875 ID\uFF0C\u4E0D\u8BFB\u53D6\u9875\u9762\u6B63\u6587\u3002",
+  description: "\u6309\u9700\u8FDE\u63A5\u5F53\u524D Chrome\uFF0C\u5217\u51FA\u666E\u901A HTTP/HTTPS \u6807\u7B7E\u9875\uFF0C\u53EA\u8FD4\u56DE\u6807\u9898\u3001\u7F51\u5740\u548C\u6807\u7B7E\u9875 ID\uFF0C\u4E0D\u8BFB\u53D6\u9875\u9762\u6B63\u6587\u3002",
   inputSchema: {
-    current_window_only: external_exports.boolean().optional().describe("\u9ED8\u8BA4 true\uFF1Bfalse \u65F6\u679A\u4E3E\u6240\u6709 Chrome \u7A97\u53E3"),
+    current_window_only: external_exports.boolean().optional().describe("\u6269\u5C55\u9A71\u52A8\u9ED8\u8BA4 true\uFF1BDevTools \u9A71\u52A8\u679A\u4E3E\u5DF2\u6388\u6743\u6D4F\u89C8\u5668\u4E0A\u4E0B\u6587"),
     url_contains: external_exports.string().trim().max(500).optional().describe("\u53EF\u9009\u7684\u6807\u9898\u6216\u7F51\u5740\u8FC7\u6EE4\u6587\u672C")
   },
   annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true }
-}, async (input, extra) => runBrowser("tabs", input, extra));
+}, async (input, extra) => runBrowser("listTabs", input, extra?.signal));
 server.registerTool("resume_activate_tab", {
   title: "\u6FC0\u6D3B\u62DB\u8058\u6807\u7B7E\u9875",
   description: "\u628A\u6307\u5B9A\u666E\u901A\u7F51\u9875\u6807\u7B7E\u9875\u5207\u5230\u524D\u53F0\u5E76\u56DE\u8BFB\u53EF\u89C1\u72B6\u6001\uFF1B\u4E0D\u4F1A\u5237\u65B0\u3001\u5BFC\u822A\u6216\u586B\u5199\u3002",
   inputSchema: { tab_id: external_exports.number().int().positive() },
   annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true }
-}, async (input, extra) => runBrowser("activate_tab", input, extra));
-for (const [method, title, description, readOnly] of [
-  ["observe", "\u89C2\u5BDF\u62DB\u8058\u9875\u9762", "\u9996\u6B21\u63D0\u4F9B tab_id\uFF0C\u540E\u7EED\u4F7F\u7528 session_id\u3002\u8BFB\u53D6\u7ED3\u6784\u5316\u9875\u9762\u5143\u7D20\u3001\u5C40\u90E8\u5019\u9009\u3001\u53D8\u5316\u6216\u64CD\u4F5C\u6838\u5BF9\uFF1B\u4E0D\u63A5\u53D7\u9009\u62E9\u5668\u548C\u811A\u672C\u3002", true],
-  ["act", "\u6267\u884C\u4E00\u4E2A\u8868\u5355\u57FA\u7840\u52A8\u4F5C", "\u4F7F\u7528\u89C2\u5BDF\u8FD4\u56DE\u7684\u5F15\u7528\u3001\u5FEB\u7167\u548C\u503C token \u6267\u884C\u8F93\u5165\u3001\u9009\u62E9\u3001\u70B9\u51FB\u3001\u6EDA\u52A8\u6216\u6709\u9650\u6279\u91CF\u5199\u5165\u3002\u503C\u53EF\u4F7F\u7528\u672C\u5730\u8D44\u6599\u6765\u6E90\uFF0CMCP \u4F1A\u5728\u53D1\u9001\u6D4F\u89C8\u5668\u524D\u89E3\u6790\u4E3A\u5B57\u9762\u503C\u3002\u6700\u7EC8\u63D0\u4EA4\u3001\u58F0\u660E\u3001\u9A8C\u8BC1\u3001\u5220\u9664\u548C\u4E0A\u4F20\u7531\u7528\u6237\u5904\u7406\u3002", false],
-  ["wait", "\u7B49\u5F85\u9875\u9762\u7684\u6709\u9650\u6761\u4EF6", "\u7B49\u5F85\u5F15\u7528\u53EF\u89C1\u3001\u6D88\u5931\u3001\u5C55\u5F00\u3001\u5019\u9009\u5C31\u7EEA\u3001\u503C\u3001\u6587\u672C\u6216\u7ED3\u6784\u53D8\u5316\uFF1B\u8D85\u65F6\u8FD4\u56DE unknown\u3002", true],
-  ["undo_operations", "\u6761\u4EF6\u64A4\u9500\u5B57\u6BB5\u64CD\u4F5C", "\u53EA\u5728\u7F51\u9875\u5F53\u524D\u503C\u4ECD\u7B49\u4E8E\u5DE5\u5177\u5199\u5165\u503C\u65F6\u9006\u5E8F\u6062\u590D\u5B57\u6BB5\uFF1B\u4E0D\u80FD\u56DE\u6EDA\u7F51\u7AD9\u5DF2\u7ECF\u4FDD\u5B58\u7684\u6570\u636E\u3002", false]
-]) {
-  server.registerTool(`resume_${method}`, {
+}, async (input, extra) => runBrowser("activateTab", input, extra?.signal));
+var browserTools = [
+  ["observe", "observe", "\u89C2\u5BDF\u62DB\u8058\u9875\u9762", "\u9996\u6B21\u63D0\u4F9B tab_id\uFF0C\u540E\u7EED\u4F7F\u7528 session_id\u3002\u8FD4\u56DE\u57FA\u4E8E\u65E0\u969C\u788D\u6811\u7684\u7ED3\u6784\u5316\u5143\u7D20\u3001\u5019\u9009\u3001\u53D8\u5316\u6216\u64CD\u4F5C\u6838\u5BF9\uFF1B\u4E0D\u63A5\u53D7\u9009\u62E9\u5668\u548C\u811A\u672C\u3002", true],
+  ["act", "act", "\u6267\u884C\u4E00\u4E2A\u8868\u5355\u57FA\u7840\u52A8\u4F5C", "\u4F7F\u7528\u89C2\u5BDF\u8FD4\u56DE\u7684\u5F15\u7528\u3001\u5FEB\u7167\u548C\u503C token \u6267\u884C\u8F93\u5165\u3001\u9009\u62E9\u3001\u70B9\u51FB\u6216\u6709\u9650\u6279\u91CF\u5199\u5165\u3002\u6700\u7EC8\u63D0\u4EA4\u3001\u58F0\u660E\u3001\u9A8C\u8BC1\u3001\u5220\u9664\u548C\u4E0A\u4F20\u7531\u7528\u6237\u5904\u7406\u3002", false],
+  ["wait", "wait", "\u7B49\u5F85\u9875\u9762\u7684\u6709\u9650\u6761\u4EF6", "\u7B49\u5F85\u5F15\u7528\u53EF\u89C1\u3001\u6D88\u5931\u3001\u5C55\u5F00\u3001\u5019\u9009\u5C31\u7EEA\u3001\u503C\u3001\u6587\u672C\u6216\u7ED3\u6784\u53D8\u5316\uFF1B\u8D85\u65F6\u8FD4\u56DE unknown\u3002", true],
+  ["undo_operations", "undo", "\u6761\u4EF6\u64A4\u9500\u5B57\u6BB5\u64CD\u4F5C", "\u53EA\u5728\u7F51\u9875\u5F53\u524D\u503C\u4ECD\u7B49\u4E8E\u5DE5\u5177\u5199\u5165\u503C\u65F6\u9006\u5E8F\u6062\u590D\u5B57\u6BB5\uFF1B\u4E0D\u80FD\u56DE\u6EDA\u7F51\u7AD9\u5DF2\u7ECF\u4FDD\u5B58\u7684\u6570\u636E\u3002", false]
+];
+for (const [toolMethod, driverMethod, title, description, readOnly] of browserTools) {
+  server.registerTool(`resume_${toolMethod}`, {
     title,
     description,
-    inputSchema: clientSchemas[method],
-    annotations: { readOnlyHint: readOnly, destructiveHint: method === "undo_operations", idempotentHint: method !== "act" }
+    inputSchema: clientSchemas[toolMethod],
+    annotations: { readOnlyHint: readOnly, destructiveHint: toolMethod === "undo_operations", idempotentHint: toolMethod !== "act" }
   }, async (input, extra) => {
     try {
-      const parsed = clientSchemas[method].parse(input);
-      const params = method === "act" ? await resolveActionSources(parsed) : parsed;
-      return runBrowser(method, params, extra);
+      const parsed = clientSchemas[toolMethod].parse(input);
+      const params = toolMethod === "act" ? await resolveActionSources(parsed) : parsed;
+      return runBrowser(driverMethod, params, extra?.signal);
     } catch (error2) {
       return errorResult(error2);
     }
@@ -25860,10 +28208,11 @@ for (const [method, title, description, readOnly] of [
 }
 var transport = new StdioServerTransport();
 await server.connect(transport);
+var closing = false;
 async function shutdown() {
-  failPending("bridge_error: MCP \u670D\u52A1\u6B63\u5728\u5173\u95ED");
-  for (const socket of bridge.clients) socket.close(1001, "Server shutdown");
-  await new Promise((resolve2) => bridge.close(resolve2));
+  if (closing) return;
+  closing = true;
+  await driver.close();
   await server.close();
 }
 process.once("SIGINT", () => {
@@ -25872,3 +28221,6 @@ process.once("SIGINT", () => {
 process.once("SIGTERM", () => {
   void shutdown().finally(() => process.exit(0));
 });
+function isRecord2(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}

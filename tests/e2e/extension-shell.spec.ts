@@ -41,8 +41,8 @@ async function options(): Promise<Page> {
 
 test('极简扩展只配置本地桥接，不创建浏览器简历数据', async () => {
   const page = await options();
-  await expect(page.getByRole('heading', { name: '浏览器执行桥' })).toBeVisible();
-  await expect(page.getByText('简历和补充资料现在由本地 MCP 管理')).toBeVisible();
+  await expect(page.getByRole('heading', { name: '兼容扩展回退' })).toBeVisible();
+  await expect(page.getByText('新版 MCP 默认直接连接当前 Chrome')).toBeVisible();
   await page.getByLabel('开启本地桥接').check();
   await expect(page.getByText('等待本地 MCP 启动')).toBeVisible();
   const stored = await worker.evaluate(async () => chrome.storage.local.get(null));

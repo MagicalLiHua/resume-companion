@@ -66,10 +66,11 @@ try {
       ...Object.fromEntries(Object.entries(process.env).filter(([, value]) => typeof value === 'string')),
       RESUME_COMPANION_BRIDGE_PORT: String(port),
       RESUME_COMPANION_DATA_DIR: dataDir,
+      RESUME_COMPANION_BROWSER_DRIVER: 'extension',
     },
     stderr: 'pipe',
   });
-  client = new Client({ name: 'resume-companion-live-test', version: '0.4.1' });
+  client = new Client({ name: 'resume-companion-live-test', version: '0.5.0' });
   await client.connect(transport);
 
   let status = await call('resume_status');
