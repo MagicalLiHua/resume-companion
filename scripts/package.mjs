@@ -25,7 +25,16 @@ await cp(resolve(root, 'README.md'), resolve(staging, 'README.md'));
 await cp(resolve(root, 'CONTRIBUTING.md'), resolve(staging, 'CONTRIBUTING.md'));
 await cp(resolve(root, 'CHANGELOG.md'), resolve(staging, 'CHANGELOG.md'));
 await mkdir(resolve(staging, 'docs'), { recursive: true });
-for (const file of ['getting-started.md', 'mcp-tools.md', 'development.md', 'validation.md', 'migration-evaluation.md']) {
+for (const file of [
+  'getting-started.md',
+  'mcp-tools.md',
+  'development.md',
+  'validation.md',
+  'migration-evaluation.md',
+  'control-experience-plan.md',
+  'control-experience-sources.md',
+  'control-recipe-evaluation.md',
+]) {
   await cp(resolve(root, 'docs', file), resolve(staging, 'docs', file));
 }
 execFileSync(process.execPath, [resolve(pluginRoot, 'scripts/package-smoke-test.mjs'), resolve(packagedPlugin, 'server.mjs')], { cwd: root, stdio: 'inherit' });

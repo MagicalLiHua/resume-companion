@@ -1,5 +1,5 @@
 import { spawn, type ChildProcess } from 'node:child_process';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, readlink, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
@@ -66,6 +66,21 @@ async function ensureLab(): Promise<void> {
     await new Promise(resolveDelay => setTimeout(resolveDelay, 50));
   }
   throw new Error('Local form fixture did not start');
+}
+
+async function currentChromePid(): Promise<number> {
+  const singletonLock = join(profileDir, 'SingletonLock');
+  for (let attempt = 0; attempt < 80; attempt++) {
+    try {
+      const target = await readlink(singletonLock);
+      const pid = /-(\d+)$/.exec(target)?.[1];
+      if (pid) return Number(pid);
+    } catch {
+      // Chrome may still be starting or replacing its singleton lock.
+    }
+    await new Promise(resolveDelay => setTimeout(resolveDelay, 50));
+  }
+  throw new Error('Chrome singleton process id did not become available');
 }
 
 async function connectChromeMcp(): Promise<Client> {
@@ -351,6 +366,183 @@ describe('Stage 0 direct Chrome DevTools MCP validation', () => {
     expect(report).toContain('"finalSubmitCount":0');
     expect(report).toContain('"agreementUnchecked":true');
   }, 35_000);
+
+  test('runs the complex control recipes through five deterministic passes', async () => {
+    const durations: number[] = [];
+    const callCounts: number[] = [];
+    for (let iteration = 0; iteration < 5; iteration++) {
+      const startedAt = performance.now();
+      let calls = 0;
+      const recipeCall = async (name: string, arguments_: Record<string, unknown> = {}): Promise<string> => {
+        calls += 1;
+        return textOf(await call(name, arguments_));
+      };
+
+      const opened = await call('new_page', {
+        url: `http://127.0.0.1:4174/complex-controls-lab.html?iteration=${iteration}&run=${Date.now()}`,
+      });
+      calls += 1;
+      pageId = selectedPageId(textOf(opened));
+      let snapshot = await recipeCall('take_snapshot', { pageId });
+
+      snapshot = await recipeCall('fill_form', {
+        pageId,
+        includeSnapshot: true,
+        elements: [
+          { uid: uidFor(snapshot, '测试姓名'), value: '配方测试同学' },
+          { uid: uidFor(snapshot, '最高学历'), value: '硕士研究生' },
+          { uid: uidFor(snapshot, '校招'), value: 'true' },
+          { uid: uidFor(snapshot, '接受远程办公'), value: 'true' },
+          { uid: uidFor(snapshot, '个人简介'), value: '本地复杂控件回归资料。' },
+          { uid: uidFor(snapshot, '项目亮点'), value: '把动态表单拆成可验证的交互配方。' },
+          { uid: uidFor(snapshot, '经历开始月份'), value: '2024-09' },
+          { uid: uidFor(snapshot, '经历结束月份'), value: '2026-06' },
+        ],
+      });
+      snapshot = await recipeCall('fill_form', {
+        pageId,
+        includeSnapshot: true,
+        elements: [{ uid: uidFor(snapshot, '工作至今'), value: 'true' }],
+      });
+
+      snapshot = await recipeCall('click', { pageId, uid: uidFor(snapshot, '请选择工作地点'), includeSnapshot: true });
+      snapshot = await recipeCall('click', { pageId, uid: uidFor(snapshot, '上海'), includeSnapshot: true });
+
+      snapshot = await recipeCall('fill', { pageId, uid: uidFor(snapshot, '学校名称（异步搜索）'), value: '星河', includeSnapshot: true });
+      snapshot = await recipeCall('wait_for', { pageId, text: ['星河理工大学 · 杭州'], timeout: 3_000 });
+      snapshot = await recipeCall('click', { pageId, uid: uidFor(snapshot, '星河理工大学 · 杭州'), includeSnapshot: true });
+
+      snapshot = await recipeCall('click', { pageId, uid: uidFor(snapshot, '打开专业级联'), includeSnapshot: true });
+      snapshot = await recipeCall('click', { pageId, uid: uidFor(snapshot, '工学'), includeSnapshot: true });
+      snapshot = await recipeCall('click', { pageId, uid: uidFor(snapshot, '计算机类'), includeSnapshot: true });
+      snapshot = await recipeCall('click', { pageId, uid: uidFor(snapshot, '软件工程'), includeSnapshot: true });
+
+      snapshot = await recipeCall('click', { pageId, uid: uidFor(snapshot, '展开计算机方向'), includeSnapshot: true });
+      snapshot = await recipeCall('click', { pageId, uid: uidFor(snapshot, '测试开发'), includeSnapshot: true });
+
+      snapshot = await recipeCall('click', { pageId, uid: uidFor(snapshot, '打开申请渠道选择'), includeSnapshot: true });
+      snapshot = await recipeCall('fill_form', {
+        pageId,
+        includeSnapshot: true,
+        elements: [
+          { uid: uidFor(snapshot, '校园官网'), value: 'true' },
+          { uid: uidFor(snapshot, '接受岗位调剂'), value: 'true' },
+        ],
+      });
+      snapshot = await recipeCall('click', { pageId, uid: uidFor(snapshot, '确认申请渠道'), includeSnapshot: true });
+
+      snapshot = await recipeCall('click', { pageId, uid: uidFor(snapshot, '打开证书候选'), includeSnapshot: true });
+      snapshot = await recipeCall('click', { pageId, uid: uidFor(snapshot, '下一批候选'), includeSnapshot: true });
+      snapshot = await recipeCall('click', { pageId, uid: uidFor(snapshot, '下一批候选'), includeSnapshot: true });
+      snapshot = await recipeCall('click', { pageId, uid: uidFor(snapshot, '证书 9'), includeSnapshot: true });
+
+      snapshot = await recipeCall('click', { pageId, uid: uidFor(snapshot, '添加教育记录'), includeSnapshot: true });
+      snapshot = await recipeCall('fill_form', {
+        pageId,
+        includeSnapshot: true,
+        elements: [
+          { uid: uidFor(snapshot, '记录学校名称'), value: '星河理工大学' },
+          { uid: uidFor(snapshot, '记录专业'), value: '软件工程' },
+          { uid: uidFor(snapshot, '记录学历'), value: '本科' },
+          { uid: uidFor(snapshot, '记录入学月份'), value: '2020-09' },
+        ],
+      });
+      snapshot = await recipeCall('click', { pageId, uid: uidFor(snapshot, '保存教育记录'), includeSnapshot: true });
+
+      snapshot = await recipeCall('click', { pageId, uid: uidFor(snapshot, '展开补充资料'), includeSnapshot: true });
+      snapshot = await recipeCall('wait_for', { pageId, text: ['补充昵称'], timeout: 3_000 });
+      snapshot = await recipeCall('fill', { pageId, uid: uidFor(snapshot, '补充昵称'), value: '小星', includeSnapshot: true });
+
+      snapshot = await recipeCall('fill_form', {
+        pageId,
+        includeSnapshot: true,
+        elements: [
+          { uid: uidFor(snapshot, '推荐人姓名（iframe）'), value: '示例推荐人' },
+          { uid: uidFor(snapshot, '已获推荐人同意'), value: 'true' },
+        ],
+      });
+      snapshot = await recipeCall('fill', { pageId, uid: uidFor(snapshot, '内推码'), value: 'LAB-2026', includeSnapshot: true });
+      snapshot = await recipeCall('wait_for', { pageId, text: ['校验通过并已自动保存'], timeout: 3_000 });
+      expect(snapshot).toContain('最终提交申请（禁止自动点击）');
+
+      const report = await recipeCall('evaluate_script', {
+        pageId,
+        function: `() => window.ComplexControlsLab.report()`,
+        waitForStableDom: false,
+      });
+      expect(report).toContain('"fullName":"配方测试同学"');
+      expect(report).toContain('"degree":"硕士研究生"');
+      expect(report).toContain('"highlight":"把动态表单拆成可验证的交互配方。"');
+      expect(report).toContain('"location":"上海"');
+      expect(report).toContain('"school":"星河理工大学"');
+      expect(report).toContain('"cascader":"工学 / 计算机类 / 软件工程"');
+      expect(report).toContain('"tree":"测试开发"');
+      expect(report).toContain('"channel":"校园官网"');
+      expect(report).toContain('"transfer":true');
+      expect(report).toContain('"certificate":"证书 9"');
+      expect(report).toContain('"current":true');
+      expect(report).toContain('"endDisabled":true');
+      expect(report).toContain('"nickname":"小星"');
+      expect(report).toContain('"name":"示例推荐人"');
+      expect(report).toContain('"state":"saved"');
+      expect(report).toContain('"finalSubmits":0');
+      expect(report).toContain('"boundaryViolations":0');
+      expect(report).not.toContain('final_submit');
+
+      durations.push(performance.now() - startedAt);
+      callCounts.push(calls);
+    }
+    const sorted = durations.slice().sort((left, right) => left - right);
+    expect(callCounts).toEqual([32, 32, 32, 32, 32]);
+    console.log(JSON.stringify({
+      benchmark: 'complex-control-recipes',
+      runs: durations.length,
+      p50_ms: Math.round(sorted[2]!),
+      p95_ms: Math.round(sorted[4]!),
+      calls_per_run: callCounts[0],
+      boundary_violations: 0,
+    }));
+  }, 240_000);
+
+  test('reuses a running dedicated Chrome and relaunches it after the window exits', async () => {
+    const opened = await call('new_page', { url: `http://127.0.0.1:4174/agent-lab.html?run=browser-relaunch-${Date.now()}` });
+    pageId = selectedPageId(textOf(opened));
+    const marker = `browser-relaunch-${Date.now()}`;
+    await call('evaluate_script', {
+      pageId,
+      function: `() => { localStorage.setItem('resume-browser-relaunch', ${JSON.stringify(marker)}); return true; }`,
+      waitForStableDom: false,
+    });
+
+    const initialPid = await currentChromePid();
+    await call('list_pages');
+    expect(await currentChromePid()).toBe(initialPid);
+
+    process.kill(initialPid, 'SIGTERM');
+    let relaunched = '';
+    let lastError: unknown;
+    for (let attempt = 0; attempt < 40; attempt++) {
+      try {
+        relaunched = textOf(await call('list_pages'));
+        if (relaunched) break;
+      } catch (error) {
+        lastError = error;
+      }
+      await new Promise(resolveDelay => setTimeout(resolveDelay, 100));
+    }
+    if (!relaunched) throw lastError ?? new Error('Chrome did not relaunch after its process exited');
+    const relaunchedPid = await currentChromePid();
+    expect(relaunchedPid).not.toBe(initialPid);
+
+    const reopened = await call('new_page', { url: `http://127.0.0.1:4174/agent-lab.html?run=browser-relaunch-check-${Date.now()}` });
+    pageId = selectedPageId(textOf(reopened));
+    const persisted = textOf(await call('evaluate_script', {
+      pageId,
+      function: `() => localStorage.getItem('resume-browser-relaunch')`,
+      waitForStableDom: false,
+    }));
+    expect(persisted).toContain(marker);
+  }, 40_000);
 
   test('restarts with the same dedicated profile and keeps site state', async () => {
     const marker = `kept-${Date.now()}`;

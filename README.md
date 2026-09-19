@@ -5,7 +5,7 @@
 [![CI](https://github.com/MagicalLiHua/resume-companion/actions/workflows/ci.yml/badge.svg)](https://github.com/MagicalLiHua/resume-companion/actions/workflows/ci.yml)
 [![MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-简历随行 0.11.1 是一个面向个人使用、有人监督的开发预览版。它不为每家招聘网站维护脚本，也不自建模型后端。插件提供两个 MCP 服务：一个管理本地多版本简历，另一个直接运行固定版本的官方 [Chrome DevTools MCP](https://github.com/ChromeDevTools/chrome-devtools-mcp)。Codex 或其他 AI Agent 读取需要的资料、理解当前页面，并组合官方浏览器工具完成填写、普通草稿保存和普通下一步。最终投递始终交给用户。
+简历随行 0.12.0 是一个面向个人使用、有人监督的开发预览版。它不为每家招聘网站维护脚本，也不自建模型后端。插件提供两个 MCP 服务：一个管理本地多版本简历，另一个直接运行固定版本的官方 [Chrome DevTools MCP](https://github.com/ChromeDevTools/chrome-devtools-mcp)。Codex 或其他 AI Agent 读取需要的资料、理解当前页面，并按通用控件配方组合官方浏览器工具完成填写、普通草稿保存和普通下一步。最终投递始终交给用户。
 
 [安装与使用](docs/getting-started.md) · [工具与权限](docs/mcp-tools.md) · [验证范围](docs/validation.md) · [参与开发](CONTRIBUTING.md)
 
@@ -28,9 +28,11 @@ Resume Companion MCP          官方 Chrome DevTools MCP 1.9.0
 
 ## 为什么使用专用 Chrome
 
-Chrome 150+ 默认 Profile 的权限式远程调试与 Agent 沙箱组合并不稳定。0.11.1 不依赖默认 Profile、9222、`DevToolsActivePort`、浏览器扩展或 Native Host。第一次网页任务会打开一个独立 Chrome 窗口，用户在里面登录招聘网站一次；后续任务复用该 Profile 的 Cookie、历史和站点数据。
+Chrome 150+ 默认 Profile 的权限式远程调试与 Agent 沙箱组合并不稳定。0.12.0 不依赖默认 Profile、9222、`DevToolsActivePort`、浏览器扩展或 Native Host。第一次网页任务会打开一个独立 Chrome 窗口，用户在里面登录招聘网站一次；后续任务复用该 Profile 的 Cookie、历史和站点数据。
 
 同一时间只允许一个任务实际操作这个专用 Profile，但仅加载插件、初始化 MCP 或读取工具目录不会占用它。实例锁在第一次浏览器工具调用时取得；另一个任务会收到可重试的 `profile_in_use`，占用者退出后可在原任务直接重试。Profile 默认位于系统用户数据目录，不放在版本化插件缓存里，升级插件不会清除登录状态。
+
+同一任务后续调用会复用已经运行的专用 Chrome，不会重复开窗口。用户退出该 Chrome 后，下一次页面工具调用会用同一个 Profile 重新启动浏览器并保留站点数据。锁保护的是当前控制任务，不是某个已经退出的 Chrome 进程；控制任务结束会释放锁，异常遗留的锁会根据进程状态和 Chrome 的 Profile 占用标记恢复，避免永久占用。
 
 ## 能做什么
 
@@ -38,6 +40,7 @@ Chrome 150+ 默认 Profile 的权限式远程调试与 Agent 沙箱组合并不�
 | --- | --- |
 | 多版本本地资料 | 保存、列出、分栏目读取和按 revision 更新多份简历 |
 | 连续复杂填表 | AI 使用页面快照、UID、批量填写、等待和回读完成多步骤表单 |
+| 通用控件配方 | 为异步下拉、级联、树、日期范围、弹窗、虚拟列表、重复记录、iframe 等提供可恢复的动作顺序 |
 | 保护已有答案 | 相同值跳过；已有草稿、用户手填和来源不明的值默认保留 |
 | 局部诊断 | 卡住时按需使用 Network、Console、局部截图或获批的只读脚本 |
 | 部分成功恢复 | 批量中途失败后重新观察，只补缺失字段，不整批重放 |
@@ -104,7 +107,7 @@ Resume Companion 自身只有四个工具：
 
 本地保存不等于本地推理。Agent 为完成任务而读取的简历字段、页面快照、截图和诊断结果会进入当前模型上下文；使用云端模型时，这些信息由对应服务处理。
 
-0.11.1 的边界主要由 skill、客户端工具审批和人工监督共同实现，不宣称代码级绝对防误投递。遇到结果不明、页面跳转异常或最终提交含义不清时，Agent 应停止并交给用户检查。完整说明见 [SECURITY.md](SECURITY.md)。
+0.12.0 的边界主要由 skill、客户端工具审批和人工监督共同实现，不宣称代码级绝对防误投递。遇到结果不明、页面跳转异常或最终提交含义不清时，Agent 应停止并交给用户检查。完整说明见 [SECURITY.md](SECURITY.md)。
 
 ## 开发与旧路线
 

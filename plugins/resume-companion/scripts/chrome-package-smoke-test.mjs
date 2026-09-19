@@ -11,6 +11,12 @@ const profileDir = join(profileRoot, 'chrome-profile');
 const lockPath = join(profileRoot, 'chrome-mcp.lock');
 const environment = Object.fromEntries(Object.entries(process.env).filter((item) => typeof item[1] === 'string'));
 
+function textOf(result) {
+  return Array.isArray(result?.content)
+    ? result.content.filter(item => item.type === 'text').map(item => item.text).join('\n')
+    : '';
+}
+
 function createClient(name) {
   const transport = new StdioClientTransport({
     command: process.execPath,
@@ -19,7 +25,10 @@ function createClient(name) {
     env: { ...environment, RESUME_COMPANION_CHROME_DATA_DIR: profileDir, RESUME_COMPANION_CHROME_HEADLESS: '1' },
     stderr: 'pipe',
   });
-  return { transport, client: new Client({ name, version: '1.0.0' }) };
+  let diagnostic = '';
+  transport.stderr?.setEncoding('utf8');
+  transport.stderr?.on('data', chunk => { diagnostic = `${diagnostic}${chunk}`.slice(-4000); });
+  return { transport, client: new Client({ name, version: '1.0.0' }), diagnostic: () => diagnostic.trim() };
 }
 
 async function lockExists() {
@@ -65,7 +74,7 @@ try {
   assert.equal(await lockExists(), false, 'Tool discovery must not reserve the Chrome profile');
 
   const firstPages = await first.client.callTool({ name: 'list_pages', arguments: {} });
-  assert(!firstPages.isError, 'First real browser tool call must start Chrome');
+  assert(!firstPages.isError, `First real browser tool call must start Chrome: ${textOf(firstPages)}\n${first.diagnostic()}`);
   assert.equal(await lockExists(), true, 'First browser call must reserve the profile');
   await assert.rejects(second.client.callTool({ name: 'list_pages', arguments: {} }), /profile_in_use/);
 
@@ -73,7 +82,7 @@ try {
   firstClosed = true;
   await waitForUnlocked();
   const secondPages = await callPagesWithRetry(second.client);
-  assert(!secondPages.isError, 'Second client must take over without restarting after the first releases the profile');
+  assert(!secondPages.isError, `Second client must take over without restarting after the first releases the profile: ${textOf(secondPages)}\n${second.diagnostic()}`);
   assert.equal(await lockExists(), true, 'Second client must own the lock after retry');
   console.log('Two packaged clients discover tools without locking; first use is exclusive and retryable takeover succeeds: OK');
 } finally {

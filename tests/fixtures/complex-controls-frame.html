@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><style>body{font:14px system-ui;margin:0;padding:14px;color:#26384b}label{display:block;margin-bottom:12px}span{display:block;margin-bottom:5px;font-weight:650}input[type=text]{width:100%;box-sizing:border-box;padding:8px;border:1px solid #aebdca;border-radius:6px}.choice{display:flex;gap:7px;align-items:center}</style></head>
+<body>
+  <label><span>推荐人姓名（iframe）</span><input id="referrer-name" type="text"></label>
+  <label class="choice"><input id="referrer-consent" type="checkbox">已获推荐人同意</label>
+  <script>
+    window.FrameLab = { report: () => ({ name: document.querySelector('#referrer-name').value, consent: document.querySelector('#referrer-consent').checked }) };
+  </script>
+</body>
+</html>

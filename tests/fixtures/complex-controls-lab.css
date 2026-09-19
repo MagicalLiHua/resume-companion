@@ -1,0 +1,50 @@
+:root { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; color: #203247; background: #eef3f7; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+button, input, select, textarea { font: inherit; }
+button { cursor: pointer; }
+header { padding: 34px max(24px, calc((100vw - 1060px) / 2)); color: white; background: linear-gradient(120deg, #142f54, #176884); }
+header h1 { margin: 7px 0; }
+header p { margin: 0; color: #d5e6f1; }
+.eyebrow { font-size: 12px; letter-spacing: 1.4px; }
+main { max-width: 1060px; margin: 0 auto; padding: 24px 20px 64px; }
+.notice, .card, .report { margin-bottom: 18px; padding: 20px; border: 1px solid #d4dfe8; border-radius: 12px; background: white; box-shadow: 0 5px 20px #18324d0b; }
+.notice { border-left: 4px solid #2d8a68; background: #eef9f4; }
+.card h2 { margin: 0 0 18px; font-size: 19px; color: #234d70; }
+.card h3 { margin: 20px 0 10px; font-size: 15px; }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 22px; }
+.wide { grid-column: 1 / -1; }
+label > span, .label { display: block; margin-bottom: 7px; color: #3b5268; font-size: 13px; font-weight: 650; }
+input:not([type=checkbox]):not([type=radio]), select, textarea, .field-button, .editable { width: 100%; min-height: 42px; padding: 9px 11px; border: 1px solid #b5c4d1; border-radius: 8px; color: #21364a; background: white; text-align: left; }
+textarea { min-height: 84px; }
+.editable { line-height: 1.5; }
+.editable:focus, input:focus, select:focus, textarea:focus, button:focus { outline: 3px solid #2b7caf2a; border-color: #2879a9; }
+fieldset { margin: 0; padding: 0; border: 0; }
+legend { margin-bottom: 8px; font-size: 13px; font-weight: 650; }
+.choice { display: inline-flex; align-items: center; gap: 7px; margin-right: 15px; min-height: 36px; }
+.control { position: relative; min-width: 0; }
+.control output { display: block; margin-top: 8px; color: #607489; font-size: 12px; }
+.popup { position: absolute; z-index: 10; top: calc(100% + 5px); left: 0; right: 0; max-height: 220px; padding: 6px; overflow: auto; border: 1px solid #a9bac9; border-radius: 8px; background: white; box-shadow: 0 13px 30px #1c3f6128; }
+.popup[hidden], [hidden] { display: none !important; }
+.popup button, .tree button { display: block; width: 100%; padding: 9px 10px; border: 0; border-radius: 5px; color: #29445d; background: white; text-align: left; }
+.popup button:hover, .tree button:hover { background: #eaf4fb; }
+.columns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.tree { padding: 6px; border: 1px solid #c2cfda; border-radius: 8px; }
+.tree [role=group] { padding-left: 18px; }
+.records { margin-bottom: 12px; }
+.record { padding: 12px; margin-bottom: 8px; border: 1px solid #d7e1e9; border-radius: 8px; background: #f8fafc; }
+.record strong { display: block; }
+.lazy { margin-top: 12px; padding: 14px; border: 1px dashed #9fb1c0; border-radius: 8px; }
+.frame-wrap { margin-top: 18px; }
+iframe { width: 100%; height: 130px; border: 1px solid #c5d1dc; border-radius: 8px; background: white; }
+.cross-origin-placeholder { margin-top: 12px; padding: 12px; border-radius: 7px; color: #76621c; background: #fff7dc; }
+.danger-zone { border-color: #dfbd75; background: #fffaf0; }
+.danger { padding: 10px 15px; border: 1px solid #c14d4d; border-radius: 7px; color: #9c3030; background: white; }
+.report { position: sticky; bottom: 10px; color: #315b49; background: #eef8f3; }
+dialog { width: min(560px, calc(100vw - 32px)); padding: 24px; border: 0; border-radius: 12px; box-shadow: 0 22px 70px #10294455; }
+dialog::backdrop { background: #10294470; }
+dialog h2 { margin-top: 0; }
+dialog label { display: block; margin: 12px 0; }
+.dialog-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 18px; }
+.dialog-actions button, #add-education, #expand-extra { padding: 9px 14px; border: 1px solid #9fb1c0; border-radius: 7px; background: white; }
+@media (max-width: 700px) { .grid { grid-template-columns: 1fr; } .wide { grid-column: auto; } .columns { grid-template-columns: 1fr; } }

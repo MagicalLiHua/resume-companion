@@ -1,6 +1,6 @@
 {
   "name": "resume-companion",
-  "version": "0.11.1",
+  "version": "0.12.0",
   "description": "Local resume profiles plus an official Chrome DevTools MCP browser workspace for supervised recruitment forms.",
   "author": {
     "name": "Resume Companion"

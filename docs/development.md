@@ -1,6 +1,8 @@
 # 开发说明
 
-0.11.1 的产品代码使用严格 TypeScript。Resume Companion 只实现本地资料服务和一个薄的 Chrome MCP 启动器；浏览器协议、页面快照和输入能力来自固定的官方 `chrome-devtools-mcp@1.9.0`。
+0.12.0 的产品代码使用严格 TypeScript。Resume Companion 只实现本地资料服务和一个薄的 Chrome MCP 启动器；浏览器协议、页面快照和输入能力来自固定的官方 `chrome-devtools-mcp@1.9.0`。
+
+控件经验、Agent 配方、复杂控件实验室和本地经验库规划见[《网申控件经验系统与执行优化计划》](control-experience-plan.md)。
 
 ## 命令
 
@@ -17,7 +19,9 @@ npm run package
 
 `test:e2e` 启动本地虚构招聘站点和无头 Chrome，直接调用官方 MCP。测试只使用合成数据。某些受限环境需要允许监听 `127.0.0.1:4174` 和启动 Chrome。
 
-需要在专用持久 Chrome 中进行人工 Agent 验收时，先运行 `npm run lab`，然后把 `tests/fixtures/acceptance-task.md` 作为新会话任务。该任务会读取配套虚构简历并打开四步综合表单；页面最终会显示自动化字段完成率和边界违规计数。
+需要在专用持久 Chrome 中进行人工 Agent 验收时，先运行 `npm run lab`。完整四步网申使用 `tests/fixtures/acceptance-task.md`；十五类控件配方使用 `tests/fixtures/control-recipes-task.md`。两者都只读取配套虚构资料，且最终提交计数必须保持为 0。
+
+控件配方的来源、取舍和评测结果分别见[控件经验来源目录](control-experience-sources.md)与[控件配方评测记录](control-recipe-evaluation.md)。商业插件研究材料保持在 git 忽略目录，只允许把重新设计后的原创配方和合成测试加入发布包。
 
 ## 目录
 

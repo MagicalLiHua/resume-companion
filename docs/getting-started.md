@@ -1,6 +1,6 @@
 # 安装与使用
 
-当前版本为 0.11.1 开发预览版，由本地资料 MCP、固定版本的官方 Chrome DevTools MCP、TypeScript 启动器和 `resume-autofill` skill 组成。它不需要浏览器扩展、Native Host 或远程调试开关。
+当前版本为 0.12.0 开发预览版，由本地资料 MCP、固定版本的官方 Chrome DevTools MCP、TypeScript 启动器和带控件配方的 `resume-autofill` skill 组成。它不需要浏览器扩展、Native Host 或远程调试开关。
 
 ## 环境
 
