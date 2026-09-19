@@ -40,6 +40,7 @@ schoolSearch.addEventListener('input', () => {
   schoolOptions.textContent = '正在搜索学校候选…';
   count('school_search');
   schoolTimer = window.setTimeout(() => {
+    count('school_candidates_load');
     const candidates = [
       ['星河理工大学', '杭州'], ['海岬财经大学', '上海'], ['远山职业技术学院', '成都'],
     ].filter(([name]) => name.includes(query));
@@ -196,6 +197,7 @@ referralCode.addEventListener('input', () => {
   count('validation_start');
   validationTimer = window.setTimeout(async () => {
     try {
+      count('validation_request');
       const response = await fetch(`/api/validate-code?value=${encodeURIComponent(referralCode.value)}`);
       const payload = await response.json();
       state.validation = payload.valid ? 'saved' : 'invalid';

@@ -83,6 +83,23 @@ async function currentChromePid(): Promise<number> {
   throw new Error('Chrome singleton process id did not become available');
 }
 
+function processIsAlive(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    return typeof error === 'object' && error !== null && 'code' in error && error.code === 'EPERM';
+  }
+}
+
+async function waitForProcessExit(pid: number): Promise<void> {
+  for (let attempt = 0; attempt < 100; attempt++) {
+    if (!processIsAlive(pid)) return;
+    await new Promise(resolveDelay => setTimeout(resolveDelay, 50));
+  }
+  throw new Error(`Chrome process ${pid} did not exit after SIGTERM`);
+}
+
 async function connectChromeMcp(): Promise<Client> {
   const environment = Object.fromEntries(Object.entries(process.env).filter((entry): entry is [string, string] => typeof entry[1] === 'string'));
   const transport = new StdioClientTransport({
@@ -519,6 +536,7 @@ describe('Stage 0 direct Chrome DevTools MCP validation', () => {
     expect(await currentChromePid()).toBe(initialPid);
 
     process.kill(initialPid, 'SIGTERM');
+    await waitForProcessExit(initialPid);
     let relaunched = '';
     let lastError: unknown;
     for (let attempt = 0; attempt < 40; attempt++) {
