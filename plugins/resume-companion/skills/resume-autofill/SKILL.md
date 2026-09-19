@@ -16,7 +16,7 @@ Use the form tools for routine work. Full accessibility snapshots, raw UID input
 
 Call `resume_status` before profile work. For browser work, call `list_pages`, choose the intended page and call `select_page`. The first browser call opens or reuses the dedicated Chrome. If the site is not logged in, let the user complete login, passwords, verification codes and device checks in that Chrome window.
 
-If a browser call returns `profile_in_use`, another task owns the Resume Companion browser. Continue profile work if useful and pause browser actions until that task closes, then retry without restarting this task. Re-list pages after navigation, a closed tab, login redirect or unknown destination.
+The first browser call in a newer task automatically takes the shared browser lease after the current atomic operation completes. If this task later receives `browser_lease_revoked`, continue in the newer task. Call `browser_takeover` only when the user explicitly wants this older task to reclaim browser control; doing so revokes the task that currently owns it. A `profile_in_use` result is expected only for an external Chrome process or a one-time upgrade from a pre-Supervisor release. Re-list pages after navigation, a closed tab, login redirect or unknown destination.
 
 ## Store only explicit facts
 

@@ -1,6 +1,6 @@
 {
   "name": "resume-companion",
-  "version": "0.15.1",
+  "version": "0.16.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -16,6 +16,7 @@
     "check": "npm run check --prefix plugins/resume-companion",
     "lab": "node scripts/lab-server.mjs",
     "debug:browser": "node plugins/resume-companion/scripts/browser-debug-client.mjs",
+    "reload:codex-mcp": "node plugins/resume-companion/scripts/reload-codex-mcp.mjs",
     "package": "node scripts/package.mjs"
   }
 }

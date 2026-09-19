@@ -22,7 +22,7 @@ function createClient(name) {
     command: process.execPath,
     args: [entry],
     cwd: dirname(entry),
-    env: { ...environment, RESUME_COMPANION_CHROME_DATA_DIR: profileDir, RESUME_COMPANION_CHROME_HEADLESS: '1' },
+    env: { ...environment, RESUME_COMPANION_CHROME_DATA_DIR: profileDir, RESUME_COMPANION_CHROME_HEADLESS: '1', RESUME_COMPANION_SUPERVISOR_EPHEMERAL: '1' },
     stderr: 'pipe',
   });
   let diagnostic = '';
@@ -43,23 +43,6 @@ async function waitForUnlocked() {
   throw new Error('Chrome profile lock was not released');
 }
 
-async function callPagesWithRetry(client) {
-  let lastError;
-  for (let attempt = 0; attempt < 40; attempt++) {
-    try {
-      const result = await client.callTool({ name: 'list_pages', arguments: {} });
-      if (!result.isError) return result;
-      lastError = new Error(textOf(result));
-      if (!textOf(result).includes('profile_in_use')) return result;
-    } catch (error) {
-      lastError = error;
-      if (!String(error).includes('profile_in_use')) throw error;
-    }
-    await new Promise(resolveDelay => setTimeout(resolveDelay, 100));
-  }
-  throw lastError;
-}
-
 const first = createClient('resume-companion-chrome-package-smoke-first');
 const second = createClient('resume-companion-chrome-package-smoke-second');
 let firstClosed = false;
@@ -69,7 +52,7 @@ try {
   await second.client.connect(second.transport);
   const firstNames = (await first.client.listTools()).tools.map(tool => tool.name);
   const secondNames = (await second.client.listTools()).tools.map(tool => tool.name);
-  for (const required of ['list_pages', 'form_observe', 'form_fill_fields', 'form_select_option', 'form_select_path', 'form_set_date', 'form_activate', 'take_snapshot', 'fill_form', 'list_network_requests', 'evaluate_script']) {
+  for (const required of ['list_pages', 'browser_takeover', 'form_observe', 'form_fill_fields', 'form_select_option', 'form_select_path', 'form_set_date', 'form_activate', 'take_snapshot', 'fill_form', 'list_network_requests', 'evaluate_script']) {
     assert(firstNames.includes(required), `First client missing ${required}`);
     assert(secondNames.includes(required), `Second client missing ${required}`);
   }
@@ -79,18 +62,18 @@ try {
   const firstPages = await first.client.callTool({ name: 'list_pages', arguments: {} });
   assert(!firstPages.isError, `First real browser tool call must start Chrome: ${textOf(firstPages)}\n${first.diagnostic()}`);
   assert.equal(await lockExists(), true, 'First browser call must reserve the profile');
-  const blocked = await second.client.callTool({ name: 'list_pages', arguments: {} });
-  assert(blocked.isError && textOf(blocked).includes('profile_in_use'), `Second client must be blocked while the first owns the profile:\n${textOf(blocked)}`);
-
-  await first.client.close();
-  firstClosed = true;
-  await waitForUnlocked();
-  const secondPages = await callPagesWithRetry(second.client);
-  assert(!secondPages.isError, `Second client must take over without restarting after the first releases the profile: ${textOf(secondPages)}\n${second.diagnostic()}`);
-  assert.equal(await lockExists(), true, 'Second client must own the lock after retry');
-  console.log('Two packaged clients discover tools without locking; first use is exclusive and retryable takeover succeeds: OK');
+  const secondPages = await second.client.callTool({ name: 'list_pages', arguments: {} });
+  assert(!secondPages.isError, `Second client must take over the running browser: ${textOf(secondPages)}\n${second.diagnostic()}`);
+  const firstRevoked = await first.client.callTool({ name: 'list_pages', arguments: {} });
+  assert(firstRevoked.isError && textOf(firstRevoked).includes('browser_lease_revoked'), `Old client must remain open but lose browser control:\n${textOf(firstRevoked)}`);
+  const reclaimed = await first.client.callTool({ name: 'browser_takeover', arguments: {} });
+  assert(!reclaimed.isError && textOf(reclaimed).includes('taken_over'), `Old client must be able to reclaim explicitly:\n${textOf(reclaimed)}`);
+  const secondRevoked = await second.client.callTool({ name: 'list_pages', arguments: {} });
+  assert(secondRevoked.isError && textOf(secondRevoked).includes('browser_lease_revoked'), `Previous owner must be fenced after explicit reclaim:\n${textOf(secondRevoked)}`);
+  console.log('Two packaged clients share one Chrome; new-task takeover and explicit reclaim are fenced: OK');
 } finally {
   if (!firstClosed) await first.client.close().catch(() => undefined);
   await second.client.close().catch(() => undefined);
+  await waitForUnlocked();
   await rm(profileRoot, { recursive: true, force: true });
 }

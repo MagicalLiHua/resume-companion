@@ -5,7 +5,7 @@
 [![CI](https://github.com/MagicalLiHua/resume-companion/actions/workflows/ci.yml/badge.svg)](https://github.com/MagicalLiHua/resume-companion/actions/workflows/ci.yml)
 [![MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-简历随行 0.15.1 是一个面向个人使用、有人监督的开发预览版。它不为每家招聘网站维护脚本，也不自建模型后端。插件提供两个 MCP 服务：一个管理本地多版本简历，另一个在固定版本的官方 [Chrome DevTools MCP](https://github.com/ChromeDevTools/chrome-devtools-mcp) 浏览器底座上提供局部观察、语义重定位和事务式表单动作。Codex 或其他 AI Agent 读取需要的资料，用少量结构化结果连续完成填写、普通草稿保存和普通下一步。最终投递始终交给用户。
+简历随行 0.16.0 是一个面向个人使用、有人监督的开发预览版。它不为每家招聘网站维护脚本，也不自建模型后端。插件提供两个 MCP 服务：一个管理本地多版本简历，另一个在固定版本的官方 [Chrome DevTools MCP](https://github.com/ChromeDevTools/chrome-devtools-mcp) 浏览器底座上提供局部观察、语义重定位和事务式表单动作。Codex 或其他 AI Agent 读取需要的资料，用少量结构化结果连续完成填写、普通草稿保存和普通下一步。最终投递始终交给用户。
 
 [安装与使用](docs/getting-started.md) · [工具与权限](docs/mcp-tools.md) · [验证范围](docs/validation.md) · [参与开发](CONTRIBUTING.md)
 
@@ -24,17 +24,17 @@ Resume Companion MCP          Resume Browser MCP
                               招聘网站
 ~~~
 
-资料服务与浏览器服务彼此独立。只整理简历不会启动 Chrome；浏览器被其他任务占用时，本地资料仍可正常读写。
+资料服务与浏览器服务彼此独立。只整理简历不会启动 Chrome；浏览器租约转移到其他任务时，本地资料仍可正常读写。
 
 ## 为什么使用专用 Chrome
 
-Chrome 150+ 默认 Profile 的权限式远程调试与 Agent 沙箱组合并不稳定。0.15.1 不依赖默认 Profile、9222、`DevToolsActivePort`、浏览器扩展或 Native Host。第一次网页任务会打开一个独立 Chrome 窗口，用户在里面登录招聘网站一次；后续任务复用该 Profile 的 Cookie、历史和站点数据。
+Chrome 150+ 默认 Profile 的权限式远程调试与 Agent 沙箱组合并不稳定。0.16.0 不依赖默认 Profile、9222、`DevToolsActivePort`、浏览器扩展或 Native Host。第一次网页任务会打开一个独立 Chrome 窗口，用户在里面登录招聘网站一次；后续任务复用该 Profile 的 Cookie、历史和站点数据。
 
-真实招聘 SPA 可能持续替换视觉上相同的 DOM 节点。0.15.1 不把快照 UID 当作长期身份：浏览器服务只让文字与控件角色均匹配的候选参与排序，在一个工具调用内完成定位、输入、等待、回读和局部结果返回。对级联和日期控件，中间步骤保留在浏览器进程内；歧义、部分副作用或结果不确定时停止并返回当前弹层状态。它不使用站点选择器，也不按候选顺序猜选。
+真实招聘 SPA 可能持续替换视觉上相同的 DOM 节点。0.16.0 不把快照 UID 当作长期身份：浏览器服务只让文字与控件角色均匹配的候选参与排序，在一个工具调用内完成定位、输入、等待、回读和局部结果返回。对级联和日期控件，中间步骤保留在浏览器进程内；歧义、部分副作用或结果不确定时停止并返回当前弹层状态。它不使用站点选择器，也不按候选顺序猜选。
 
-同一时间只允许一个任务实际操作这个专用 Profile，但仅加载插件、初始化 MCP 或读取工具目录不会占用它。实例锁在第一次浏览器工具调用时取得；另一个任务会收到可重试的 `profile_in_use`，占用者退出后可在原任务直接重试。Profile 默认位于系统用户数据目录，不放在版本化插件缓存里，升级插件不会清除登录状态。
+专用 Chrome 由一个本机 Browser Supervisor 持有，多个 Codex 任务连接到同一个浏览器、Profile、标签页和页面状态。同一时间只有一个任务拥有操作租约：新任务第一次调用浏览器工具时会在上一项原子操作结束后自动接管；旧任务保持打开，但后续浏览器调用会收到 `browser_lease_revoked`。如果确实要回到旧任务，可在那里明确调用 `browser_takeover`。只加载插件、初始化 MCP 或读取工具目录不会争抢租约。
 
-同一任务后续调用会复用已经运行的专用 Chrome，不会重复开窗口。用户退出该 Chrome 后，下一次页面工具调用会用同一个 Profile 重新启动浏览器并保留站点数据。锁保护的是当前控制任务，不是某个已经退出的 Chrome 进程；控制任务结束会释放锁，异常遗留的锁会根据进程状态和 Chrome 的 Profile 占用标记恢复，避免永久占用。
+同一任务后续调用会复用已经运行的专用 Chrome，不会重复开窗口。用户退出该 Chrome 后，下一次页面工具调用会用同一个 Profile 重新启动浏览器并保留站点数据。Supervisor 独立于单个任务存活，任务结束不会关闭用户正在看的浏览器。Profile 默认位于系统用户数据目录，不放在版本化插件缓存里，升级插件不会清除登录状态。
 
 ## 能做什么
 
@@ -87,7 +87,7 @@ codex plugin add resume-companion@resume-companion
 4. 验证 resume_companion 只暴露四个资料工具；验证 resume_browser 包含 form_observe、五个事务式表单工具和固定的 chrome-devtools-mcp 1.9.0 诊断工具，upload_file 和 lighthouse_audit 已禁用。
 5. 用虚构资料测试创建、目录读取、携带 expected_revision 的章节读取和 revision 冲突。
 6. 启动一次专用 Chrome 测试 list_pages 和 form_observe；不要接管默认 Chrome，不开启远程调试，不填写真实信息，不执行保存或最终提交。
-7. 如果客户端需要重启或新建任务才能加载 MCP，先完成其余步骤，最后报告安装目录、Profile 目录、修改的配置、验证结果和下一条可直接使用的指令。
+7. 在 Codex 中升级后运行包内 `scripts/reload-codex-mcp.mjs`，热重载 MCP 配置；不要要求用户重启整个 Codex。最后报告安装目录、Profile 目录、修改的配置、验证结果和下一条可直接使用的指令。
 ~~~
 
 ## 两组工具
@@ -109,8 +109,8 @@ Resume Companion 自身只有四个工具：
 
 本地保存不等于本地推理。Agent 为完成任务而读取的简历字段、页面快照、截图和诊断结果会进入当前模型上下文；使用云端模型时，这些信息由对应服务处理。
 
-0.15.1 的 `form_activate` 会阻止明显的最终提交、声明、上传和不可逆边界；skill、客户端审批和人工监督仍然共同参与判断。遇到结果不明、页面跳转异常或按钮含义不清时，Agent 应停止并交给用户检查。完整说明见 [SECURITY.md](SECURITY.md)。
+0.16.0 的 `form_activate` 会阻止明显的最终提交、声明、上传和不可逆边界；skill、客户端审批和人工监督仍然共同参与判断。遇到结果不明、页面跳转异常或按钮含义不清时，Agent 应停止并交给用户检查。完整说明见 [SECURITY.md](SECURITY.md)。
 
 ## 开发与旧路线
 
-新增产品代码使用严格 TypeScript。发布中的 `server.bundle.mjs` 与 `chrome-launcher.bundle.mjs` 是由源码生成的产物，并标记为 GitHub Linguist generated。旧版扩展与 Native Messaging 实现已从主线删除，可从 Git 标签 `archive/extension-0.10.0` 恢复。
+新增产品代码使用严格 TypeScript。发布中的 `server.bundle.mjs`、`chrome-launcher.bundle.mjs` 与 `browser-supervisor.bundle.mjs` 是由源码生成的产物，并标记为 GitHub Linguist generated。旧版扩展与 Native Messaging 实现已从主线删除，可从 Git 标签 `archive/extension-0.10.0` 恢复。

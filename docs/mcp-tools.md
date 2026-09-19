@@ -1,6 +1,6 @@
 # MCP 工具与权限
 
-0.15.1 把资料与浏览器分成两个 MCP。`resume_companion` 管理本地多版本简历；`resume_browser` 在固定的 Chrome DevTools MCP 1.9.0 浏览器底座上增加表单语义缓存、局部/增量观察、动态定位、事务式动作和输出脱敏。官方 Network、Console、截图与脚本诊断工具继续保留。
+0.16.0 把资料与浏览器分成两个 MCP。`resume_companion` 管理本地多版本简历；`resume_browser` 通过 Browser Supervisor 共享一个专用 Chrome，并在固定的 Chrome DevTools MCP 1.9.0 浏览器底座上增加表单语义缓存、局部/增量观察、动态定位、事务式动作和输出脱敏。官方 Network、Console、截图与脚本诊断工具继续保留。
 
 ## Resume Companion 资料工具
 
@@ -23,6 +23,8 @@
 | `form_select_path` | 在一次调用内完成省市区、专业分类、树等多级路径 |
 | `form_set_date` | 写入一个完整日期或月份，只有最终值回读一致才成功 |
 | `form_activate` | 聚焦、打开、关闭、添加记录、保存普通记录或进入普通下一步；阻止明显人工边界 |
+
+新任务第一次执行任意浏览器工具时，会在当前原子操作完成后自动取得共享浏览器租约。旧任务仍可阅读其历史和使用资料工具，但浏览器调用返回 `browser_lease_revoked`。`browser_takeover` 用于用户明确要求旧任务重新接管的情况；它会反向撤销当前任务的浏览器租约。
 
 日常流程是一次 `overview`、按依赖分组的事务动作，以及只在结果不明确时的一次带目标 `delta` 或 `focus`。局部结果完整返回当前字段、弹层和校验；区域外只返回不含字段值的 `locality` 变化哨兵。只有 `widen_recommended` 为 true 或存在已知跨区依赖时才扩大观察，完整页面快照不再是每个点击后的默认步骤。
 
@@ -48,7 +50,7 @@
 | 策略 | 工具 |
 | --- | --- |
 | 自动批准 | 页面列表和选择、六个表单工具、快照/等待、请求列表、Console 列表/详情、截图、原始常规输入工具 |
-| 每次提示 | `evaluate_script`、`handle_dialog`、`get_network_request`、导航、新建/关闭页面、按键、键盘输入、拖拽 |
+| 每次提示 | `browser_takeover`、`evaluate_script`、`handle_dialog`、`get_network_request`、导航、新建/关闭页面、按键、键盘输入、拖拽 |
 | 禁用 | `upload_file`、`lighthouse_audit` |
 | 默认 | 其他未审查工具均为 `prompt` |
 

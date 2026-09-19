@@ -1,5 +1,5 @@
 import { spawn, type ChildProcess } from 'node:child_process';
-import { mkdtemp, readlink, rm } from 'node:fs/promises';
+import { access, mkdtemp, readlink, rm } from 'node:fs/promises';
 import { createConnection } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -7,6 +7,8 @@ import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { debugSocketPath } from '../src/browser/debug-bridge.js';
+import { supervisorSocketPath } from '../src/browser/supervisor-protocol.js';
+import { RUNTIME_PLUGIN_VERSION } from '../src/version.js';
 
 type ToolResult = Awaited<ReturnType<Client['callTool']>>;
 
@@ -112,6 +114,7 @@ async function connectChromeMcp(): Promise<Client> {
       ...environment,
       RESUME_COMPANION_CHROME_DATA_DIR: profileDir,
       RESUME_COMPANION_CHROME_HEADLESS: '1',
+      RESUME_COMPANION_SUPERVISOR_EPHEMERAL: '1',
     },
     stderr: 'pipe',
   });
@@ -148,6 +151,16 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await client?.close();
+  if (process.platform !== 'win32') {
+    for (let attempt = 0; attempt < 80; attempt++) {
+      try {
+        await access(supervisorSocketPath(profileDir));
+      } catch {
+        break;
+      }
+      await new Promise(resolveDelay => setTimeout(resolveDelay, 50));
+    }
+  }
   lab?.kill('SIGTERM');
   await rm(profileRoot, { recursive: true, force: true });
 });
@@ -161,7 +174,7 @@ describe('Stage 0 direct Chrome DevTools MCP validation', () => {
     expect(names).toContain('list_network_requests');
     expect(names).toContain('evaluate_script');
     expect(names).toEqual(expect.arrayContaining([
-      'form_observe', 'form_fill_fields', 'form_select_option', 'form_select_path', 'form_set_date', 'form_activate',
+      'browser_takeover', 'form_observe', 'form_fill_fields', 'form_select_option', 'form_select_path', 'form_set_date', 'form_activate',
     ]));
     expect(names).not.toContain('click_at');
   });
@@ -169,7 +182,7 @@ describe('Stage 0 direct Chrome DevTools MCP validation', () => {
   test.skipIf(process.platform === 'win32')('supports read-only live debugging through the owning browser process', async () => {
     const status = await debugRequest({ command: 'status' });
     expect(status.ok).toBe(true);
-    expect(status.result.version).toBe('0.15.1');
+    expect(status.result.version).toBe(RUNTIME_PLUGIN_VERSION);
     expect(status.result.pages).toBeGreaterThan(0);
 
     const pages = await debugRequest({ command: 'list_pages' });
@@ -181,6 +194,29 @@ describe('Stage 0 direct Chrome DevTools MCP validation', () => {
     expect(observation.result.page_id).toBe(pageId);
     expect(observation.result.metrics.response_bytes).toBeLessThanOrEqual(8_500);
   });
+
+  test('moves the shared browser lease to a new task and requires explicit reclaim by the old task', async () => {
+    const newer = await connectChromeMcp();
+    try {
+      const pages = await newer.callTool({ name: 'list_pages', arguments: {} });
+      expect(pages.isError).not.toBe(true);
+      expect(textOf(pages)).toContain(`${pageId}:`);
+
+      const revoked = await client!.callTool({ name: 'list_pages', arguments: {} });
+      expect(revoked.isError).toBe(true);
+      expect(textOf(revoked)).toContain('browser_lease_revoked');
+
+      const reclaimed = await client!.callTool({ name: 'browser_takeover', arguments: {} });
+      expect(reclaimed.isError).not.toBe(true);
+      expect(textOf(reclaimed)).toContain('taken_over');
+
+      const newerRevoked = await newer.callTool({ name: 'list_pages', arguments: {} });
+      expect(newerRevoked.isError).toBe(true);
+      expect(textOf(newerRevoked)).toContain('browser_lease_revoked');
+    } finally {
+      await newer.close();
+    }
+  }, 20_000);
 
   test('returns a budgeted semantic overview instead of the complete 220-field page', async () => {
     const opened = await call('new_page', { url: `http://127.0.0.1:4174/long-form.html?semantic=${Date.now()}` });

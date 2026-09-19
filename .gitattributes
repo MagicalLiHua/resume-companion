@@ -1,4 +1,5 @@
 # The published MCP executable is generated from the TypeScript sources.
 plugins/resume-companion/server.bundle.mjs linguist-generated=true
 plugins/resume-companion/chrome-launcher.bundle.mjs linguist-generated=true
+plugins/resume-companion/browser-supervisor.bundle.mjs linguist-generated=true
 plugins/resume-companion/devtools-resilience-preload.mjs linguist-generated=true

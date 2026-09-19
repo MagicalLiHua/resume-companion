@@ -3,6 +3,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { ProfileReadSchema, ProfileSaveSchema, ProfileStore } from './profile-store.js';
+import { RUNTIME_PLUGIN_VERSION } from './version.js';
 
 type ToolData = Record<string, unknown>;
 type ToolResult = {
@@ -37,7 +38,7 @@ async function runLocal(job: () => Promise<unknown>): Promise<ToolResult> {
   }
 }
 
-const server = new McpServer({ name: 'resume-companion', version: '0.15.1' });
+const server = new McpServer({ name: 'resume-companion', version: RUNTIME_PLUGIN_VERSION });
 
 server.registerTool('resume_status', {
   title: '检查简历随行资料库状态',
@@ -45,7 +46,7 @@ server.registerTool('resume_status', {
   annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
 }, async () => runLocal(async () => ({
   storage: await store.status(),
-  service: { name: 'resume-companion', version: '0.15.1', role: 'profile_library' },
+  service: { name: 'resume-companion', version: RUNTIME_PLUGIN_VERSION, role: 'profile_library' },
 })));
 
 server.registerTool('resume_profile_list', {

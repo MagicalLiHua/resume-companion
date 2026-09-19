@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { existsSync } from 'node:fs';
+import { randomUUID } from 'node:crypto';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { z } from 'zod';
@@ -9,6 +10,7 @@ import { redactBrowserText } from './browser/privacy.js';
 import { FormEngine, type FieldRequest, type ObserveRequest } from './browser/form-engine.js';
 import { installStaleUidRecovery } from './browser/stale-uid-recovery.js';
 import { ChromeProfileLock, profileHash, resolveChromeProfileDir } from './chrome-profile.js';
+import { RUNTIME_PLUGIN_VERSION } from './version.js';
 
 type AnyRecord = Record<string, any>;
 
@@ -104,36 +106,64 @@ function annotateTimeout(result: AnyRecord, toolName: string): AnyRecord {
   };
 }
 
-export class ResumeBrowserServer {
-  private readonly server: AnyRecord;
-  private readonly mutex: AnyRecord;
+export class ResumeBrowserHost {
+  readonly mutex: AnyRecord = new thirdPartyModule.Mutex();
+  readonly unlockedMutex = { acquire: async () => ({ [Symbol.dispose]: (): void => undefined }) };
   private browser: AnyRecord | undefined;
   private context: AnyRecord | undefined;
   private engine: FormEngine | undefined;
   private debugBridge: BrowserDebugBridge | undefined;
   private lockHeld = false;
   private closing = false;
+  private leaseOwner: string | undefined;
+  private readonly revokedSessions = new Set<string>();
 
-  private constructor() {
-    this.server = new thirdPartyModule.McpServer({
-      name: 'resume_browser',
-      title: 'Resume Browser MCP',
-      version: '0.15.1',
-    }, { capabilities: { logging: {} } });
-    this.mutex = new thirdPartyModule.Mutex();
+  async run<T>(sessionId: string, callback: () => Promise<T>): Promise<T> {
+    const guard = await this.mutex.acquire();
+    try {
+      this.claimUnsafe(sessionId);
+      return await callback();
+    } finally {
+      guard[Symbol.dispose]();
+    }
   }
 
-  static async create(): Promise<ResumeBrowserServer> {
-    const instance = new ResumeBrowserServer();
-    instance.registerUpstreamTools();
-    instance.registerFormTools();
-    return instance;
+  async handleForm(sessionId: string, pageId: number, callback: (engine: FormEngine) => Promise<AnyRecord>): Promise<AnyRecord> {
+    try {
+      return await this.run(sessionId, async () => {
+        const context = await this.getContext();
+        context.getPageById(pageId);
+        if (!this.engine) this.engine = new FormEngine(id => context.getPageById(id));
+        return await callback(this.engine);
+      });
+    } catch (error) {
+      return browserErrorResult(error);
+    }
   }
 
-  async connect(): Promise<void> {
-    const transport = new thirdPartyModule.StdioServerTransport();
-    await this.server.connect(transport);
-    console.error(`Resume Browser MCP 0.15.1 ready; Chrome profile ${profileHash(profileDir)} is acquired on first browser call.`);
+  recordLowLevelOperation(pageId: number, action: string, operationId: string | undefined, target: string, resultName: string): void {
+    this.engine?.recordLowLevelOperation(pageId, action, operationId, target, resultName);
+  }
+
+  releaseSession(sessionId: string): void {
+    if (this.leaseOwner === sessionId) this.leaseOwner = undefined;
+    this.revokedSessions.delete(sessionId);
+  }
+
+  async takeover(sessionId: string): Promise<AnyRecord> {
+    const guard = await this.mutex.acquire();
+    try {
+      const previousOwner = this.leaseOwner;
+      if (previousOwner && previousOwner !== sessionId) this.revokedSessions.add(previousOwner);
+      this.revokedSessions.delete(sessionId);
+      this.leaseOwner = sessionId;
+      return {
+        content: [{ type: 'text', text: JSON.stringify({ ok: true, status: previousOwner && previousOwner !== sessionId ? 'taken_over' : 'already_owner' }) }],
+        structuredContent: { ok: true, status: previousOwner && previousOwner !== sessionId ? 'taken_over' : 'already_owner' },
+      };
+    } finally {
+      guard[Symbol.dispose]();
+    }
   }
 
   async close(): Promise<void> {
@@ -150,183 +180,10 @@ export class ResumeBrowserServer {
     } finally {
       if (this.lockHeld) await lock.release();
       this.lockHeld = false;
-      await this.server.close().catch(() => undefined);
     }
   }
 
-  private registerUpstreamTools(): void {
-    const blocked = new Set(['upload_file', 'lighthouse_audit']);
-    for (const tool of toolsModule.createTools(upstreamArgs) as AnyRecord[]) {
-      if (blocked.has(tool.name)) continue;
-      const handler = new toolHandlerModule.ToolHandler(tool, upstreamArgs, () => this.getContext(), this.mutex);
-      if (!handler.shouldRegister) continue;
-      if (ledgerAwareLowLevelTools.has(tool.name)) {
-        handler.inputSchema = {
-          ...handler.inputSchema,
-          operation_id: z.string().min(4).max(120).optional().describe('可选的测试操作关联 ID。'),
-          test_mode: z.boolean().optional().describe('把这次低层回退记入短期测试清单；字段语义和清理状态仍标记为未验证。'),
-        };
-        handler.registeredInputSchema = z.object(handler.inputSchema).passthrough();
-      }
-      this.server.registerTool(tool.name, {
-        description: tool.description,
-        inputSchema: handler.registeredInputSchema,
-        annotations: tool.annotations,
-      }, async (params: AnyRecord) => {
-        let result = await handler.handle(params);
-        result = annotateTimeout(result, tool.name);
-        if (snapshotBearingTools.has(tool.name)) result = sanitizeBrowserResult(result) as AnyRecord;
-        if (params.test_mode && typeof params.pageId === 'number') {
-          this.engine?.recordLowLevelOperation(
-            params.pageId,
-            tool.name,
-            params.operation_id,
-            typeof params.uid === 'string' ? params.uid : Array.isArray(params.elements) ? `${params.elements.length} elements` : 'keyboard_or_pointer_target',
-            result?.isError ? 'failed_or_partial' : 'completed_unverified',
-          );
-        }
-        return result;
-      });
-    }
-  }
-
-  private registerFormTools(): void {
-    this.server.registerTool('form_observe', {
-      description: 'Observe a recruitment form with local semantic caching. Focused results expose local details and only a value-free sentinel for changes elsewhere; full mode is explicit.',
-      inputSchema: {
-        page_id: z.number().int().positive(),
-        mode: z.enum(['overview', 'focus', 'delta', 'full']).default('overview'),
-        target: z.string().max(200).optional(),
-        scope: z.string().max(200).optional(),
-        since_observation_id: z.string().max(120).optional(),
-        max_bytes: z.number().int().min(2_000).max(80_000).optional(),
-        include_values: z.enum(['state', 'masked', 'needed']).optional(),
-        include_test_ledger: z.boolean().optional(),
-      },
-      annotations: { readOnlyHint: true },
-    }, async (params: ObserveRequest) => await this.handleForm(params.page_id, engine => engine.observe(params)));
-
-    this.server.registerTool('form_fill_fields', {
-      description: 'Fill a dependency-safe batch of ordinary fields by semantic label or logical field reference, then verify each value locally.',
-      inputSchema: {
-        ...operationFields,
-        fields: z.array(z.object({
-          field: z.string().min(1).max(240),
-          scope: z.string().max(240).optional(),
-          value: z.union([z.string().max(20_000), z.boolean(), z.number()]),
-          overwrite: z.boolean().optional(),
-        })).min(1).max(80),
-      },
-      annotations: { readOnlyHint: false },
-    }, async (params: AnyRecord) => await this.handleForm(params.page_id, engine => engine.fillFields({
-      pageId: params.page_id,
-      expectedGeneration: params.expected_generation,
-      operationId: params.operation_id,
-      testMode: params.test_mode,
-      fields: params.fields as FieldRequest[],
-    })));
-
-    this.server.registerTool('form_select_option', {
-      description: 'Select one radio, checkbox, native option or custom dropdown candidate and verify the resulting field state.',
-      inputSchema: {
-        ...operationFields,
-        field: z.string().min(1).max(240),
-        value: z.string().min(1).max(500),
-        scope: z.string().max(240).optional(),
-        query: z.string().max(500).optional(),
-      },
-      annotations: { readOnlyHint: false },
-    }, async (params: AnyRecord) => await this.handleForm(params.page_id, engine => engine.selectOption({
-      pageId: params.page_id,
-      expectedGeneration: params.expected_generation,
-      operationId: params.operation_id,
-      testMode: params.test_mode,
-      field: params.field,
-      value: params.value,
-      scope: params.scope,
-      query: params.query,
-    })));
-
-    this.server.registerTool('form_select_path', {
-      description: 'Complete a cascader or tree path inside one MCP transaction without returning intermediate full-page snapshots.',
-      inputSchema: {
-        ...operationFields,
-        field: z.string().min(1).max(240),
-        path: z.array(z.string().min(1).max(500)).min(1).max(12),
-        scope: z.string().max(240).optional(),
-      },
-      annotations: { readOnlyHint: false },
-    }, async (params: AnyRecord) => await this.handleForm(params.page_id, engine => engine.selectPath({
-      pageId: params.page_id,
-      expectedGeneration: params.expected_generation,
-      operationId: params.operation_id,
-      testMode: params.test_mode,
-      field: params.field,
-      path: params.path,
-      scope: params.scope,
-    })));
-
-    this.server.registerTool('form_set_date', {
-      description: 'Set and verify one complete date or month value as a transaction; intermediate picker values are never reported as success.',
-      inputSchema: {
-        ...operationFields,
-        field: z.string().min(1).max(240),
-        value: z.string().min(4).max(80),
-        scope: z.string().max(240).optional(),
-        overwrite: z.boolean().optional(),
-      },
-      annotations: { readOnlyHint: false },
-    }, async (params: AnyRecord) => await this.handleForm(params.page_id, engine => engine.setDate({
-      pageId: params.page_id,
-      expectedGeneration: params.expected_generation,
-      operationId: params.operation_id,
-      testMode: params.test_mode,
-      field: params.field,
-      value: params.value,
-      scope: params.scope,
-      overwrite: params.overwrite,
-    })));
-
-    this.server.registerTool('form_activate', {
-      description: 'Focus, open, close, add, save, or enter an ordinary next step by semantic target. Final submission and manual boundaries are blocked.',
-      inputSchema: {
-        ...operationFields,
-        target: z.string().min(1).max(240),
-        scope: z.string().max(240).optional(),
-        intent: z.enum(['focus', 'open', 'close', 'add_record', 'save_record', 'next_step']),
-      },
-      annotations: { readOnlyHint: false },
-    }, async (params: AnyRecord) => await this.handleForm(params.page_id, engine => engine.activate({
-      pageId: params.page_id,
-      expectedGeneration: params.expected_generation,
-      operationId: params.operation_id,
-      testMode: params.test_mode,
-      target: params.target,
-      scope: params.scope,
-      intent: params.intent,
-    })));
-  }
-
-  private async handleForm(pageId: number, callback: (engine: FormEngine) => Promise<AnyRecord>): Promise<AnyRecord> {
-    const guard = await this.mutex.acquire();
-    try {
-      const context = await this.getContext();
-      context.getPageById(pageId);
-      if (!this.engine) this.engine = new FormEngine(id => context.getPageById(id));
-      return await callback(this.engine);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      return {
-        content: [{ type: 'text', text: JSON.stringify({ ok: false, error: { code: 'browser_error', message: redactDiagnostic(message) } }, null, 2) }],
-        structuredContent: { ok: false, error: { code: 'browser_error', message: redactDiagnostic(message) } },
-        isError: true,
-      };
-    } finally {
-      guard[Symbol.dispose]();
-    }
-  }
-
-  private async getContext(): Promise<AnyRecord> {
+  async getContext(): Promise<AnyRecord> {
     if (!this.lockHeld) {
       await lock.acquire();
       this.lockHeld = true;
@@ -370,6 +227,14 @@ export class ResumeBrowserServer {
     return this.context;
   }
 
+  private claimUnsafe(sessionId: string): void {
+    if (this.revokedSessions.has(sessionId)) {
+      throw new Error('browser_lease_revoked: 这个任务的浏览器控制权已由更新的任务接管；请在当前任务明确请求重新接管或继续使用新任务');
+    }
+    if (this.leaseOwner && this.leaseOwner !== sessionId) this.revokedSessions.add(this.leaseOwner);
+    this.leaseOwner = sessionId;
+  }
+
   private async handleDebugRequest(request: AnyRecord): Promise<AnyRecord> {
     const guard = await this.mutex.acquire();
     try {
@@ -377,7 +242,7 @@ export class ResumeBrowserServer {
       const engine = this.engine;
       if (!context || !engine) throw new Error('browser_context_unavailable');
       if (request.command === 'status') {
-        return { version: '0.15.1', pid: process.pid, profile_hash: profileHash(profileDir), pages: context.getPages().length };
+        return { version: RUNTIME_PLUGIN_VERSION, pid: process.pid, profile_hash: profileHash(profileDir), pages: context.getPages().length, lease_active: Boolean(this.leaseOwner) };
       }
       if (request.command === 'list_pages') {
         const pages = await Promise.all((context.getPages() as AnyRecord[]).map(async page => ({
@@ -412,6 +277,215 @@ export class ResumeBrowserServer {
   }
 }
 
+export class ResumeBrowserServer {
+  private readonly server: AnyRecord;
+  private closing = false;
+
+  private constructor(private readonly host: ResumeBrowserHost, private readonly sessionId: string) {
+    this.server = new thirdPartyModule.McpServer({
+      name: 'resume_browser',
+      title: 'Resume Browser MCP',
+      version: RUNTIME_PLUGIN_VERSION,
+    }, { capabilities: { logging: {} } });
+  }
+
+  static async create(host = new ResumeBrowserHost(), sessionId: string = randomUUID()): Promise<ResumeBrowserServer> {
+    const instance = new ResumeBrowserServer(host, sessionId);
+    instance.registerUpstreamTools();
+    instance.registerFormTools();
+    return instance;
+  }
+
+  async connect(transport: AnyRecord = new thirdPartyModule.StdioServerTransport()): Promise<void> {
+    await this.server.connect(transport);
+    console.error(`Resume Browser MCP ${RUNTIME_PLUGIN_VERSION} session ready; Chrome profile ${profileHash(profileDir)} is acquired on first browser call.`);
+  }
+
+  async close(): Promise<void> {
+    if (this.closing) return;
+    this.closing = true;
+    this.host.releaseSession(this.sessionId);
+    await this.server.close().catch(() => undefined);
+  }
+
+  private registerUpstreamTools(): void {
+    const blocked = new Set(['upload_file', 'lighthouse_audit']);
+    for (const tool of toolsModule.createTools(upstreamArgs) as AnyRecord[]) {
+      if (blocked.has(tool.name)) continue;
+      const handler = new toolHandlerModule.ToolHandler(tool, upstreamArgs, () => this.host.getContext(), this.host.unlockedMutex);
+      if (!handler.shouldRegister) continue;
+      if (ledgerAwareLowLevelTools.has(tool.name)) {
+        handler.inputSchema = {
+          ...handler.inputSchema,
+          operation_id: z.string().min(4).max(120).optional().describe('可选的测试操作关联 ID。'),
+          test_mode: z.boolean().optional().describe('把这次低层回退记入短期测试清单；字段语义和清理状态仍标记为未验证。'),
+        };
+        handler.registeredInputSchema = z.object(handler.inputSchema).passthrough();
+      }
+      this.server.registerTool(tool.name, {
+        description: tool.description,
+        inputSchema: handler.registeredInputSchema,
+        annotations: tool.annotations,
+      }, async (params: AnyRecord) => {
+        try {
+          return await this.host.run(this.sessionId, async () => {
+            let result = await handler.handle(params);
+            result = annotateTimeout(result, tool.name);
+            if (snapshotBearingTools.has(tool.name)) result = sanitizeBrowserResult(result) as AnyRecord;
+            if (params.test_mode && typeof params.pageId === 'number') {
+              this.host.recordLowLevelOperation(
+                params.pageId,
+                tool.name,
+                params.operation_id,
+                typeof params.uid === 'string' ? params.uid : Array.isArray(params.elements) ? `${params.elements.length} elements` : 'keyboard_or_pointer_target',
+                result?.isError ? 'failed_or_partial' : 'completed_unverified',
+              );
+            }
+            return result;
+          });
+        } catch (error) {
+          return browserErrorResult(error);
+        }
+      });
+    }
+  }
+
+  private registerFormTools(): void {
+    this.server.registerTool('browser_takeover', {
+      description: 'Explicitly reclaim the shared Resume Companion browser lease for this task. The previously controlling task remains open but its browser calls are revoked.',
+      inputSchema: {},
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
+    }, async () => await this.host.takeover(this.sessionId));
+
+    this.server.registerTool('form_observe', {
+      description: 'Observe a recruitment form with local semantic caching. Focused results expose local details and only a value-free sentinel for changes elsewhere; full mode is explicit.',
+      inputSchema: {
+        page_id: z.number().int().positive(),
+        mode: z.enum(['overview', 'focus', 'delta', 'full']).default('overview'),
+        target: z.string().max(200).optional(),
+        scope: z.string().max(200).optional(),
+        since_observation_id: z.string().max(120).optional(),
+        max_bytes: z.number().int().min(2_000).max(80_000).optional(),
+        include_values: z.enum(['state', 'masked', 'needed']).optional(),
+        include_test_ledger: z.boolean().optional(),
+      },
+      annotations: { readOnlyHint: true },
+    }, async (params: ObserveRequest) => await this.host.handleForm(this.sessionId, params.page_id, engine => engine.observe(params)));
+
+    this.server.registerTool('form_fill_fields', {
+      description: 'Fill a dependency-safe batch of ordinary fields by semantic label or logical field reference, then verify each value locally.',
+      inputSchema: {
+        ...operationFields,
+        fields: z.array(z.object({
+          field: z.string().min(1).max(240),
+          scope: z.string().max(240).optional(),
+          value: z.union([z.string().max(20_000), z.boolean(), z.number()]),
+          overwrite: z.boolean().optional(),
+        })).min(1).max(80),
+      },
+      annotations: { readOnlyHint: false },
+    }, async (params: AnyRecord) => await this.host.handleForm(this.sessionId, params.page_id, engine => engine.fillFields({
+      pageId: params.page_id,
+      expectedGeneration: params.expected_generation,
+      operationId: params.operation_id,
+      testMode: params.test_mode,
+      fields: params.fields as FieldRequest[],
+    })));
+
+    this.server.registerTool('form_select_option', {
+      description: 'Select one radio, checkbox, native option or custom dropdown candidate and verify the resulting field state.',
+      inputSchema: {
+        ...operationFields,
+        field: z.string().min(1).max(240),
+        value: z.string().min(1).max(500),
+        scope: z.string().max(240).optional(),
+        query: z.string().max(500).optional(),
+      },
+      annotations: { readOnlyHint: false },
+    }, async (params: AnyRecord) => await this.host.handleForm(this.sessionId, params.page_id, engine => engine.selectOption({
+      pageId: params.page_id,
+      expectedGeneration: params.expected_generation,
+      operationId: params.operation_id,
+      testMode: params.test_mode,
+      field: params.field,
+      value: params.value,
+      scope: params.scope,
+      query: params.query,
+    })));
+
+    this.server.registerTool('form_select_path', {
+      description: 'Complete a cascader or tree path inside one MCP transaction without returning intermediate full-page snapshots.',
+      inputSchema: {
+        ...operationFields,
+        field: z.string().min(1).max(240),
+        path: z.array(z.string().min(1).max(500)).min(1).max(12),
+        scope: z.string().max(240).optional(),
+      },
+      annotations: { readOnlyHint: false },
+    }, async (params: AnyRecord) => await this.host.handleForm(this.sessionId, params.page_id, engine => engine.selectPath({
+      pageId: params.page_id,
+      expectedGeneration: params.expected_generation,
+      operationId: params.operation_id,
+      testMode: params.test_mode,
+      field: params.field,
+      path: params.path,
+      scope: params.scope,
+    })));
+
+    this.server.registerTool('form_set_date', {
+      description: 'Set and verify one complete date or month value as a transaction; intermediate picker values are never reported as success.',
+      inputSchema: {
+        ...operationFields,
+        field: z.string().min(1).max(240),
+        value: z.string().min(4).max(80),
+        scope: z.string().max(240).optional(),
+        overwrite: z.boolean().optional(),
+      },
+      annotations: { readOnlyHint: false },
+    }, async (params: AnyRecord) => await this.host.handleForm(this.sessionId, params.page_id, engine => engine.setDate({
+      pageId: params.page_id,
+      expectedGeneration: params.expected_generation,
+      operationId: params.operation_id,
+      testMode: params.test_mode,
+      field: params.field,
+      value: params.value,
+      scope: params.scope,
+      overwrite: params.overwrite,
+    })));
+
+    this.server.registerTool('form_activate', {
+      description: 'Focus, open, close, add, save, or enter an ordinary next step by semantic target. Final submission and manual boundaries are blocked.',
+      inputSchema: {
+        ...operationFields,
+        target: z.string().min(1).max(240),
+        scope: z.string().max(240).optional(),
+        intent: z.enum(['focus', 'open', 'close', 'add_record', 'save_record', 'next_step']),
+      },
+      annotations: { readOnlyHint: false },
+    }, async (params: AnyRecord) => await this.host.handleForm(this.sessionId, params.page_id, engine => engine.activate({
+      pageId: params.page_id,
+      expectedGeneration: params.expected_generation,
+      operationId: params.operation_id,
+      testMode: params.test_mode,
+      target: params.target,
+      scope: params.scope,
+      intent: params.intent,
+    })));
+  }
+
+}
+
+function browserErrorResult(error: unknown): AnyRecord {
+  const message = error instanceof Error ? error.message : String(error);
+  const code = /^browser_lease_revoked:/.test(message) ? 'browser_lease_revoked' : 'browser_error';
+  const data = { ok: false, error: { code, message: redactDiagnostic(message) } };
+  return {
+    content: [{ type: 'text', text: JSON.stringify(data, null, 2) }],
+    structuredContent: data,
+    isError: true,
+  };
+}
+
 function redactDiagnostic(value: string): string {
   return value
     .replaceAll(profileDir, `<chrome-profile:${profileHash(profileDir)}>`)
@@ -421,10 +495,11 @@ function redactDiagnostic(value: string): string {
 }
 
 export async function runResumeBrowserServer(): Promise<void> {
-  const server = await ResumeBrowserServer.create();
+  const host = new ResumeBrowserHost();
+  const server = await ResumeBrowserServer.create(host);
   let shutdownPromise: Promise<void> | undefined;
   const requestShutdown = (): void => {
-    shutdownPromise ??= server.close().finally(() => process.exit(0));
+    shutdownPromise ??= server.close().then(() => host.close()).finally(() => process.exit(0));
   };
   process.stdin.once('end', requestShutdown);
   process.stdin.once('close', requestShutdown);

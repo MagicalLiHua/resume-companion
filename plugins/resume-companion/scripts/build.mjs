@@ -25,9 +25,15 @@ await build({
   outfile: resolve(root, 'chrome-launcher.bundle.mjs'),
 });
 
+await build({
+  ...common,
+  entryPoints: [resolve(root, 'src/browser-supervisor.ts')],
+  outfile: resolve(root, 'browser-supervisor.bundle.mjs'),
+});
+
 const runtimeRoot = resolve(root, 'runtime');
 await rm(runtimeRoot, { recursive: true, force: true });
 await mkdir(runtimeRoot, { recursive: true });
 await cp(resolve(root, 'node_modules/chrome-devtools-mcp'), resolve(runtimeRoot, 'chrome-devtools-mcp'), { recursive: true });
 
-console.log('Profile MCP, Resume Browser MCP and pinned Chrome DevTools MCP runtime generated.');
+console.log('Profile MCP, Resume Browser launcher, browser supervisor and pinned Chrome DevTools MCP runtime generated.');

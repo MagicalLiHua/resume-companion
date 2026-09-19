@@ -2985,7 +2985,7 @@ var require_compile = __commonJS({
       const schOrFunc = root.refs[ref];
       if (schOrFunc)
         return schOrFunc;
-      let _sch = resolve2.call(this, root, ref);
+      let _sch = resolve3.call(this, root, ref);
       if (_sch === void 0) {
         const schema = (_a = root.localRefs) === null || _a === void 0 ? void 0 : _a[ref];
         const { schemaId } = this.opts;
@@ -3012,7 +3012,7 @@ var require_compile = __commonJS({
     function sameSchemaEnv(s1, s2) {
       return s1.schema === s2.schema && s1.root === s2.root && s1.baseId === s2.baseId;
     }
-    function resolve2(root, ref) {
+    function resolve3(root, ref) {
       let sch;
       while (typeof (sch = this.refs[ref]) == "string")
         ref = sch;
@@ -3842,7 +3842,7 @@ var require_fast_uri = __commonJS({
       }
       return uri;
     }
-    function resolve2(baseURI, relativeURI, options) {
+    function resolve3(baseURI, relativeURI, options) {
       const schemelessOptions = options ? Object.assign({ scheme: "null" }, options) : { scheme: "null" };
       const {
         parsed: baseParsed,
@@ -4210,7 +4210,7 @@ var require_fast_uri = __commonJS({
     var fastUri = {
       SCHEMES,
       normalize,
-      resolve: resolve2,
+      resolve: resolve3,
       resolveComponent,
       equal,
       serialize,
@@ -19306,7 +19306,7 @@ var Protocol = class {
           return;
         }
         const pollInterval = task2.pollInterval ?? this._options?.defaultTaskPollInterval ?? 1e3;
-        await new Promise((resolve2) => setTimeout(resolve2, pollInterval));
+        await new Promise((resolve3) => setTimeout(resolve3, pollInterval));
         options?.signal?.throwIfAborted();
       }
     } catch (error2) {
@@ -19323,7 +19323,7 @@ var Protocol = class {
    */
   request(request, resultSchema, options) {
     const { relatedRequestId, resumptionToken, onresumptiontoken, task, relatedTask } = options ?? {};
-    return new Promise((resolve2, reject) => {
+    return new Promise((resolve3, reject) => {
       const earlyReject = (error2) => {
         reject(error2);
       };
@@ -19401,7 +19401,7 @@ var Protocol = class {
           if (!parseResult.success) {
             reject(parseResult.error);
           } else {
-            resolve2(parseResult.data);
+            resolve3(parseResult.data);
           }
         } catch (error2) {
           reject(error2);
@@ -19662,12 +19662,12 @@ var Protocol = class {
       }
     } catch {
     }
-    return new Promise((resolve2, reject) => {
+    return new Promise((resolve3, reject) => {
       if (signal.aborted) {
         reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
         return;
       }
-      const timeoutId = setTimeout(resolve2, interval);
+      const timeoutId = setTimeout(resolve3, interval);
       signal.addEventListener("abort", () => {
         clearTimeout(timeoutId);
         reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
@@ -20758,7 +20758,7 @@ var McpServer = class {
     let task = createTaskResult.task;
     const pollInterval = task.pollInterval ?? 5e3;
     while (task.status !== "completed" && task.status !== "failed" && task.status !== "cancelled") {
-      await new Promise((resolve2) => setTimeout(resolve2, pollInterval));
+      await new Promise((resolve3) => setTimeout(resolve3, pollInterval));
       const updatedTask = await extra.taskStore.getTask(taskId);
       if (!updatedTask) {
         throw new McpError(ErrorCode.InternalError, `Task ${taskId} not found during polling`);
@@ -21422,12 +21422,12 @@ var StdioServerTransport = class {
     this.onclose?.();
   }
   send(message) {
-    return new Promise((resolve2) => {
+    return new Promise((resolve3) => {
       const json = serializeMessage(message);
       if (this._stdout.write(json)) {
-        resolve2();
+        resolve3();
       } else {
-        this._stdout.once("drain", resolve2);
+        this._stdout.once("drain", resolve3);
       }
     });
   }
@@ -21908,6 +21908,27 @@ var ProfileStore = class {
   }
 };
 
+// src/version.ts
+import { readFileSync } from "node:fs";
+import { dirname as dirname2, resolve as resolve2 } from "node:path";
+import { fileURLToPath } from "node:url";
+var PLUGIN_VERSION = "0.16.0";
+function resolveRuntimePluginVersion(moduleUrl) {
+  const directory = dirname2(fileURLToPath(moduleUrl));
+  for (const manifest of [
+    resolve2(directory, ".codex-plugin/plugin.json"),
+    resolve2(directory, "../.codex-plugin/plugin.json")
+  ]) {
+    try {
+      const value = JSON.parse(readFileSync(manifest, "utf8"));
+      if (typeof value.version === "string" && value.version.trim()) return value.version.trim();
+    } catch {
+    }
+  }
+  return PLUGIN_VERSION;
+}
+var RUNTIME_PLUGIN_VERSION = resolveRuntimePluginVersion(import.meta.url);
+
 // src/index.ts
 var store = new ProfileStore();
 await store.initialize();
@@ -21931,14 +21952,14 @@ async function runLocal(job) {
     return errorResult(error2);
   }
 }
-var server = new McpServer({ name: "resume-companion", version: "0.15.1" });
+var server = new McpServer({ name: "resume-companion", version: RUNTIME_PLUGIN_VERSION });
 server.registerTool("resume_status", {
   title: "\u68C0\u67E5\u7B80\u5386\u968F\u884C\u8D44\u6599\u5E93\u72B6\u6001",
   description: "\u8FD4\u56DE\u672C\u5730\u8D44\u6599\u5E93\u76EE\u5F55\u3001\u683C\u5F0F\u7248\u672C\u548C\u8D44\u6599\u6570\u91CF\u3002\u6D4F\u89C8\u5668\u7531\u72EC\u7ACB\u7684 Resume Browser MCP \u63D0\u4F9B\uFF0C\u56E0\u6B64\u672C\u5DE5\u5177\u4E0D\u4F1A\u542F\u52A8\u6216\u68C0\u67E5 Chrome\u3002",
   annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true }
 }, async () => runLocal(async () => ({
   storage: await store.status(),
-  service: { name: "resume-companion", version: "0.15.1", role: "profile_library" }
+  service: { name: "resume-companion", version: RUNTIME_PLUGIN_VERSION, role: "profile_library" }
 })));
 server.registerTool("resume_profile_list", {
   title: "\u5217\u51FA\u672C\u5730\u7B80\u5386\u8D44\u6599",

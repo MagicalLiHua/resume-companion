@@ -1,8 +1,8 @@
 # 开发说明
 
-0.15.1 的产品代码使用严格 TypeScript。Resume Companion 实现本地资料服务和 Resume Browser MCP；后者在固定的 `chrome-devtools-mcp@1.9.0` 浏览器生命周期与诊断能力之上维护页面语义缓存、局部/增量观察、事务式表单动作和敏感值脱敏。
+0.16.0 的产品代码使用严格 TypeScript。Resume Companion 实现本地资料服务、Browser Supervisor 和 Resume Browser MCP；后者在固定的 `chrome-devtools-mcp@1.9.0` 浏览器生命周期与诊断能力之上维护页面语义缓存、局部/增量观察、事务式表单动作和敏感值脱敏。
 
-0.15.1 的浏览器层由同进程 TypeScript 组合服务实现：固定上游浏览器生命周期和诊断能力，在共享页面上下文中增加局部观察、语义重定位和事务式表单动作。架构讨论、竞品分析和阶段评测保留在本地研发资料中，不随公开仓库和安装包发布。
+0.16.0 的浏览器层由独立 TypeScript Supervisor 和每任务 MCP 会话组成：固定上游浏览器生命周期和诊断能力，在一个共享页面上下文中增加租约、局部观察、语义重定位和事务式表单动作。架构讨论、竞品分析和阶段评测保留在本地研发资料中，不随公开仓库和安装包发布。
 
 ## 命令
 
@@ -23,7 +23,7 @@ npm run package
 
 商业插件研究材料和真实网站捕获保持在 git 忽略目录，只允许把重新设计后的原创实现和合成测试加入公开仓库。
 
-专用 Chrome 已由另一个 Agent 任务持有时，不要再启动第二个浏览器 MCP。0.15.1 起，持有者在首次浏览器调用后会创建仅限本机用户访问的只读调试 socket。开发侧可运行 `npm run debug:browser -- status`、`npm run debug:browser -- pages`，或 `npm run debug:browser -- observe <page-id> [target] [scope]` 实时查看同一个浏览器上下文。调试通道只支持状态、列页和脱敏语义观察，不执行填写、点击、脚本或 Network 正文读取。
+Browser Supervisor 通过按 Profile 派生且权限为 0600 的本机 socket 复用同一个专用 Chrome。新任务首次调用浏览器工具时会转移操作租约，旧任务的后续浏览器调用被拒绝。开发侧可运行 `npm run debug:browser -- status`、`npm run debug:browser -- pages`，或 `npm run debug:browser -- observe <page-id> [target] [scope]` 实时查看同一个浏览器上下文。调试通道只支持状态、列页和脱敏语义观察，不执行填写、点击、脚本或 Network 正文读取。
 
 ## 目录
 
@@ -32,7 +32,9 @@ npm run package
 | `plugins/resume-companion/src/index.ts` | 四工具资料 MCP |
 | `plugins/resume-companion/src/profile-store.ts` | 本地 schema、原子写入、历史和 revision |
 | `plugins/resume-companion/src/chrome-profile.ts` | 跨平台 Profile 路径与实例锁 |
-| `plugins/resume-companion/src/chrome-launcher.ts` | 官方 MCP 参数、stdio 透传和脱敏诊断 |
+| `plugins/resume-companion/src/chrome-launcher.ts` | 每任务 stdio 与 Supervisor socket 的轻量代理 |
+| `plugins/resume-companion/src/browser-supervisor.ts` | 共享 Chrome 生命周期、页面上下文和任务租约 |
+| `plugins/resume-companion/src/resume-browser-server.ts` | 官方工具、语义工具与每任务 MCP 会话 |
 | `plugins/resume-companion/src/browser/stale-uid-recovery.ts` | 失效 AX 句柄与动作期 Locator 的唯一语义恢复 |
 | `plugins/resume-companion/src/devtools-resilience-preload.ts` | 在固定上游运行时安装兼容层 |
 | `plugins/resume-companion/skills` | Agent 工作流与诊断边界 |
@@ -45,12 +47,12 @@ npm run package
 
 - `server.bundle.mjs`
 - `chrome-launcher.bundle.mjs`
-- `devtools-resilience-preload.mjs`
+- `browser-supervisor.bundle.mjs`
 - `runtime/chrome-devtools-mcp/`
 
-不要手工编辑 bundle 或 runtime。启动器不代理、不改名、不解析上游 MCP 工具，只计算稳定 Profile、获取锁、设置已审查参数、透传 stdio 和脱敏 stderr。预加载兼容层固定依赖 1.9.0 的 `McpPage` 导出；构建脚本还对该固定运行包的错误包装做精确签名校验，使 `stale_action_*` 能原样返回。上游结构不匹配时构建或启动直接失败，不会静默关闭恢复。兼容层只在旧 AX 句柄已经脱离文档或 Locator 动作期间丢失节点时运行，候选歧义和结果不确定时停止，不包含域名、CSS 选择器或站点 API。
+不要手工编辑 bundle 或 runtime。轻量启动器只完成 Supervisor 握手和 stdio/socket 透传；Supervisor 在共享页面上下文中注册官方工具与语义工具。短命节点恢复固定依赖 1.9.0 的 `McpPage` 导出；上游结构不匹配时构建或启动直接失败，不会静默关闭恢复。恢复层只在旧 AX 句柄已经脱离文档或 Locator 动作期间丢失节点时运行，候选歧义和结果不确定时停止，不包含域名、CSS 选择器或站点 API。
 
-专用 Profile 不放在插件缓存中。启动器允许 MCP 初始化和工具目录读取直接透传，只在第一条 `tools/call` 前获取锁；第二个任务不会静默改用临时 Profile。锁冲突作为当前工具调用的可重试 JSON-RPC 错误返回，不终止上游 MCP。正常或信号退出时，锁只在上游进程结束后释放。
+专用 Profile 不放在插件缓存中。Supervisor 只在第一条浏览器 `tools/call` 时获取 Profile 锁；第二个任务连接已有 Supervisor，并在原子操作边界转移任务租约，不会启动第二个 Chrome 或改用临时 Profile。只有外部 Chrome 进程和从旧版迁移的残留进程会触发 `profile_in_use`。
 
 ## 变更规则
 
