@@ -34,6 +34,7 @@ for (const file of [
   'control-experience-plan.md',
   'control-experience-sources.md',
   'control-recipe-evaluation.md',
+  'resume-browser-mcp-plan.md',
 ]) {
   await cp(resolve(root, 'docs', file), resolve(staging, 'docs', file));
 }

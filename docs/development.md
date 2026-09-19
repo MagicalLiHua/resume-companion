@@ -2,7 +2,7 @@
 
 0.14.0 的产品代码使用严格 TypeScript。Resume Companion 实现本地资料服务、Chrome MCP 启动器和一个针对 SPA 短命节点的受限语义恢复层；浏览器协议、页面快照和输入动作仍来自固定的官方 `chrome-devtools-mcp@1.9.0`。
 
-控件经验、Agent 配方、复杂控件实验室和本地经验库规划见[《网申控件经验系统与执行优化计划》](control-experience-plan.md)。
+下一阶段的局部观察、增量快照、事务式组件动作和上游 fork 计划见[《Resume Browser MCP：局部观察与事务式表单执行改进计划》](resume-browser-mcp-plan.md)。控件经验、Agent 配方、复杂控件实验室和本地经验库规划继续见[《网申控件经验系统与执行优化计划》](control-experience-plan.md)。
 
 ## 命令
 

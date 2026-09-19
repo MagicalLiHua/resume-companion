@@ -44,6 +44,7 @@ research/third-party/
 !/docs/control-experience-plan.md
 !/docs/control-experience-sources.md
 !/docs/control-recipe-evaluation.md
+!/docs/resume-browser-mcp-plan.md
 !/docs/images/
 /plugins/resume-companion/scripts/debug-client.mjs
 /plugins/resume-companion/scripts/model-eval-client.mjs

@@ -7,7 +7,7 @@
 
 简历随行 0.14.0 是一个面向个人使用、有人监督的开发预览版。它不为每家招聘网站维护脚本，也不自建模型后端。插件提供两个 MCP 服务：一个管理本地多版本简历，另一个运行固定版本的官方 [Chrome DevTools MCP](https://github.com/ChromeDevTools/chrome-devtools-mcp)，并为真实 SPA 的短命 DOM 节点增加窄范围语义恢复。Codex 或其他 AI Agent 读取需要的资料、理解当前页面，并按通用控件配方组合官方浏览器工具完成填写、普通草稿保存和普通下一步。最终投递始终交给用户。
 
-[安装与使用](docs/getting-started.md) · [工具与权限](docs/mcp-tools.md) · [验证范围](docs/validation.md) · [参与开发](CONTRIBUTING.md)
+[安装与使用](docs/getting-started.md) · [工具与权限](docs/mcp-tools.md) · [下一阶段计划](docs/resume-browser-mcp-plan.md) · [验证范围](docs/validation.md) · [参与开发](CONTRIBUTING.md)
 
 ## 架构
 
