@@ -1,6 +1,6 @@
 # 安装与使用
 
-当前版本为 0.14.0 开发预览版，由本地资料 MCP、固定版本的官方 Chrome DevTools MCP、TypeScript 启动器、SPA 短命节点恢复层和带控件配方的 `resume-autofill` skill 组成。它不需要浏览器扩展、Native Host 或远程调试开关。
+当前版本为 0.15.0 开发预览版，由本地资料 MCP、TypeScript Resume Browser MCP、固定的 Chrome DevTools MCP 1.9.0 浏览器底座和 `resume-autofill` skill 组成。它不需要浏览器扩展、Native Host 或远程调试开关。
 
 ## 环境
 
@@ -35,7 +35,7 @@ codex plugin add resume-companion@resume-companion
 插件一次注册两个 MCP：
 
 - `resume_companion` 是必需服务，启动失败会影响资料管理。
-- `chrome_devtools` 是可选服务，被另一个任务占用时不会阻止资料服务启动。
+- `resume_browser` 是可选服务，被另一个任务占用时不会阻止资料服务启动。
 
 新安装或升级插件后，新建一个 Codex 任务让工具目录重新加载。
 
@@ -49,11 +49,11 @@ codex plugin add resume-companion@resume-companion
 
 > 用“校招版”完成当前网申，可以保存普通草稿和进入普通下一步，最终提交交给我。
 
-第一次调用 `list_pages` 时，Chrome DevTools MCP 会打开 Resume Companion 专用 Chrome。请在这个窗口登录招聘网站、完成验证码或设备验证，然后回到 Agent 继续。此后登录状态会随 Profile 保存。
+第一次调用 `list_pages` 时，Resume Browser MCP 会打开 Resume Companion 专用 Chrome。请在这个窗口登录招聘网站、完成验证码或设备验证，然后回到 Agent 继续。此后登录状态会随 Profile 保存。
 
 ## 工具审批
 
-Chrome 服务默认 `prompt`。插件只为审查过的常规工具设置自动批准：页面列表和选择、快照、文本等待、请求列表、Console 列表和详情、截图、`fill_form`、`fill`、`click` 与 `hover`。
+浏览器服务默认 `prompt`。插件为页面列表和选择、六个表单工具、快照、文本等待、请求列表、Console 列表和详情、截图及原始常规输入设置自动批准。
 
 `evaluate_script`、请求详情、导航、新建/关闭页面、按键、键盘输入、拖拽和对话框处理保持逐次提示。上传和 Lighthouse 被禁用。客户端若不支持 `.mcp.json` 的审批字段，需要手动复制 [工具与权限](mcp-tools.md) 中的策略；在完成前不要把浏览器服务设置成全局无条件自动批准。
 
@@ -66,7 +66,7 @@ Chrome 服务默认 `prompt`。插件只为审查过的常规工具设置自动�
 | Chrome 打开但网站未登录 | 在专用 Chrome 中手工登录一次；不要切换到默认 Chrome |
 | Chrome 被用户关闭 | 再调用一个页面工具，MCP 会重新启动并复用同一 Profile |
 | 资料读取返回 `profile_changed` | 重新读取资料目录，固定新的 revision，再规划剩余字段 |
-| 页面填写中途失败 | 重新快照，核对已成功字段，只补缺失项 |
+| 页面填写中途失败 | 根据事务结果核对成功字段；用 `focus` 或 `delta` 观察，只补缺失项 |
 | 网页显示结果不明 | 不重放保存或下一步；由 Agent 按证据诊断，仍不明确时交给用户 |
 
 ## 数据备份与清理

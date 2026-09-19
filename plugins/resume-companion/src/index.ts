@@ -37,15 +37,15 @@ async function runLocal(job: () => Promise<unknown>): Promise<ToolResult> {
   }
 }
 
-const server = new McpServer({ name: 'resume-companion', version: '0.14.0' });
+const server = new McpServer({ name: 'resume-companion', version: '0.15.0' });
 
 server.registerTool('resume_status', {
   title: '检查简历随行资料库状态',
-  description: '返回本地资料库目录、格式版本和资料数量。浏览器由独立的 Chrome DevTools MCP 提供，因此本工具不会启动或检查 Chrome。',
+  description: '返回本地资料库目录、格式版本和资料数量。浏览器由独立的 Resume Browser MCP 提供，因此本工具不会启动或检查 Chrome。',
   annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
 }, async () => runLocal(async () => ({
   storage: await store.status(),
-  service: { name: 'resume-companion', version: '0.14.0', role: 'profile_library' },
+  service: { name: 'resume-companion', version: '0.15.0', role: 'profile_library' },
 })));
 
 server.registerTool('resume_profile_list', {

@@ -1,5 +1,15 @@
 # 更新记录
 
+## 0.15.0 · Resume Browser MCP
+
+- 用同进程 TypeScript 组合服务替代上游子进程转发：继续复用固定的 Chrome DevTools MCP 1.9.0 浏览器生命周期和诊断工具，同时共享页面上下文、互斥锁与专用 Profile。
+- 新增 `form_observe`，支持 overview、focus、delta 和显式 full；观察结果带 generation、逻辑字段引用、响应预算、裁剪信息和敏感值脱敏。
+- 新增 `form_fill_fields`、`form_select_option`、`form_select_path`、`form_set_date` 与 `form_activate`，在浏览器进程内完成动态定位、输入、等待、回读和局部结果返回。
+- 事务动作支持 generation 冲突、幂等 operation ID、已有值保护、约束预检、局部错误分类和测试操作清单；明显的提交、声明、上传与不可逆边界由 `form_activate` 阻止。
+- 删除编译后上游字符串补丁和独立预加载产物；原始 DevTools 工具继续作为诊断和显式回退。
+- `resume-autofill` 默认使用局部观察和事务工具，完整快照与 UID 循环不再是日常流程。
+- 新增长页面预算、隐私脱敏、三级级联单调用、日期、增量、幂等、人工边界、持续 DOM 重建与 Profile 重启持久性回归。
+
 ## 0.14.0 · 动作期间节点替换恢复
 
 - 将 SPA 恢复范围从“取得句柄前”扩展到 Locator 的完整 `fill`、`fill_form`、`click` 和 `hover` 动作周期。

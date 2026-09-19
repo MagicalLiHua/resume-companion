@@ -1,6 +1,6 @@
 # Contributing
 
-The 0.11 architecture keeps Resume Companion small: a versioned local profile MCP, a TypeScript launcher for pinned official Chrome DevTools MCP, and an Agent skill that composes both. Browser automation changes should use upstream stable tools and general decision rules instead of recruitment-site selectors or replaying private APIs.
+The 0.15 architecture keeps Resume Companion focused: a versioned local profile MCP, a TypeScript Resume Browser MCP built on the pinned Chrome DevTools foundation, and an Agent skill that composes both. Browser automation changes should use semantic form primitives and general component behavior instead of recruitment-site selectors or replaying private APIs.
 
 Before a pull request:
 

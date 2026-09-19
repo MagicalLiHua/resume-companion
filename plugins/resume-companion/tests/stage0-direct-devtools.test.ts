@@ -144,10 +144,176 @@ describe('Stage 0 direct Chrome DevTools MCP validation', () => {
     expect(names).toContain('take_snapshot');
     expect(names).toContain('list_network_requests');
     expect(names).toContain('evaluate_script');
+    expect(names).toEqual(expect.arrayContaining([
+      'form_observe', 'form_fill_fields', 'form_select_option', 'form_select_path', 'form_set_date', 'form_activate',
+    ]));
     expect(names).not.toContain('click_at');
   });
 
+  test('returns a budgeted semantic overview instead of the complete 220-field page', async () => {
+    const opened = await call('new_page', { url: `http://127.0.0.1:4174/long-form.html?semantic=${Date.now()}` });
+    pageId = selectedPageId(textOf(opened));
+    const observed = await call('form_observe', {
+      page_id: pageId,
+      mode: 'overview',
+      max_bytes: 5_000,
+      include_values: 'state',
+    });
+    const output = textOf(observed);
+    const data = JSON.parse(output) as {
+      truncated: boolean;
+      fields: unknown[];
+      metrics: { observed_fields: number; returned_fields: number };
+    };
+    expect(data.metrics.observed_fields).toBe(220);
+    expect(data.metrics.returned_fields).toBeLessThan(220);
+    expect(data.truncated).toBe(true);
+    expect(Buffer.byteLength(output, 'utf8')).toBeLessThanOrEqual(5_400);
+  }, 20_000);
+
+  test('fills a semantic batch and masks existing phone and email values in observations', async () => {
+    const opened = await call('new_page', { url: `http://127.0.0.1:4174/index.html?semantic-fill=${Date.now()}` });
+    pageId = selectedPageId(textOf(opened));
+    const filled = await call('form_fill_fields', {
+      page_id: pageId,
+      operation_id: `fill-${Date.now()}`,
+      fields: [
+        { field: '姓名', scope: '基本资料', value: '语义填写同学' },
+        { field: '手机号', scope: '基本资料', value: '13800001234' },
+        { field: '电子邮箱', scope: '基本资料', value: 'semantic@example.test' },
+        { field: '现居城市', scope: '基本资料', value: '杭州' },
+      ],
+    });
+    const fillData = JSON.parse(textOf(filled)) as { ok: boolean; change_summary: Record<string, number> };
+    expect(fillData.ok).toBe(true);
+    expect(fillData.change_summary.filled).toBe(4);
+    const observed = textOf(await call('form_observe', {
+      page_id: pageId,
+      mode: 'focus',
+      scope: '基本资料',
+      include_values: 'masked',
+    }));
+    expect(observed).toContain('138****1234');
+    expect(observed).toContain('se******@example.test');
+    expect(observed).not.toContain('13800001234');
+    expect(observed).not.toContain('semantic@example.test');
+  }, 25_000);
+
+  test('completes a three-level cascader in one semantic transaction', async () => {
+    const opened = await call('new_page', { url: `http://127.0.0.1:4174/complex-controls-lab.html?semantic-path=${Date.now()}` });
+    pageId = selectedPageId(textOf(opened));
+    const selected = await call('form_select_path', {
+      page_id: pageId,
+      operation_id: `path-${Date.now()}`,
+      field: '打开专业级联',
+      path: ['工学', '计算机类', '软件工程'],
+    });
+    const data = JSON.parse(textOf(selected)) as { ok: boolean; completed_path: string[] };
+    expect(data.ok).toBe(true);
+    expect(data.completed_path).toEqual(['工学', '计算机类', '软件工程']);
+    const report = textOf(await call('evaluate_script', {
+      pageId,
+      function: `() => window.ComplexControlsLab.report()`,
+      waitForStableDom: false,
+    }));
+    expect(report).toContain('"cascader":"工学 / 计算机类 / 软件工程"');
+  }, 25_000);
+
+  test('handles custom options, complete dates, deltas, idempotency and manual boundaries', async () => {
+    const opened = await call('new_page', { url: `http://127.0.0.1:4174/complex-controls-lab.html?semantic-actions=${Date.now()}` });
+    pageId = selectedPageId(textOf(opened));
+    const initial = JSON.parse(textOf(await call('form_observe', {
+      page_id: pageId,
+      mode: 'overview',
+      include_values: 'state',
+    }))) as { observation_id: string; generation: number };
+
+    const locationOperation = `location-${Date.now()}`;
+    const location = await call('form_select_option', {
+      page_id: pageId,
+      expected_generation: initial.generation,
+      operation_id: locationOperation,
+      field: '请选择工作地点',
+      value: '上海',
+      test_mode: true,
+    });
+    expect(JSON.parse(textOf(location)).ok).toBe(true);
+    expect(textOf(await call('form_select_option', {
+      page_id: pageId,
+      operation_id: locationOperation,
+      field: '不会再次执行',
+      value: '深圳',
+    }))).toBe(textOf(location));
+
+    expect(JSON.parse(textOf(await call('form_set_date', {
+      page_id: pageId,
+      field: '经历开始月份',
+      value: '2024-09',
+    }))).ok).toBe(true);
+    expect(JSON.parse(textOf(await call('form_fill_fields', {
+      page_id: pageId,
+      fields: [{ field: '个人简介', value: '用于验证局部观察的区域外变化。' }],
+    }))).ok).toBe(true);
+
+    const delta = JSON.parse(textOf(await call('form_observe', {
+      page_id: pageId,
+      mode: 'delta',
+      since_observation_id: initial.observation_id,
+      include_values: 'needed',
+      target: '经历开始月份',
+      include_test_ledger: true,
+    }))) as {
+      changes: { fields: Array<{ label: string }> };
+      locality: { changed_outside_scope: number; outside_change_labels: string[]; widen_recommended: boolean };
+      test_ledger: unknown[];
+    };
+    expect(delta.changes.fields.some(field => field.label.includes('经历开始月份'))).toBe(true);
+    expect(delta.changes.fields.some(field => field.label.includes('个人简介'))).toBe(false);
+    expect(delta.locality.changed_outside_scope).toBeGreaterThanOrEqual(1);
+    expect(delta.locality.outside_change_labels).toContain('个人简介');
+    expect(delta.locality.widen_recommended).toBe(true);
+    expect(delta.test_ledger).toHaveLength(1);
+
+    const boundary = await client!.callTool({
+      name: 'form_activate',
+      arguments: { page_id: pageId, target: '最终提交申请（禁止自动点击）', intent: 'next_step' },
+    });
+    expect(boundary.isError).toBe(true);
+    expect(textOf(boundary)).toContain('manual_boundary');
+    const report = textOf(await call('evaluate_script', {
+      pageId,
+      function: `() => window.ComplexControlsLab.report()`,
+      waitForStableDom: false,
+    }));
+    expect(report).toContain('"location":"上海"');
+    expect(report).toContain('"start":"2024-09"');
+    expect(report).toContain('"finalSubmits":0');
+  }, 30_000);
+
+  test('fills by semantics while the target DOM is continuously replaced', async () => {
+    const opened = await call('new_page', { url: `http://127.0.0.1:4174/dom-churn.html?semantic-churn=${Date.now()}` });
+    pageId = selectedPageId(textOf(opened));
+    await call('evaluate_script', {
+      pageId,
+      function: `() => { window.ChurnLab.churnFor(300); return true; }`,
+      waitForStableDom: false,
+    });
+    const filled = JSON.parse(textOf(await call('form_fill_fields', {
+      page_id: pageId,
+      fields: [{ field: '姓名', scope: '基本信息', value: '语义抗抖同学' }],
+    }))) as { ok: boolean };
+    expect(filled.ok).toBe(true);
+    const state = textOf(await call('evaluate_script', {
+      pageId,
+      function: `() => window.ChurnLab.read()`,
+      waitForStableDom: false,
+    }));
+    expect(state).toContain('"name":"语义抗抖同学"');
+  }, 25_000);
+
   test('fills ordinary fields and a checkbox in one call and returns the next snapshot', async () => {
+    const opened = await call('new_page', { url: `http://127.0.0.1:4174/agent-lab.html?legacy-flow=${Date.now()}` });
+    pageId = selectedPageId(textOf(opened));
     const initial = textOf(await call('take_snapshot', { pageId }));
     const startedAt = performance.now();
     const filled = await call('fill_form', {
@@ -269,6 +435,33 @@ describe('Stage 0 direct Chrome DevTools MCP validation', () => {
     expect(state).toContain('"finalSubmits":0');
     console.log(JSON.stringify({ benchmark: 'direct-fill-form-20', runs: durations.length, p50_ms: Math.round(p50), p95_ms: Math.round(p95), max_response_bytes: Math.max(...responseBytes) }));
   }, 60_000);
+
+  test('fills the same 20 ordinary controls in one semantic transaction with compact output', async () => {
+    const opened = await call('new_page', { url: `http://127.0.0.1:4174/benchmark-form.html?semantic-batch=${Date.now()}` });
+    pageId = selectedPageId(textOf(opened));
+    const fields = [
+      ['姓名', '语义基准同学'], ['邮箱', 'semantic-benchmark@example.com'], ['电话', '13800000000'], ['城市', '示例市'],
+      ['意向岗位', '测试开发'], ['学校', '示例大学'], ['专业', '软件工程'], ['学历说明', '本科'],
+      ['公司', '示例科技'], ['职位', '实习生'], ['项目名称', '虚构项目'], ['技能摘要', 'TypeScript'],
+      ['岗位类别', '测试'], ['最高学历', '本科'], ['工作地点', '上海'], ['到岗时间', '一个月内'],
+      ['能力选项 1', true], ['能力选项 2', true], ['能力选项 3', true], ['能力选项 4', true],
+    ].map(([field, value]) => ({ field, value }));
+    const startedAt = performance.now();
+    const output = textOf(await call('form_fill_fields', { page_id: pageId, fields }));
+    const elapsedMs = performance.now() - startedAt;
+    const result = JSON.parse(output) as { ok: boolean; change_summary: { filled: number } };
+    expect(result.ok).toBe(true);
+    expect(result.change_summary.filled).toBe(20);
+    expect(Buffer.byteLength(output, 'utf8')).toBeLessThan(3_000);
+    const state = textOf(await call('evaluate_script', {
+      pageId,
+      function: `() => window.Benchmark.read()`,
+      waitForStableDom: false,
+    }));
+    expect(state).toContain('semantic-benchmark@example.com');
+    expect(state).toContain('"finalSubmits":0');
+    console.log(JSON.stringify({ benchmark: 'semantic-fill-fields-20', calls: 1, elapsed_ms: Math.round(elapsedMs), response_bytes: Buffer.byteLength(output, 'utf8') }));
+  }, 30_000);
 
   test('measures a 12-checkbox batch on the direct upstream route', async () => {
     const durations: number[] = [];

@@ -9,7 +9,7 @@
       "startup_timeout_sec": 30,
       "default_tools_approval_mode": "approve"
     },
-    "chrome_devtools": {
+    "resume_browser": {
       "command": "node",
       "args": ["./chrome-launcher.bundle.mjs"],
       "cwd": ".",
@@ -28,6 +28,12 @@
         "list_console_messages": { "approval_mode": "approve" },
         "get_console_message": { "approval_mode": "approve" },
         "take_screenshot": { "approval_mode": "approve" },
+        "form_observe": { "approval_mode": "approve" },
+        "form_fill_fields": { "approval_mode": "approve" },
+        "form_select_option": { "approval_mode": "approve" },
+        "form_select_path": { "approval_mode": "approve" },
+        "form_set_date": { "approval_mode": "approve" },
+        "form_activate": { "approval_mode": "approve" },
         "fill_form": { "approval_mode": "approve" },
         "fill": { "approval_mode": "approve" },
         "click": { "approval_mode": "approve" },

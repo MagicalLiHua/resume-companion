@@ -15,7 +15,7 @@ await rm(staging, { recursive: true, force: true });
 await mkdir(staging, { recursive: true });
 const packagedPlugin = resolve(staging, 'plugins/resume-companion');
 await mkdir(packagedPlugin, { recursive: true });
-for (const item of ['.codex-plugin', '.mcp.json', 'package.json', 'server.mjs', 'server.bundle.mjs', 'chrome-launcher.bundle.mjs', 'devtools-resilience-preload.mjs', 'runtime', 'skills']) {
+for (const item of ['.codex-plugin', '.mcp.json', 'package.json', 'server.mjs', 'server.bundle.mjs', 'chrome-launcher.bundle.mjs', 'runtime', 'skills']) {
   await cp(resolve(pluginRoot, item), resolve(packagedPlugin, item), { recursive: true });
 }
 await cp(resolve(root, 'LICENSE'), resolve(staging, 'LICENSE'));
@@ -30,11 +30,6 @@ for (const file of [
   'mcp-tools.md',
   'development.md',
   'validation.md',
-  'migration-evaluation.md',
-  'control-experience-plan.md',
-  'control-experience-sources.md',
-  'control-recipe-evaluation.md',
-  'resume-browser-mcp-plan.md',
 ]) {
   await cp(resolve(root, 'docs', file), resolve(staging, 'docs', file));
 }
@@ -42,7 +37,7 @@ execFileSync(process.execPath, [resolve(pluginRoot, 'scripts/package-smoke-test.
 execFileSync(process.execPath, [resolve(pluginRoot, 'scripts/chrome-package-smoke-test.mjs'), resolve(packagedPlugin, 'chrome-launcher.bundle.mjs')], { cwd: root, stdio: 'inherit' });
 await writeFile(resolve(staging, 'README.txt'), `简历随行 ${pkg.version} 开发预览版
 
-Codex：按 docs/getting-started.md 安装插件。插件会同时注册本地资料 MCP 和固定版本的官方 Chrome DevTools MCP。
+Codex：按 docs/getting-started.md 安装插件。插件会同时注册本地资料 MCP 和基于固定 Chrome DevTools 底座的 Resume Browser MCP。
 
 需要 Node.js 24 和 Chrome 116+。首次网页任务会打开 Resume Companion 专用的持久 Chrome Profile，请在该窗口登录招聘网站一次。后续任务会复用该登录状态，无需安装扩展、Native Host 或开启远程调试。
 

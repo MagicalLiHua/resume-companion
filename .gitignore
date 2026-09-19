@@ -40,11 +40,6 @@ research/third-party/
 !/docs/mcp-tools.md
 !/docs/development.md
 !/docs/validation.md
-!/docs/migration-evaluation.md
-!/docs/control-experience-plan.md
-!/docs/control-experience-sources.md
-!/docs/control-recipe-evaluation.md
-!/docs/resume-browser-mcp-plan.md
 !/docs/images/
 /plugins/resume-companion/scripts/debug-client.mjs
 /plugins/resume-companion/scripts/model-eval-client.mjs

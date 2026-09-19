@@ -1,8 +1,8 @@
 # 开发说明
 
-0.14.0 的产品代码使用严格 TypeScript。Resume Companion 实现本地资料服务、Chrome MCP 启动器和一个针对 SPA 短命节点的受限语义恢复层；浏览器协议、页面快照和输入动作仍来自固定的官方 `chrome-devtools-mcp@1.9.0`。
+0.15.0 的产品代码使用严格 TypeScript。Resume Companion 实现本地资料服务和 Resume Browser MCP；后者在固定的 `chrome-devtools-mcp@1.9.0` 浏览器生命周期与诊断能力之上维护页面语义缓存、局部/增量观察、事务式表单动作和敏感值脱敏。
 
-下一阶段的局部观察、增量快照、事务式组件动作和上游 fork 计划见[《Resume Browser MCP：局部观察与事务式表单执行改进计划》](resume-browser-mcp-plan.md)。控件经验、Agent 配方、复杂控件实验室和本地经验库规划继续见[《网申控件经验系统与执行优化计划》](control-experience-plan.md)。
+0.15.0 的浏览器层由同进程 TypeScript 组合服务实现：固定上游浏览器生命周期和诊断能力，在共享页面上下文中增加局部观察、语义重定位和事务式表单动作。架构讨论、竞品分析和阶段评测保留在本地研发资料中，不随公开仓库和安装包发布。
 
 ## 命令
 
@@ -21,7 +21,7 @@ npm run package
 
 需要在专用持久 Chrome 中进行人工 Agent 验收时，先运行 `npm run lab`。完整四步网申使用 `tests/fixtures/acceptance-task.md`；十五类控件配方使用 `tests/fixtures/control-recipes-task.md`。两者都只读取配套虚构资料，且最终提交计数必须保持为 0。
 
-控件配方的来源、取舍和评测结果分别见[控件经验来源目录](control-experience-sources.md)与[控件配方评测记录](control-recipe-evaluation.md)。商业插件研究材料保持在 git 忽略目录，只允许把重新设计后的原创配方和合成测试加入发布包。
+商业插件研究材料和真实网站捕获保持在 git 忽略目录，只允许把重新设计后的原创实现和合成测试加入公开仓库。
 
 ## 目录
 

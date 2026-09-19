@@ -47,12 +47,15 @@ async function callPagesWithRetry(client) {
   let lastError;
   for (let attempt = 0; attempt < 40; attempt++) {
     try {
-      return await client.callTool({ name: 'list_pages', arguments: {} });
+      const result = await client.callTool({ name: 'list_pages', arguments: {} });
+      if (!result.isError) return result;
+      lastError = new Error(textOf(result));
+      if (!textOf(result).includes('profile_in_use')) return result;
     } catch (error) {
       lastError = error;
       if (!String(error).includes('profile_in_use')) throw error;
-      await new Promise(resolveDelay => setTimeout(resolveDelay, 100));
     }
+    await new Promise(resolveDelay => setTimeout(resolveDelay, 100));
   }
   throw lastError;
 }
@@ -66,7 +69,7 @@ try {
   await second.client.connect(second.transport);
   const firstNames = (await first.client.listTools()).tools.map(tool => tool.name);
   const secondNames = (await second.client.listTools()).tools.map(tool => tool.name);
-  for (const required of ['list_pages', 'take_snapshot', 'fill_form', 'list_network_requests', 'evaluate_script']) {
+  for (const required of ['list_pages', 'form_observe', 'form_fill_fields', 'form_select_option', 'form_select_path', 'form_set_date', 'form_activate', 'take_snapshot', 'fill_form', 'list_network_requests', 'evaluate_script']) {
     assert(firstNames.includes(required), `First client missing ${required}`);
     assert(secondNames.includes(required), `Second client missing ${required}`);
   }
@@ -76,7 +79,8 @@ try {
   const firstPages = await first.client.callTool({ name: 'list_pages', arguments: {} });
   assert(!firstPages.isError, `First real browser tool call must start Chrome: ${textOf(firstPages)}\n${first.diagnostic()}`);
   assert.equal(await lockExists(), true, 'First browser call must reserve the profile');
-  await assert.rejects(second.client.callTool({ name: 'list_pages', arguments: {} }), /profile_in_use/);
+  const blocked = await second.client.callTool({ name: 'list_pages', arguments: {} });
+  assert(blocked.isError && textOf(blocked).includes('profile_in_use'), `Second client must be blocked while the first owns the profile:\n${textOf(blocked)}`);
 
   await first.client.close();
   firstClosed = true;
