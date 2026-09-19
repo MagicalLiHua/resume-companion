@@ -545,9 +545,41 @@ describe('Stage 0 direct Chrome DevTools MCP validation', () => {
       waitForStableDom: false,
     }));
     expect(state).toContain('"name":"节点恢复同学"');
-    expect(state).toContain('"clicked":"已点击"');
+    expect(state).toContain('"clicked":"已点击 1 次"');
+    expect(state).toContain('"clickCount":1');
     await call('close_page', { pageId: churnPageId });
   }, 20_000);
+
+  test('recovers once when SPA nodes are replaced during locator actions', async () => {
+    const opened = await call('new_page', { url: `http://127.0.0.1:4174/dom-churn.html?action-time=${Date.now()}` });
+    const churnPageId = selectedPageId(textOf(opened));
+    const snapshot = textOf(await call('take_snapshot', { pageId: churnPageId }));
+    const nameUid = uidFor(snapshot, '姓名');
+    const addUid = uidFor(snapshot, '添加教育信息');
+
+    await call('evaluate_script', {
+      pageId: churnPageId,
+      function: `() => { window.ChurnLab.churnFor(300); return true; }`,
+      waitForStableDom: false,
+    });
+    await call('fill', { pageId: churnPageId, uid: nameUid, value: '动作期恢复同学' });
+
+    await call('evaluate_script', {
+      pageId: churnPageId,
+      function: `() => { window.ChurnLab.churnFor(300); return true; }`,
+      waitForStableDom: false,
+    });
+    await call('click', { pageId: churnPageId, uid: addUid });
+
+    const state = textOf(await call('evaluate_script', {
+      pageId: churnPageId,
+      function: `() => window.ChurnLab.read()`,
+      waitForStableDom: false,
+    }));
+    expect(state).toContain('"name":"动作期恢复同学"');
+    expect(state).toContain('"clickCount":1');
+    await call('close_page', { pageId: churnPageId });
+  }, 30_000);
 
   test('reuses a running dedicated Chrome and relaunches it after the window exits', async () => {
     const opened = await call('new_page', { url: `http://127.0.0.1:4174/agent-lab.html?run=browser-relaunch-${Date.now()}` });

@@ -1,6 +1,6 @@
 # MCP 工具与权限
 
-0.13.0 把资料与浏览器分成两个 MCP。Agent 直接调用官方 Chrome DevTools MCP，不再经过 Resume Companion 的浏览器代理协议。启动器只在官方 UID 对应的节点已脱离文档时做一次语义重定位，不新增或改名官方工具。
+0.14.0 把资料与浏览器分成两个 MCP。Agent 直接调用官方 Chrome DevTools MCP，不再经过 Resume Companion 的浏览器代理协议。兼容层在官方 UID 对应的节点已经脱离文档或 Locator 动作期间被替换时做一次语义重定位，不新增或改名官方工具。
 
 ## Resume Companion 资料工具
 
@@ -33,9 +33,9 @@
 
 `fill_form(includeSnapshot=true)` 是普通页面的首选：一次快照、一次批量填写、直接复用附带的新快照。上游会按数组顺序处理元素；后项失败时前项可能已成功，所以恢复前必须重新观察，不能整批重放。
 
-截图用于理解布局，操作仍使用 UID。0.13.0 不启用实验性 `click_at`。
+截图用于理解布局，操作仍使用 UID。0.14.0 不启用实验性 `click_at`。
 
-当 SPA 在快照与动作之间替换节点时，运行时会核对旧句柄的 `isConnected`。失效后只按相同角色、可访问名称和最近的命名分组恢复；多个候选无法可靠区分时返回 `stale_uid_ambiguous`，当前页面找不到唯一候选时返回 `stale_uid_unresolved`。这项恢复缩短 UID 竞态窗口，但动作失败仍可能已经触发聚焦、校验或部分写入，重试前必须重新观察当前值。
+当 SPA 在快照后或 Locator 动作期间替换节点时，运行时会核对旧句柄的 `isConnected`。失效后只按相同角色、可访问名称和最近的命名分组恢复；多个候选无法可靠区分时返回 `stale_uid_ambiguous`，当前页面找不到唯一候选时返回 `stale_uid_unresolved`。`fill` 会先核对目标值再决定是否重试；`click` 只有在 Locator 尚未进入真实动作时才重试。点击已开始则返回 `stale_action_result_unknown`，一次恢复仍失败则返回 `stale_action_retry_exhausted`。收到这些错误后必须重新观察当前值和页面结构。
 
 ## 审批矩阵
 
@@ -46,7 +46,7 @@
 | 禁用 | `upload_file`、`lighthouse_audit` |
 | 默认 | 其他未审查工具均为 `prompt` |
 
-逐工具审批按工具名生效，不能判断某个具体按钮是不是最终提交。最终提交边界仍依赖 skill、页面证据和人工监督。0.13.0 不宣传参数级强制防误投递。
+逐工具审批按工具名生效，不能判断某个具体按钮是不是最终提交。最终提交边界仍依赖 skill、页面证据和人工监督。0.14.0 不宣传参数级强制防误投递。
 
 ## 诊断约束
 

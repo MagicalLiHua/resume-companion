@@ -1,6 +1,6 @@
 # 开发说明
 
-0.13.0 的产品代码使用严格 TypeScript。Resume Companion 实现本地资料服务、Chrome MCP 启动器和一个针对 SPA 短命节点的受限语义恢复层；浏览器协议、页面快照和输入动作仍来自固定的官方 `chrome-devtools-mcp@1.9.0`。
+0.14.0 的产品代码使用严格 TypeScript。Resume Companion 实现本地资料服务、Chrome MCP 启动器和一个针对 SPA 短命节点的受限语义恢复层；浏览器协议、页面快照和输入动作仍来自固定的官方 `chrome-devtools-mcp@1.9.0`。
 
 控件经验、Agent 配方、复杂控件实验室和本地经验库规划见[《网申控件经验系统与执行优化计划》](control-experience-plan.md)。
 
@@ -31,7 +31,7 @@ npm run package
 | `plugins/resume-companion/src/profile-store.ts` | 本地 schema、原子写入、历史和 revision |
 | `plugins/resume-companion/src/chrome-profile.ts` | 跨平台 Profile 路径与实例锁 |
 | `plugins/resume-companion/src/chrome-launcher.ts` | 官方 MCP 参数、stdio 透传和脱敏诊断 |
-| `plugins/resume-companion/src/browser/stale-uid-recovery.ts` | 失效 AX 句柄的唯一语义重定位 |
+| `plugins/resume-companion/src/browser/stale-uid-recovery.ts` | 失效 AX 句柄与动作期 Locator 的唯一语义恢复 |
 | `plugins/resume-companion/src/devtools-resilience-preload.ts` | 在固定上游运行时安装兼容层 |
 | `plugins/resume-companion/skills` | Agent 工作流与诊断边界 |
 | `plugins/resume-companion/tests` | 资料、锁、策略和真实官方 MCP 集成 |
@@ -46,7 +46,7 @@ npm run package
 - `devtools-resilience-preload.mjs`
 - `runtime/chrome-devtools-mcp/`
 
-不要手工编辑 bundle 或 runtime。启动器不代理、不改名、不解析上游 MCP 工具，只计算稳定 Profile、获取锁、设置已审查参数、透传 stdio 和脱敏 stderr。预加载兼容层固定依赖 1.9.0 的 `McpPage` 导出；上游结构不匹配时启动失败并要求重新构建，不会静默关闭恢复。兼容层只在旧 AX 句柄已经脱离文档或无法解析时运行，候选歧义时停止，不包含域名、CSS 选择器或站点 API。
+不要手工编辑 bundle 或 runtime。启动器不代理、不改名、不解析上游 MCP 工具，只计算稳定 Profile、获取锁、设置已审查参数、透传 stdio 和脱敏 stderr。预加载兼容层固定依赖 1.9.0 的 `McpPage` 导出；构建脚本还对该固定运行包的错误包装做精确签名校验，使 `stale_action_*` 能原样返回。上游结构不匹配时构建或启动直接失败，不会静默关闭恢复。兼容层只在旧 AX 句柄已经脱离文档或 Locator 动作期间丢失节点时运行，候选歧义和结果不确定时停止，不包含域名、CSS 选择器或站点 API。
 
 专用 Profile 不放在插件缓存中。启动器允许 MCP 初始化和工具目录读取直接透传，只在第一条 `tools/call` 前获取锁；第二个任务不会静默改用临时 Profile。锁冲突作为当前工具调用的可重试 JSON-RPC 错误返回，不终止上游 MCP。正常或信号退出时，锁只在上游进程结束后释放。
 

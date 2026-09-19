@@ -44,8 +44,33 @@ interface NodePath {
 }
 
 interface DebuggableHandle {
-  evaluate?<T>(callback: (element: Element) => T): Promise<T>;
+  evaluate?<T>(callback: (element: Element, ...args: never[]) => T, ...args: unknown[]): Promise<T>;
+  asLocator?: () => LocatorLike;
   [Symbol.dispose]?: () => void;
+}
+
+interface LocatorLike {
+  click?(options?: unknown): Promise<unknown>;
+  fill?(value: unknown, options?: unknown): Promise<unknown>;
+  hover?(options?: unknown): Promise<unknown>;
+  on?(event: string, listener: () => void): unknown;
+  off?(event: string, listener: () => void): unknown;
+  [key: string]: unknown;
+}
+
+interface LocatorTransform {
+  method: string;
+  args: unknown[];
+}
+
+interface ResilientHandleState {
+  page: McpPageLike;
+  uid: string;
+  expected: NodePath;
+  current: DebuggableHandle;
+  handles: Set<DebuggableHandle>;
+  readRecoveryUsed: boolean;
+  actionRecoveryUsed: boolean;
 }
 
 const installedSymbol = Symbol.for('resume-companion.stale-uid-recovery');
@@ -136,13 +161,22 @@ function isDetachedUidError(error: unknown): boolean {
   return error instanceof Error && error.message.includes('no longer exists on the page');
 }
 
-async function handleIsConnected(handle: unknown): Promise<boolean> {
+function isDetachedHandleError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  const message = error.message.toLowerCase();
+  return message.includes('detached')
+    || message.includes('no longer exists')
+    || message.includes('could not find object with given id')
+    || message.includes('js handle is disposed');
+}
+
+async function handleConnectionState(handle: unknown): Promise<'connected' | 'detached' | 'unknown'> {
   const debuggable = handle as DebuggableHandle;
-  if (!debuggable.evaluate) return true;
+  if (!debuggable.evaluate) return 'connected';
   try {
-    return await debuggable.evaluate(element => element.isConnected);
-  } catch {
-    return false;
+    return await debuggable.evaluate(element => element.isConnected) ? 'connected' : 'detached';
+  } catch (error) {
+    return isDetachedHandleError(error) ? 'detached' : 'unknown';
   }
 }
 
@@ -186,6 +220,187 @@ async function recoverHandle(page: McpPageLike, uid: string, expected: NodePath)
   );
 }
 
+function locatorFrom(handle: DebuggableHandle, transforms: LocatorTransform[]): LocatorLike {
+  if (!handle.asLocator) throw new Error('stale_action_incompatible: Element handle does not expose a locator');
+  let locator = handle.asLocator();
+  for (const transform of transforms) {
+    const method = locator[transform.method];
+    if (typeof method !== 'function') {
+      throw new Error(`stale_action_incompatible: Locator method ${transform.method} is unavailable`);
+    }
+    locator = Reflect.apply(method, locator, transform.args) as LocatorLike;
+  }
+  return locator;
+}
+
+async function intendedValueIsPresent(handle: DebuggableHandle, expected: unknown): Promise<boolean> {
+  if (!handle.evaluate) return false;
+  try {
+    return await handle.evaluate((element, rawExpected) => {
+      const expectedText = String(rawExpected);
+      const expectedBoolean = rawExpected === true || rawExpected === 'true';
+      if (element instanceof HTMLInputElement && (element.type === 'checkbox' || element.type === 'radio')) {
+        return element.checked === expectedBoolean;
+      }
+      const role = element.getAttribute('role');
+      if (role === 'checkbox' || role === 'radio' || role === 'switch') {
+        return element.getAttribute('aria-checked') === String(expectedBoolean);
+      }
+      if (element instanceof HTMLSelectElement || element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+        return element.value === expectedText;
+      }
+      if (element instanceof HTMLElement && element.isContentEditable) return element.innerText === expectedText;
+      return false;
+    }, expected);
+  } catch {
+    return false;
+  }
+}
+
+function observeLocatorAction(locator: LocatorLike): { didStart: () => boolean; stop: () => void } {
+  let started = false;
+  const listener = (): void => { started = true; };
+  locator.on?.('action', listener);
+  return {
+    didStart: () => started,
+    stop: () => { locator.off?.('action', listener); },
+  };
+}
+
+async function replaceCurrentHandle(state: ResilientHandleState): Promise<DebuggableHandle> {
+  const recovered = await recoverHandle(state.page, state.uid, state.expected) as DebuggableHandle;
+  state.current = recovered;
+  state.handles.add(recovered);
+  return recovered;
+}
+
+async function runLocatorAction(
+  state: ResilientHandleState,
+  transforms: LocatorTransform[],
+  action: 'click' | 'fill' | 'hover',
+  args: unknown[],
+): Promise<unknown> {
+  const attemptedHandle = state.current;
+  const initialLocator = locatorFrom(attemptedHandle, transforms);
+  const initialMethod = initialLocator[action];
+  if (typeof initialMethod !== 'function') throw new Error(`stale_action_incompatible: Locator action ${action} is unavailable`);
+  const observation = observeLocatorAction(initialLocator);
+  try {
+    return await Reflect.apply(initialMethod, initialLocator, args);
+  } catch (originalError) {
+    if (await handleConnectionState(attemptedHandle) !== 'detached') throw originalError;
+    if (state.actionRecoveryUsed) {
+      throw new Error(
+        `stale_action_retry_exhausted: Element uid ${state.uid} was replaced again during ${action}. Take a fresh snapshot before retrying.`,
+        { cause: originalError },
+      );
+    }
+    state.actionRecoveryUsed = true;
+    const actionStarted = observation.didStart();
+    const recovered = await replaceCurrentHandle(state);
+
+    if (action === 'fill' && await intendedValueIsPresent(recovered, args[0])) {
+      console.error(`[resume-companion] stale_action_already_applied uid=${state.uid} action=fill`);
+      return undefined;
+    }
+    if (action === 'click' && actionStarted) {
+      throw new Error(
+        `stale_action_result_unknown: Element uid ${state.uid} was replaced after the click began. Take a fresh snapshot and verify the page before retrying.`,
+        { cause: originalError },
+      );
+    }
+
+    console.error(`[resume-companion] stale_action_retry uid=${state.uid} action=${action}`);
+    let retryLocator = locatorFrom(recovered, transforms);
+    if (typeof retryLocator.setWaitForStableBoundingBox === 'function') {
+      retryLocator = Reflect.apply(retryLocator.setWaitForStableBoundingBox, retryLocator, [false]) as LocatorLike;
+    }
+    const retryMethod = retryLocator[action];
+    if (typeof retryMethod !== 'function') throw new Error(`stale_action_incompatible: Locator action ${action} is unavailable`);
+    const retryObservation = observeLocatorAction(retryLocator);
+    try {
+      return await Reflect.apply(retryMethod, retryLocator, args);
+    } catch (retryError) {
+      const uncertain = action === 'click' && retryObservation.didStart();
+      throw new Error(
+        uncertain
+          ? `stale_action_result_unknown: Element uid ${state.uid} was replaced during the recovery click. Take a fresh snapshot and verify the page before retrying.`
+          : `stale_action_retry_exhausted: Element uid ${state.uid} could not complete ${action} after one semantic recovery. Take a fresh snapshot before retrying.`,
+        { cause: retryError },
+      );
+    } finally {
+      retryObservation.stop();
+    }
+  } finally {
+    observation.stop();
+  }
+}
+
+function resilientLocator(state: ResilientHandleState, transforms: LocatorTransform[] = []): LocatorLike {
+  const chainMethods = new Set([
+    'setTimeout',
+    'setVisibility',
+    'setWaitForEnabled',
+    'setEnsureElementIsInTheViewport',
+    'setWaitForStableBoundingBox',
+  ]);
+  return new Proxy({} as LocatorLike, {
+    get(_target, property) {
+      if (typeof property !== 'string') return undefined;
+      if (chainMethods.has(property)) {
+        return (...args: unknown[]) => resilientLocator(state, [...transforms, { method: property, args }]);
+      }
+      if (property === 'click' || property === 'fill' || property === 'hover') {
+        return (...args: unknown[]) => runLocatorAction(state, transforms, property, args);
+      }
+      const locator = locatorFrom(state.current, transforms);
+      const value = locator[property];
+      return typeof value === 'function' ? value.bind(locator) : value;
+    },
+  });
+}
+
+function resilientHandle(page: McpPageLike, uid: string, expected: NodePath, initial: unknown): unknown {
+  const initialHandle = initial as DebuggableHandle;
+  const state: ResilientHandleState = {
+    page,
+    uid,
+    expected,
+    current: initialHandle,
+    handles: new Set([initialHandle]),
+    readRecoveryUsed: false,
+    actionRecoveryUsed: false,
+  };
+  return new Proxy(initialHandle as object, {
+    get(_target, property) {
+      if (property === Symbol.dispose) {
+        return (): void => {
+          for (const handle of state.handles) handle[Symbol.dispose]?.();
+        };
+      }
+      if (property === 'asLocator') return () => resilientLocator(state);
+      const current = state.current as Record<PropertyKey, unknown>;
+      const value = Reflect.get(current, property, current);
+      if (property === 'evaluate' && typeof value === 'function') {
+        return async (...args: unknown[]): Promise<unknown> => {
+          const attemptedHandle = state.current;
+          try {
+            return await Reflect.apply(value, attemptedHandle, args);
+          } catch (error) {
+            if (state.readRecoveryUsed || await handleConnectionState(attemptedHandle) !== 'detached') throw error;
+            state.readRecoveryUsed = true;
+            const recovered = await replaceCurrentHandle(state);
+            const recoveredEvaluate = recovered.evaluate;
+            if (!recoveredEvaluate) throw error;
+            return await Reflect.apply(recoveredEvaluate, recovered, args);
+          }
+        };
+      }
+      return typeof value === 'function' ? value.bind(state.current) : value;
+    },
+  });
+}
+
 export function installStaleUidRecovery(McpPage: McpPageConstructorLike): void {
   const prototype = McpPage.prototype;
   if (prototype[installedSymbol]) return;
@@ -195,12 +410,14 @@ export function installStaleUidRecovery(McpPage: McpPageConstructorLike): void {
     const expected = snapshot ? pathForUid(snapshot.root, uid) : undefined;
     try {
       const handle = await original.call(this, uid);
-      if (!expected || await handleIsConnected(handle)) return handle;
+      if (!expected) return handle;
+      const state = await handleConnectionState(handle);
+      if (state !== 'detached') return resilientHandle(this, uid, expected, handle);
       (handle as DebuggableHandle)[Symbol.dispose]?.();
-      return await recoverHandle(this, uid, expected);
+      return resilientHandle(this, uid, expected, await recoverHandle(this, uid, expected));
     } catch (error) {
       if (!expected || !isDetachedUidError(error)) throw error;
-      return await recoverHandle(this, uid, expected);
+      return resilientHandle(this, uid, expected, await recoverHandle(this, uid, expected));
     }
   };
   prototype[installedSymbol] = true;

@@ -37,7 +37,7 @@ async function runLocal(job: () => Promise<unknown>): Promise<ToolResult> {
   }
 }
 
-const server = new McpServer({ name: 'resume-companion', version: '0.13.0' });
+const server = new McpServer({ name: 'resume-companion', version: '0.14.0' });
 
 server.registerTool('resume_status', {
   title: '检查简历随行资料库状态',
@@ -45,7 +45,7 @@ server.registerTool('resume_status', {
   annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
 }, async () => runLocal(async () => ({
   storage: await store.status(),
-  service: { name: 'resume-companion', version: '0.13.0', role: 'profile_library' },
+  service: { name: 'resume-companion', version: '0.14.0', role: 'profile_library' },
 })));
 
 server.registerTool('resume_profile_list', {

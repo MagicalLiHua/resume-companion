@@ -5,7 +5,7 @@
 [![CI](https://github.com/MagicalLiHua/resume-companion/actions/workflows/ci.yml/badge.svg)](https://github.com/MagicalLiHua/resume-companion/actions/workflows/ci.yml)
 [![MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-简历随行 0.13.0 是一个面向个人使用、有人监督的开发预览版。它不为每家招聘网站维护脚本，也不自建模型后端。插件提供两个 MCP 服务：一个管理本地多版本简历，另一个运行固定版本的官方 [Chrome DevTools MCP](https://github.com/ChromeDevTools/chrome-devtools-mcp)，并为真实 SPA 的短命 DOM 节点增加窄范围语义恢复。Codex 或其他 AI Agent 读取需要的资料、理解当前页面，并按通用控件配方组合官方浏览器工具完成填写、普通草稿保存和普通下一步。最终投递始终交给用户。
+简历随行 0.14.0 是一个面向个人使用、有人监督的开发预览版。它不为每家招聘网站维护脚本，也不自建模型后端。插件提供两个 MCP 服务：一个管理本地多版本简历，另一个运行固定版本的官方 [Chrome DevTools MCP](https://github.com/ChromeDevTools/chrome-devtools-mcp)，并为真实 SPA 的短命 DOM 节点增加窄范围语义恢复。Codex 或其他 AI Agent 读取需要的资料、理解当前页面，并按通用控件配方组合官方浏览器工具完成填写、普通草稿保存和普通下一步。最终投递始终交给用户。
 
 [安装与使用](docs/getting-started.md) · [工具与权限](docs/mcp-tools.md) · [验证范围](docs/validation.md) · [参与开发](CONTRIBUTING.md)
 
@@ -28,9 +28,9 @@ Resume Companion MCP          官方 Chrome DevTools MCP 1.9.0
 
 ## 为什么使用专用 Chrome
 
-Chrome 150+ 默认 Profile 的权限式远程调试与 Agent 沙箱组合并不稳定。0.13.0 不依赖默认 Profile、9222、`DevToolsActivePort`、浏览器扩展或 Native Host。第一次网页任务会打开一个独立 Chrome 窗口，用户在里面登录招聘网站一次；后续任务复用该 Profile 的 Cookie、历史和站点数据。
+Chrome 150+ 默认 Profile 的权限式远程调试与 Agent 沙箱组合并不稳定。0.14.0 不依赖默认 Profile、9222、`DevToolsActivePort`、浏览器扩展或 Native Host。第一次网页任务会打开一个独立 Chrome 窗口，用户在里面登录招聘网站一次；后续任务复用该 Profile 的 Cookie、历史和站点数据。
 
-真实招聘 SPA 可能在快照与动作之间替换视觉上相同的 DOM 节点。0.13.0 在官方 UID 句柄已经脱离文档时，用该控件的角色、可访问名称和所在分组即时重定位；只有唯一候选或上下文能明确区分时才继续，重复字段无法区分时会停止并要求重新观察。它不使用站点选择器，也不按候选顺序猜选。
+真实招聘 SPA 可能在快照后乃至动作执行期间替换视觉上相同的 DOM 节点。0.14.0 用控件的角色、可访问名称和所在分组即时重定位，并对绝对赋值核对结果后最多重试一次。点击只有在确认尚未进入真实派发时才自动恢复；派发已经开始则停止并要求重新观察，避免重复添加记录、保存或跳转。候选无法唯一确认时同样停止。它不使用站点选择器，也不按候选顺序猜选。
 
 同一时间只允许一个任务实际操作这个专用 Profile，但仅加载插件、初始化 MCP 或读取工具目录不会占用它。实例锁在第一次浏览器工具调用时取得；另一个任务会收到可重试的 `profile_in_use`，占用者退出后可在原任务直接重试。Profile 默认位于系统用户数据目录，不放在版本化插件缓存里，升级插件不会清除登录状态。
 
@@ -109,7 +109,7 @@ Resume Companion 自身只有四个工具：
 
 本地保存不等于本地推理。Agent 为完成任务而读取的简历字段、页面快照、截图和诊断结果会进入当前模型上下文；使用云端模型时，这些信息由对应服务处理。
 
-0.13.0 的边界主要由 skill、客户端工具审批和人工监督共同实现，不宣称代码级绝对防误投递。遇到结果不明、页面跳转异常或最终提交含义不清时，Agent 应停止并交给用户检查。完整说明见 [SECURITY.md](SECURITY.md)。
+0.14.0 的边界主要由 skill、客户端工具审批和人工监督共同实现，不宣称代码级绝对防误投递。遇到结果不明、页面跳转异常或最终提交含义不清时，Agent 应停止并交给用户检查。完整说明见 [SECURITY.md](SECURITY.md)。
 
 ## 开发与旧路线
 

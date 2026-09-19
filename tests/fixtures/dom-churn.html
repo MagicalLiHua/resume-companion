@@ -16,24 +16,37 @@
     </section>
   </main>
   <script>
-    document.querySelector('#churn-add').addEventListener('click', () => {
-      document.querySelector('#churn-output').textContent = '已点击';
+    let clickCount = 0;
+    const attachButton = button => button.addEventListener('click', () => {
+      clickCount += 1;
+      document.querySelector('#churn-output').textContent = `已点击 ${clickCount} 次`;
     });
+    attachButton(document.querySelector('#churn-add'));
+
+    function replaceControls() {
+      const input = document.querySelector('#churn-name');
+      const inputReplacement = input.cloneNode(true);
+      inputReplacement.value = input.value;
+      input.replaceWith(inputReplacement);
+      const button = document.querySelector('#churn-add');
+      const buttonReplacement = button.cloneNode(true);
+      attachButton(buttonReplacement);
+      button.replaceWith(buttonReplacement);
+    }
+
+    function churnFor(durationMs) {
+      const interval = setInterval(replaceControls, 4);
+      setTimeout(() => clearInterval(interval), durationMs);
+    }
+
     window.ChurnLab = {
-      replaceControls() {
-        const input = document.querySelector('#churn-name');
-        input.replaceWith(input.cloneNode(true));
-        const button = document.querySelector('#churn-add');
-        const replacement = button.cloneNode(true);
-        replacement.addEventListener('click', () => {
-          document.querySelector('#churn-output').textContent = '已点击';
-        });
-        button.replaceWith(replacement);
-      },
+      replaceControls,
+      churnFor,
       read() {
         return {
           name: document.querySelector('#churn-name').value,
           clicked: document.querySelector('#churn-output').textContent,
+          clickCount,
         };
       },
     };
