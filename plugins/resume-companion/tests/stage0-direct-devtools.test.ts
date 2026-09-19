@@ -113,6 +113,9 @@ async function connectChromeMcp(): Promise<Client> {
     },
     stderr: 'pipe',
   });
+  if (process.env.RESUME_COMPANION_TEST_STDERR === '1') {
+    transport.stderr?.on('data', chunk => process.stderr.write(chunk));
+  }
   const connected = new Client({ name: 'resume-companion-stage0-direct', version: '1.0.0' });
   await connected.connect(transport);
   return connected;
@@ -520,6 +523,31 @@ describe('Stage 0 direct Chrome DevTools MCP validation', () => {
       boundary_violations: 0,
     }));
   }, 240_000);
+
+  test('re-resolves detached SPA controls by unique accessibility semantics', async () => {
+    const opened = await call('new_page', { url: `http://127.0.0.1:4174/dom-churn.html?run=${Date.now()}` });
+    const churnPageId = selectedPageId(textOf(opened));
+    const snapshot = textOf(await call('take_snapshot', { pageId: churnPageId }));
+    const nameUid = uidFor(snapshot, '姓名');
+    const addUid = uidFor(snapshot, '添加教育信息');
+
+    await call('evaluate_script', {
+      pageId: churnPageId,
+      function: `() => { window.ChurnLab.replaceControls(); return true; }`,
+      waitForStableDom: false,
+    });
+    await call('fill', { pageId: churnPageId, uid: nameUid, value: '节点恢复同学' });
+    await call('click', { pageId: churnPageId, uid: addUid });
+
+    const state = textOf(await call('evaluate_script', {
+      pageId: churnPageId,
+      function: `() => window.ChurnLab.read()`,
+      waitForStableDom: false,
+    }));
+    expect(state).toContain('"name":"节点恢复同学"');
+    expect(state).toContain('"clicked":"已点击"');
+    await call('close_page', { pageId: churnPageId });
+  }, 20_000);
 
   test('reuses a running dedicated Chrome and relaunches it after the window exits', async () => {
     const opened = await call('new_page', { url: `http://127.0.0.1:4174/agent-lab.html?run=browser-relaunch-${Date.now()}` });

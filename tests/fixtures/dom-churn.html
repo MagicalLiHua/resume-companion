@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>高频重渲染控件实验室</title>
+</head>
+<body>
+  <main aria-label="简历表单">
+    <section aria-label="基本信息">
+      <label for="churn-name">姓名</label>
+      <input id="churn-name" autocomplete="name">
+    </section>
+    <section aria-label="教育信息">
+      <button id="churn-add" type="button">添加教育信息</button>
+      <output id="churn-output">未点击</output>
+    </section>
+  </main>
+  <script>
+    document.querySelector('#churn-add').addEventListener('click', () => {
+      document.querySelector('#churn-output').textContent = '已点击';
+    });
+    window.ChurnLab = {
+      replaceControls() {
+        const input = document.querySelector('#churn-name');
+        input.replaceWith(input.cloneNode(true));
+        const button = document.querySelector('#churn-add');
+        const replacement = button.cloneNode(true);
+        replacement.addEventListener('click', () => {
+          document.querySelector('#churn-output').textContent = '已点击';
+        });
+        button.replaceWith(replacement);
+      },
+      read() {
+        return {
+          name: document.querySelector('#churn-name').value,
+          clicked: document.querySelector('#churn-output').textContent,
+        };
+      },
+    };
+  </script>
+</body>
+</html>

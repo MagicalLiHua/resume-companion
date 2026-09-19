@@ -198,10 +198,18 @@ var runtimePath = process.env.RESUME_COMPANION_DEVTOOLS_RUNTIME ?? [
   resolve2(moduleDirectory, "../runtime/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js"),
   resolve2(moduleDirectory, "../../node_modules/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js")
 ].find(existsSync) ?? resolve2(moduleDirectory, "runtime/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js");
+var resiliencePreloadPath = [
+  resolve2(moduleDirectory, "devtools-resilience-preload.mjs"),
+  resolve2(moduleDirectory, "../devtools-resilience-preload.mjs")
+].find(existsSync) ?? resolve2(moduleDirectory, "devtools-resilience-preload.mjs");
 var profileDir = resolveChromeProfileDir();
 var lock = new ChromeProfileLock(profileDir);
 if (!existsSync(runtimePath)) {
   console.error("runtime_missing: \u56FA\u5B9A\u7248\u672C\u7684 Chrome DevTools MCP \u8FD0\u884C\u5305\u4E0D\u5B58\u5728\uFF0C\u8BF7\u91CD\u65B0\u5B89\u88C5\u5B8C\u6574\u63D2\u4EF6");
+  process.exit(1);
+}
+if (!existsSync(resiliencePreloadPath)) {
+  console.error("runtime_preload_missing: SPA \u8282\u70B9\u6062\u590D\u517C\u5BB9\u5C42\u4E0D\u5B58\u5728\uFF0C\u8BF7\u91CD\u65B0\u5B89\u88C5\u5B8C\u6574\u63D2\u4EF6");
   process.exit(1);
 }
 var upstreamArgs = [
@@ -219,11 +227,12 @@ var upstreamArgs = [
   "--screenshot-max-height=1200"
 ];
 if (process.env.RESUME_COMPANION_CHROME_HEADLESS === "1") upstreamArgs.push("--headless");
-var child = spawn(process.execPath, upstreamArgs, {
+var child = spawn(process.execPath, ["--import", resiliencePreloadPath, ...upstreamArgs], {
   cwd: dirname2(runtimePath),
   stdio: ["pipe", "pipe", "pipe"],
   env: {
     ...stringEnvironment(),
+    RESUME_COMPANION_DEVTOOLS_RUNTIME_ENTRY: runtimePath,
     CHROME_DEVTOOLS_MCP_NO_UPDATE_CHECKS: "1",
     CHROME_DEVTOOLS_MCP_NO_USAGE_STATISTICS: "1"
   }

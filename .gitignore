@@ -23,6 +23,10 @@ backend/.rollbacks/
 backend/web/
 research/third-party/
 
+# Private captures from real recruitment sites stay local. Public tests use
+# synthetic fixtures that reproduce the observed behavior without site assets.
+/tests/fixtures/bankcomm-resume-capture/
+
 .evaluation/
 
 # Local development material is not part of the public release tree.

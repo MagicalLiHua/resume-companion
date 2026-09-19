@@ -15,7 +15,7 @@ await rm(staging, { recursive: true, force: true });
 await mkdir(staging, { recursive: true });
 const packagedPlugin = resolve(staging, 'plugins/resume-companion');
 await mkdir(packagedPlugin, { recursive: true });
-for (const item of ['.codex-plugin', '.mcp.json', 'package.json', 'server.mjs', 'server.bundle.mjs', 'chrome-launcher.bundle.mjs', 'runtime', 'skills']) {
+for (const item of ['.codex-plugin', '.mcp.json', 'package.json', 'server.mjs', 'server.bundle.mjs', 'chrome-launcher.bundle.mjs', 'devtools-resilience-preload.mjs', 'runtime', 'skills']) {
   await cp(resolve(pluginRoot, item), resolve(packagedPlugin, item), { recursive: true });
 }
 await cp(resolve(root, 'LICENSE'), resolve(staging, 'LICENSE'));

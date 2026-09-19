@@ -21931,14 +21931,14 @@ async function runLocal(job) {
     return errorResult(error2);
   }
 }
-var server = new McpServer({ name: "resume-companion", version: "0.12.0" });
+var server = new McpServer({ name: "resume-companion", version: "0.13.0" });
 server.registerTool("resume_status", {
   title: "\u68C0\u67E5\u7B80\u5386\u968F\u884C\u8D44\u6599\u5E93\u72B6\u6001",
   description: "\u8FD4\u56DE\u672C\u5730\u8D44\u6599\u5E93\u76EE\u5F55\u3001\u683C\u5F0F\u7248\u672C\u548C\u8D44\u6599\u6570\u91CF\u3002\u6D4F\u89C8\u5668\u7531\u72EC\u7ACB\u7684 Chrome DevTools MCP \u63D0\u4F9B\uFF0C\u56E0\u6B64\u672C\u5DE5\u5177\u4E0D\u4F1A\u542F\u52A8\u6216\u68C0\u67E5 Chrome\u3002",
   annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true }
 }, async () => runLocal(async () => ({
   storage: await store.status(),
-  service: { name: "resume-companion", version: "0.12.0", role: "profile_library" }
+  service: { name: "resume-companion", version: "0.13.0", role: "profile_library" }
 })));
 server.registerTool("resume_profile_list", {
   title: "\u5217\u51FA\u672C\u5730\u7B80\u5386\u8D44\u6599",

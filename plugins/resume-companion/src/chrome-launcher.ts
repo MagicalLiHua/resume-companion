@@ -13,11 +13,19 @@ const runtimePath = process.env.RESUME_COMPANION_DEVTOOLS_RUNTIME ?? [
   resolve(moduleDirectory, '../runtime/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js'),
   resolve(moduleDirectory, '../../node_modules/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js'),
 ].find(existsSync) ?? resolve(moduleDirectory, 'runtime/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js');
+const resiliencePreloadPath = [
+  resolve(moduleDirectory, 'devtools-resilience-preload.mjs'),
+  resolve(moduleDirectory, '../devtools-resilience-preload.mjs'),
+].find(existsSync) ?? resolve(moduleDirectory, 'devtools-resilience-preload.mjs');
 const profileDir = resolveChromeProfileDir();
 const lock = new ChromeProfileLock(profileDir);
 
 if (!existsSync(runtimePath)) {
   console.error('runtime_missing: 固定版本的 Chrome DevTools MCP 运行包不存在，请重新安装完整插件');
+  process.exit(1);
+}
+if (!existsSync(resiliencePreloadPath)) {
+  console.error('runtime_preload_missing: SPA 节点恢复兼容层不存在，请重新安装完整插件');
   process.exit(1);
 }
 
@@ -37,11 +45,12 @@ const upstreamArgs = [
 ];
 if (process.env.RESUME_COMPANION_CHROME_HEADLESS === '1') upstreamArgs.push('--headless');
 
-const child = spawn(process.execPath, upstreamArgs, {
+const child = spawn(process.execPath, ['--import', resiliencePreloadPath, ...upstreamArgs], {
   cwd: dirname(runtimePath),
   stdio: ['pipe', 'pipe', 'pipe'],
   env: {
     ...stringEnvironment(),
+    RESUME_COMPANION_DEVTOOLS_RUNTIME_ENTRY: runtimePath,
     CHROME_DEVTOOLS_MCP_NO_UPDATE_CHECKS: '1',
     CHROME_DEVTOOLS_MCP_NO_USAGE_STATISTICS: '1',
   },
