@@ -1,6 +1,6 @@
 # 安装与使用
 
-当前版本为 0.11.0 开发预览版，由本地资料 MCP、固定版本的官方 Chrome DevTools MCP、TypeScript 启动器和 `resume-autofill` skill 组成。它不需要浏览器扩展、Native Host 或远程调试开关。
+当前版本为 0.11.1 开发预览版，由本地资料 MCP、固定版本的官方 Chrome DevTools MCP、TypeScript 启动器和 `resume-autofill` skill 组成。它不需要浏览器扩展、Native Host 或远程调试开关。
 
 ## 环境
 
@@ -62,7 +62,7 @@ Chrome 服务默认 `prompt`。插件只为审查过的常规工具设置自动�
 | 现象 | 处理 |
 | --- | --- |
 | `resume_status` 不存在 | 检查插件是否安装并启用；新建任务重新加载 MCP 配置 |
-| `profile_in_use` | 关闭另一个正在使用 Resume Companion 专用 Chrome 的任务，再重试 |
+| `profile_in_use` | 关闭另一个正在使用 Resume Companion 专用 Chrome 的任务，然后在当前任务直接重试；无需重启任务 |
 | Chrome 打开但网站未登录 | 在专用 Chrome 中手工登录一次；不要切换到默认 Chrome |
 | Chrome 被用户关闭 | 再调用一个页面工具，MCP 会重新启动并复用同一 Profile |
 | 资料读取返回 `profile_changed` | 重新读取资料目录，固定新的 revision，再规划剩余字段 |

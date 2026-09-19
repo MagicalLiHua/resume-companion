@@ -1,6 +1,6 @@
 # 开发说明
 
-0.11.0 的产品代码使用严格 TypeScript。Resume Companion 只实现本地资料服务和一个薄的 Chrome MCP 启动器；浏览器协议、页面快照和输入能力来自固定的官方 `chrome-devtools-mcp@1.9.0`。
+0.11.1 的产品代码使用严格 TypeScript。Resume Companion 只实现本地资料服务和一个薄的 Chrome MCP 启动器；浏览器协议、页面快照和输入能力来自固定的官方 `chrome-devtools-mcp@1.9.0`。
 
 ## 命令
 
@@ -41,7 +41,7 @@ npm run package
 
 不要手工编辑 bundle 或 runtime。启动器不代理、不改名、不解析上游 MCP 工具，只计算稳定 Profile、获取锁、设置已审查参数、透传 stdio 和脱敏 stderr。
 
-专用 Profile 不放在插件缓存中。启动器进程一启动就获取锁；第二个任务不会静默改用临时 Profile。正常或信号退出时，锁只在上游进程结束后释放。
+专用 Profile 不放在插件缓存中。启动器允许 MCP 初始化和工具目录读取直接透传，只在第一条 `tools/call` 前获取锁；第二个任务不会静默改用临时 Profile。锁冲突作为当前工具调用的可重试 JSON-RPC 错误返回，不终止上游 MCP。正常或信号退出时，锁只在上游进程结束后释放。
 
 ## 变更规则
 

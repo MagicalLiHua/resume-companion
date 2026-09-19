@@ -10,7 +10,8 @@ type ToolResult = Awaited<ReturnType<Client['callTool']>>;
 
 const pluginRoot = resolve(import.meta.dirname, '..');
 const projectRoot = resolve(pluginRoot, '../..');
-const profileDir = await mkdtemp(join(tmpdir(), 'resume-companion-stage0-profile-'));
+const profileRoot = await mkdtemp(join(tmpdir(), 'resume-companion-stage0-profile-'));
+const profileDir = join(profileRoot, 'chrome-profile');
 let lab: ChildProcess | null = null;
 let client: Client | null = null;
 let pageId = 0;
@@ -97,7 +98,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await client?.close();
   lab?.kill('SIGTERM');
-  await rm(profileDir, { recursive: true, force: true });
+  await rm(profileRoot, { recursive: true, force: true });
 });
 
 describe('Stage 0 direct Chrome DevTools MCP validation', () => {

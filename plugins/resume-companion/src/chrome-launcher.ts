@@ -5,6 +5,7 @@ import { existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ChromeProfileLock, profileHash, resolveChromeProfileDir } from './chrome-profile.js';
+import { McpToolLockGate } from './mcp-tool-lock-gate.js';
 
 const moduleDirectory = dirname(fileURLToPath(import.meta.url));
 const runtimePath = process.env.RESUME_COMPANION_DEVTOOLS_RUNTIME ?? [
@@ -17,13 +18,6 @@ const lock = new ChromeProfileLock(profileDir);
 
 if (!existsSync(runtimePath)) {
   console.error('runtime_missing: 固定版本的 Chrome DevTools MCP 运行包不存在，请重新安装完整插件');
-  process.exit(1);
-}
-
-try {
-  await lock.acquire();
-} catch (error) {
-  console.error(error instanceof Error ? error.message : String(error));
   process.exit(1);
 }
 
@@ -53,7 +47,21 @@ const child = spawn(process.execPath, upstreamArgs, {
   },
 });
 
-process.stdin.pipe(child.stdin);
+const inputGate = new McpToolLockGate(child.stdin, process.stdout, () => lock.acquire());
+process.stdin.on('data', (chunk: Buffer) => {
+  try {
+    inputGate.push(chunk);
+    void inputGate.flush().catch(error => {
+      console.error(error instanceof Error ? redactDiagnostic(error.message) : 'mcp_forward_failed: 无法转发 MCP 输入');
+      requestClose('SIGTERM');
+    });
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : 'mcp_input_failed: 无法读取 MCP 输入');
+    requestClose('SIGTERM');
+  }
+});
+process.stdin.once('end', () => void inputGate.end().catch(() => requestClose('SIGTERM')));
+process.stdin.once('error', () => requestClose('SIGTERM'));
 child.stdout.pipe(process.stdout);
 child.stderr.setEncoding('utf8');
 child.stderr.on('data', (chunk: string) => process.stderr.write(redactDiagnostic(chunk)));

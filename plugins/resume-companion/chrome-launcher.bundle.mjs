@@ -74,6 +74,10 @@ var ChromeProfileLock = class {
         await handle.sync();
         await handle.close();
         this.held = true;
+        if (await chromeProfileIsBusy(this.profileDir)) {
+          await this.release();
+          throw new Error("profile_in_use: \u4E13\u7528 Chrome Profile \u6B63\u7531\u6B8B\u7559\u6216\u5916\u90E8 Chrome \u8FDB\u7A0B\u4F7F\u7528\uFF1B\u8BF7\u5148\u5173\u95ED\u5BF9\u5E94 Chrome \u7A97\u53E3");
+        }
         return;
       } catch (error) {
         const code = typeof error === "object" && error !== null && "code" in error ? error.code : void 0;
@@ -107,6 +111,86 @@ var ChromeProfileLock = class {
   }
 };
 
+// src/mcp-tool-lock-gate.ts
+import { once } from "node:events";
+var MAX_BUFFER_BYTES = 10 * 1024 * 1024;
+var McpToolLockGate = class {
+  constructor(upstream, clientOutput, acquire) {
+    this.upstream = upstream;
+    this.clientOutput = clientOutput;
+    this.acquire = acquire;
+  }
+  upstream;
+  clientOutput;
+  acquire;
+  buffer = Buffer.alloc(0);
+  queue = Promise.resolve();
+  lockAcquired = false;
+  push(chunk) {
+    if (this.buffer.length + chunk.length > MAX_BUFFER_BYTES) {
+      this.buffer = Buffer.alloc(0);
+      throw new Error("mcp_input_too_large: MCP \u8F93\u5165\u8D85\u8FC7\u5B89\u5168\u4E0A\u9650");
+    }
+    this.buffer = this.buffer.length ? Buffer.concat([this.buffer, chunk]) : chunk;
+    while (true) {
+      const newline = this.buffer.indexOf(10);
+      if (newline < 0) break;
+      const line = this.buffer.subarray(0, newline + 1);
+      this.buffer = this.buffer.subarray(newline + 1);
+      this.queue = this.queue.then(() => this.forward(line));
+    }
+  }
+  async flush() {
+    await this.queue;
+  }
+  async end() {
+    if (this.buffer.length) {
+      const trailing = this.buffer;
+      this.buffer = Buffer.alloc(0);
+      this.queue = this.queue.then(() => this.forward(trailing));
+    }
+    await this.queue;
+    this.upstream.end();
+  }
+  async forward(line) {
+    const toolCall = parseToolCall(line);
+    if (toolCall && !this.lockAcquired) {
+      try {
+        await this.acquire();
+        this.lockAcquired = true;
+      } catch (error) {
+        await writeChunk(this.clientOutput, Buffer.from(`${JSON.stringify({
+          jsonrpc: "2.0",
+          id: toolCall.id,
+          error: { code: -32e3, message: safeLockError(error) }
+        })}
+`));
+        return;
+      }
+    }
+    await writeChunk(this.upstream, line);
+  }
+};
+function parseToolCall(line) {
+  try {
+    const text = line.toString("utf8").replace(/[\r\n]+$/, "");
+    const message = JSON.parse(text);
+    if (message.jsonrpc !== "2.0" || message.method !== "tools/call") return null;
+    if (typeof message.id !== "string" && typeof message.id !== "number") return null;
+    return { id: message.id };
+  } catch {
+    return null;
+  }
+}
+function safeLockError(error) {
+  const message = error instanceof Error ? error.message : String(error);
+  return message.startsWith("profile_in_use:") ? message : "profile_lock_failed: \u65E0\u6CD5\u5B89\u5168\u53D6\u5F97 Resume Companion \u4E13\u7528 Chrome \u7684\u5B9E\u4F8B\u9501";
+}
+async function writeChunk(stream, chunk) {
+  if (stream.write(chunk)) return;
+  await once(stream, "drain");
+}
+
 // src/chrome-launcher.ts
 var moduleDirectory = dirname2(fileURLToPath(import.meta.url));
 var runtimePath = process.env.RESUME_COMPANION_DEVTOOLS_RUNTIME ?? [
@@ -118,12 +202,6 @@ var profileDir = resolveChromeProfileDir();
 var lock = new ChromeProfileLock(profileDir);
 if (!existsSync(runtimePath)) {
   console.error("runtime_missing: \u56FA\u5B9A\u7248\u672C\u7684 Chrome DevTools MCP \u8FD0\u884C\u5305\u4E0D\u5B58\u5728\uFF0C\u8BF7\u91CD\u65B0\u5B89\u88C5\u5B8C\u6574\u63D2\u4EF6");
-  process.exit(1);
-}
-try {
-  await lock.acquire();
-} catch (error) {
-  console.error(error instanceof Error ? error.message : String(error));
   process.exit(1);
 }
 var upstreamArgs = [
@@ -150,7 +228,21 @@ var child = spawn(process.execPath, upstreamArgs, {
     CHROME_DEVTOOLS_MCP_NO_USAGE_STATISTICS: "1"
   }
 });
-process.stdin.pipe(child.stdin);
+var inputGate = new McpToolLockGate(child.stdin, process.stdout, () => lock.acquire());
+process.stdin.on("data", (chunk) => {
+  try {
+    inputGate.push(chunk);
+    void inputGate.flush().catch((error) => {
+      console.error(error instanceof Error ? redactDiagnostic(error.message) : "mcp_forward_failed: \u65E0\u6CD5\u8F6C\u53D1 MCP \u8F93\u5165");
+      requestClose("SIGTERM");
+    });
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : "mcp_input_failed: \u65E0\u6CD5\u8BFB\u53D6 MCP \u8F93\u5165");
+    requestClose("SIGTERM");
+  }
+});
+process.stdin.once("end", () => void inputGate.end().catch(() => requestClose("SIGTERM")));
+process.stdin.once("error", () => requestClose("SIGTERM"));
 child.stdout.pipe(process.stdout);
 child.stderr.setEncoding("utf8");
 child.stderr.on("data", (chunk) => process.stderr.write(redactDiagnostic(chunk)));

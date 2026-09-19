@@ -78,6 +78,10 @@ export class ChromeProfileLock {
         await handle.sync();
         await handle.close();
         this.held = true;
+        if (await chromeProfileIsBusy(this.profileDir)) {
+          await this.release();
+          throw new Error('profile_in_use: 专用 Chrome Profile 正由残留或外部 Chrome 进程使用；请先关闭对应 Chrome 窗口');
+        }
         return;
       } catch (error) {
         const code = typeof error === 'object' && error !== null && 'code' in error ? error.code : undefined;

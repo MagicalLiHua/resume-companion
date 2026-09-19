@@ -16,7 +16,7 @@ The dedicated Chrome keeps its own logins across tasks. On first use, let the us
 
 Call `resume_status` before profile work. Its success proves only that the local profile library is available; browser status comes from the presence and results of the Chrome DevTools tools.
 
-For browser work, call `list_pages`. If the Chrome service is unavailable with `profile_in_use`, tell the user another task owns the Resume Companion browser and stop browser actions while leaving profile work available. A first browser call may open a new Chrome window. If the intended site is not logged in, ask the user to log in there and continue after they return to the application page.
+For browser work, call `list_pages`. Merely loading the MCP does not reserve the profile; the first browser tool call does. If it returns `profile_in_use`, tell the user another task owns the Resume Companion browser and pause browser actions while leaving profile work available. After that task closes, retry in the current task without restarting it. A first successful browser call may open a new Chrome window. If the intended site is not logged in, ask the user to log in there and continue after they return to the application page.
 
 Use `select_page` with the chosen `pageId` before observing or acting. Keep passing that `pageId` to page-scoped tools. Re-list pages after navigation, a closed tab, a login redirect or an unknown destination.
 
