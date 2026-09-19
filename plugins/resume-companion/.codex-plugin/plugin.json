@@ -1,6 +1,6 @@
 {
   "name": "resume-companion",
-  "version": "0.16.0",
+  "version": "0.16.1",
   "description": "Local resume profiles plus a scoped Resume Browser MCP for supervised recruitment forms.",
   "author": {
     "name": "Resume Companion"

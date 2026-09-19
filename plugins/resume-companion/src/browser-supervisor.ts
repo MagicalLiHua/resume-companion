@@ -1,20 +1,64 @@
 #!/usr/bin/env node
 
-import { chmod, unlink } from 'node:fs/promises';
+import { chmod, open, readFile, unlink, type FileHandle } from 'node:fs/promises';
 import { createConnection, createServer, type Server, type Socket } from 'node:net';
 import { resolveChromeProfileDir } from './chrome-profile.js';
 import { ResumeBrowserHost, ResumeBrowserServer } from './resume-browser-server.js';
 import { SocketServerTransport } from './browser/socket-transport.js';
-import { compareVersions, supervisorSocketPath, type SupervisorHello, type SupervisorReply } from './browser/supervisor-protocol.js';
+import { compareVersions, supervisorSocketPath, supervisorStartupLockPath, type SupervisorHello, type SupervisorReply } from './browser/supervisor-protocol.js';
 import { BROWSER_SUPERVISOR_PROTOCOL, RUNTIME_PLUGIN_VERSION } from './version.js';
 
 const profileDir = resolveChromeProfileDir();
 const endpoint = supervisorSocketPath(profileDir);
+const startupLockPath = supervisorStartupLockPath(profileDir);
 const host = new ResumeBrowserHost();
 const sessions = new Map<string, { server: ResumeBrowserServer; socket: Socket }>();
 let listener: Server | undefined;
 let closing = false;
 let emptyTimer: NodeJS.Timeout | undefined;
+
+function processExists(pid: number): boolean {
+  if (!Number.isSafeInteger(pid) || pid <= 0) return false;
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    return typeof error === 'object' && error !== null && 'code' in error && error.code === 'EPERM';
+  }
+}
+
+async function acquireStartupLock(): Promise<FileHandle | null> {
+  for (let attempt = 0; attempt < 200; attempt++) {
+    try {
+      const handle = await open(startupLockPath, 'wx', 0o600);
+      await handle.writeFile(`${JSON.stringify({ pid: process.pid, started_at: new Date().toISOString() })}\n`, 'utf8');
+      await handle.sync();
+      return handle;
+    } catch (error) {
+      const code = typeof error === 'object' && error !== null && 'code' in error ? error.code : undefined;
+      if (code !== 'EEXIST') throw error;
+      if (await endpointIsLive()) return null;
+      try {
+        const record = JSON.parse(await readFile(startupLockPath, 'utf8')) as { pid?: unknown };
+        if (typeof record.pid !== 'number' || !processExists(record.pid)) {
+          await unlink(startupLockPath).catch(() => undefined);
+          continue;
+        }
+      } catch {
+        if (attempt >= 20) await unlink(startupLockPath).catch(() => undefined);
+        else await new Promise(resolveDelay => setTimeout(resolveDelay, 25));
+        continue;
+      }
+      await new Promise(resolveDelay => setTimeout(resolveDelay, 25));
+    }
+  }
+  throw new Error('browser_supervisor_startup_timeout: another process did not finish starting');
+}
+
+async function releaseStartupLock(handle: FileHandle): Promise<void> {
+  await handle.close().catch(() => undefined);
+  await unlink(startupLockPath).catch(() => undefined);
+}
 
 function reply(socket: Socket, value: SupervisorReply): Promise<void> {
   return new Promise((resolveReply, reject) => {
@@ -127,6 +171,11 @@ async function dispatchHandshake(socket: Socket, line: string): Promise<void> {
       socket.end();
       return void setTimeout(() => { void shutdown(); }, 20);
     }
+    if (hello.kind === 'shutdown') {
+      await reply(socket, { status: 'shutting_down', supervisor_version: RUNTIME_PLUGIN_VERSION, protocol: BROWSER_SUPERVISOR_PROTOCOL });
+      socket.end();
+      return void setTimeout(() => { void shutdown(); }, 20);
+    }
     if (hello.kind !== 'connect') {
       await reply(socket, { status: 'error', supervisor_version: RUNTIME_PLUGIN_VERSION, protocol: BROWSER_SUPERVISOR_PROTOCOL, message: 'unsupported supervisor command' });
       socket.end();
@@ -163,21 +212,29 @@ async function shutdown(): Promise<void> {
   process.exit(0);
 }
 
-if (!await prepareEndpoint()) process.exit(0);
-listener = createServer(socket => { void handleHandshake(socket); });
-listener.on('error', error => {
-  if ((error as NodeJS.ErrnoException).code === 'EADDRINUSE') process.exit(0);
-  console.error(`Resume Browser supervisor failed: ${error.message}`);
-  process.exit(1);
-});
-await new Promise<void>((resolveListen, reject) => {
-  listener!.once('error', reject);
-  listener!.listen(endpoint, () => {
-    listener!.off('error', reject);
-    resolveListen();
+const startupLock = await acquireStartupLock();
+if (!startupLock) process.exit(0);
+try {
+  if (!await prepareEndpoint()) {
+    await releaseStartupLock(startupLock);
+    process.exit(0);
+  }
+  listener = createServer(socket => { void handleHandshake(socket); });
+  await new Promise<void>((resolveListen, reject) => {
+    listener!.once('error', reject);
+    listener!.listen(endpoint, () => {
+      listener!.off('error', reject);
+      resolveListen();
+    });
   });
-});
-if (process.platform !== 'win32') await chmod(endpoint, 0o600);
+  if (process.platform !== 'win32') await chmod(endpoint, 0o600);
+  await releaseStartupLock(startupLock);
+} catch (error) {
+  await releaseStartupLock(startupLock);
+  if ((error as NodeJS.ErrnoException).code === 'EADDRINUSE') process.exit(0);
+  console.error(`Resume Browser supervisor failed: ${error instanceof Error ? error.message : String(error)}`);
+  process.exit(1);
+}
 process.once('SIGTERM', () => { void shutdown(); });
 process.once('SIGINT', () => { void shutdown(); });
 scheduleEphemeralShutdown();

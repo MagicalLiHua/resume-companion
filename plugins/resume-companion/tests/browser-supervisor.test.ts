@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from 'vitest';
 import { ResumeBrowserHost } from '../src/resume-browser-server.js';
-import { compareVersions } from '../src/browser/supervisor-protocol.js';
+import { compareVersions, supervisorSocketPath, supervisorStartupLockPath } from '../src/browser/supervisor-protocol.js';
 
 const hosts: ResumeBrowserHost[] = [];
 afterEach(async () => {
@@ -27,5 +27,11 @@ describe('shared browser supervisor lease', () => {
     expect(compareVersions('0.16.0+codex.same', '0.16.0+codex.same')).toBe(0);
     expect(compareVersions('0.16.1', '0.16.0')).toBe(1);
     expect(compareVersions('0.15.9', '0.16.0')).toBe(-1);
+  });
+
+  test('uses a separate per-profile startup lock for cold-start serialization', () => {
+    const profile = '/tmp/resume-companion-profile';
+    expect(supervisorStartupLockPath(profile)).not.toBe(supervisorSocketPath(profile));
+    expect(supervisorStartupLockPath(profile)).toMatch(/\.start\.lock$/);
   });
 });

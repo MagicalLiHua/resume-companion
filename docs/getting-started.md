@@ -1,6 +1,6 @@
 # 安装与使用
 
-当前版本为 0.16.0 开发预览版，由本地资料 MCP、TypeScript Resume Browser MCP、Browser Supervisor、固定的 Chrome DevTools MCP 1.9.0 浏览器底座和 `resume-autofill` skill 组成。它不需要浏览器扩展、Native Host 或远程调试开关。
+当前版本为 0.16.1 开发预览版，由本地资料 MCP、TypeScript Resume Browser MCP、Browser Supervisor、固定的 Chrome DevTools MCP 1.9.0 浏览器底座和 `resume-autofill` skill 组成。它不需要浏览器扩展、Native Host 或远程调试开关。
 
 ## 环境
 
@@ -37,7 +37,7 @@ codex plugin add resume-companion@resume-companion
 - `resume_companion` 是必需服务，启动失败会影响资料管理。
 - `resume_browser` 是可选服务；所有任务通过 Browser Supervisor 复用同一个专用 Chrome。
 
-新安装或升级插件后，运行插件包内的 `scripts/reload-codex-mcp.mjs` 即可让已加载任务刷新 MCP，无需重启 Codex。升级会替换 Browser Supervisor；不要在尚未保存的表单事务执行到一半时升级。
+新安装或升级插件后，运行插件包内的 `scripts/reload-codex-mcp.mjs`。如果当前 App Server 开放控制端点，它会刷新已加载任务的 MCP；Codex 桌面版未开放该端点时，它会停止旧 Browser Supervisor，并提示新建任务加载新版本。无需重启 Codex。不要在尚未保存的表单事务执行到一半时升级。
 
 ## 第一次使用
 
@@ -61,9 +61,9 @@ codex plugin add resume-companion@resume-companion
 
 | 现象 | 处理 |
 | --- | --- |
-| `resume_status` 不存在 | 检查插件是否安装并启用；运行 `scripts/reload-codex-mcp.mjs` 热重载 MCP |
+| `resume_status` 不存在 | 检查插件是否安装并启用；运行 `scripts/reload-codex-mcp.mjs`，然后按输出热重载或新建任务 |
 | `browser_lease_revoked` | 更新的任务已经接管浏览器；继续使用新任务，或在旧任务明确调用 `browser_takeover` |
-| 首次从 0.15.x 升级出现 `profile_in_use` | 运行 MCP 热重载以退出旧版浏览器进程，再重试；这是迁移到 Supervisor 的一次性情况 |
+| 首次从 0.15.x 升级出现 `profile_in_use` | 运行更新脚本以退出旧版浏览器进程，再在新任务重试；这是迁移到 Supervisor 的一次性情况 |
 | Chrome 打开但网站未登录 | 在专用 Chrome 中手工登录一次；不要切换到默认 Chrome |
 | Chrome 被用户关闭 | 再调用一个页面工具，MCP 会重新启动并复用同一 Profile |
 | 资料读取返回 `profile_changed` | 重新读取资料目录，固定新的 revision，再规划剩余字段 |

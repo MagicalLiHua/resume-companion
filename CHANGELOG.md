@@ -1,12 +1,20 @@
 # 更新记录
 
+## 0.16.1 · Supervisor 冷启动与桌面更新修复
+
+- 使用按 Profile 派生的原子启动锁串行化冷启动；多个任务同时加载插件时只会创建一个 Browser Supervisor。
+- 安装更新脚本会先终止旧 Supervisor 并撤销它的浏览器会话；App Server 控制端点可用时继续热重载 MCP，Codex 桌面版未开放端点时明确提示新建任务，无需重启应用。
+- 发布包冒烟改为两个 MCP 客户端同时冷启动，验证它们最终共享同一个 Chrome、租约和页面状态。
+- 原始 `fill` 返回成功后核对当前语义节点；SPA 在动作结束瞬间替换节点并丢失值时，等待目标稳定后只补写一次。
+
 ## 0.16.0 · 跨任务浏览器接管与 MCP 热重载
 
 - 新增独立 Browser Supervisor。多个 Codex 任务连接到同一个专用 Chrome、持久 Profile、标签页和语义缓存，不再为每个任务启动浏览器或争抢 Profile 锁。
 - 新任务在第一次浏览器调用的原子边界自动接管操作租约；旧任务保持打开并收到明确的 `browser_lease_revoked`，不会继续并发操作页面。
 - 新增 `browser_takeover`，允许用户明确要求旧任务重新取得控制权；当前所有者随即被撤销。
 - Supervisor 使用仅当前系统用户可访问的 Unix socket 或 Named Pipe，按 Profile 隔离，并在新版客户端连接时执行协议与版本升级。
-- 新增 Codex App Server MCP 热重载脚本。安装或升级插件后可刷新已加载任务，无需重启整个 Codex 应用。
+- 冷启动使用按 Profile 派生的原子启动锁，多个任务同时加载时只会创建一个 Supervisor。
+- 新增 Codex App Server MCP 更新脚本。控制端点可用时刷新已加载任务；桌面版未开放端点时通过新任务加载，无需重启整个 Codex 应用。
 - 新增双 MCP 客户端集成回归，验证共享同一 Chrome、自动接管、旧任务隔离和显式夺回。
 
 ## 0.15.1 · 真实 SPA 事务恢复与只读实时调试

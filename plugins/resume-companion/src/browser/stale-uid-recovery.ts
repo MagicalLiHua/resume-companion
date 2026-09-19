@@ -274,6 +274,17 @@ async function replaceCurrentHandle(state: ResilientHandleState): Promise<Debugg
   return recovered;
 }
 
+async function replaceWithSettledHandle(state: ResilientHandleState, timeoutMs = 600): Promise<DebuggableHandle> {
+  const deadline = Date.now() + timeoutMs;
+  let recovered = await replaceCurrentHandle(state);
+  while (Date.now() < deadline) {
+    await new Promise(resolveDelay => setTimeout(resolveDelay, 20));
+    if (state.current === recovered && await handleConnectionState(recovered) !== 'detached') return recovered;
+    recovered = await replaceCurrentHandle(state);
+  }
+  return recovered;
+}
+
 async function runLocatorAction(
   state: ResilientHandleState,
   transforms: LocatorTransform[],
@@ -286,7 +297,29 @@ async function runLocatorAction(
   if (typeof initialMethod !== 'function') throw new Error(`stale_action_incompatible: Locator action ${action} is unavailable`);
   const observation = observeLocatorAction(initialLocator);
   try {
-    return await Reflect.apply(initialMethod, initialLocator, args);
+    const result = await Reflect.apply(initialMethod, initialLocator, args);
+    if (action !== 'fill' || await handleConnectionState(attemptedHandle) !== 'detached' && await intendedValueIsPresent(attemptedHandle, args[0])) {
+      return result;
+    }
+    if (state.actionRecoveryUsed) {
+      throw new Error(`stale_action_retry_exhausted: Element uid ${state.uid} lost the filled value after recovery. Take a fresh snapshot before retrying.`);
+    }
+    state.actionRecoveryUsed = true;
+    const recovered = await replaceWithSettledHandle(state);
+    if (await intendedValueIsPresent(recovered, args[0])) return result;
+    console.error(`[resume-companion] stale_action_postcheck_retry uid=${state.uid} action=fill`);
+    let retryLocator = locatorFrom(recovered, transforms);
+    if (typeof retryLocator.setWaitForStableBoundingBox === 'function') {
+      retryLocator = Reflect.apply(retryLocator.setWaitForStableBoundingBox, retryLocator, [false]) as LocatorLike;
+    }
+    const retryMethod = retryLocator.fill;
+    if (typeof retryMethod !== 'function') throw new Error('stale_action_incompatible: Locator action fill is unavailable');
+    const retryResult = await Reflect.apply(retryMethod, retryLocator, args);
+    const verified = await handleConnectionState(recovered) === 'detached' ? await replaceWithSettledHandle(state) : recovered;
+    if (!await intendedValueIsPresent(verified, args[0])) {
+      throw new Error(`stale_action_retry_exhausted: Element uid ${state.uid} did not retain the filled value after one semantic recovery. Take a fresh snapshot before retrying.`);
+    }
+    return retryResult;
   } catch (originalError) {
     if (await handleConnectionState(attemptedHandle) !== 'detached') throw originalError;
     if (state.actionRecoveryUsed) {
@@ -297,7 +330,7 @@ async function runLocatorAction(
     }
     state.actionRecoveryUsed = true;
     const actionStarted = observation.didStart();
-    const recovered = await replaceCurrentHandle(state);
+    const recovered = action === 'fill' ? await replaceWithSettledHandle(state) : await replaceCurrentHandle(state);
 
     if (action === 'fill' && await intendedValueIsPresent(recovered, args[0])) {
       console.error(`[resume-companion] stale_action_already_applied uid=${state.uid} action=fill`);

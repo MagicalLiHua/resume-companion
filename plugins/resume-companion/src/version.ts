@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export const PLUGIN_VERSION = '0.16.0';
+export const PLUGIN_VERSION = '0.16.1';
 export const BROWSER_SUPERVISOR_PROTOCOL = 1;
 
 export function resolveRuntimePluginVersion(moduleUrl: string): string {

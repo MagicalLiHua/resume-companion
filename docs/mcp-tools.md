@@ -1,6 +1,6 @@
 # MCP 工具与权限
 
-0.16.0 把资料与浏览器分成两个 MCP。`resume_companion` 管理本地多版本简历；`resume_browser` 通过 Browser Supervisor 共享一个专用 Chrome，并在固定的 Chrome DevTools MCP 1.9.0 浏览器底座上增加表单语义缓存、局部/增量观察、动态定位、事务式动作和输出脱敏。官方 Network、Console、截图与脚本诊断工具继续保留。
+0.16.1 把资料与浏览器分成两个 MCP。`resume_companion` 管理本地多版本简历；`resume_browser` 通过 Browser Supervisor 共享一个专用 Chrome，并在固定的 Chrome DevTools MCP 1.9.0 浏览器底座上增加表单语义缓存、局部/增量观察、动态定位、事务式动作和输出脱敏。官方 Network、Console、截图与脚本诊断工具继续保留。
 
 ## Resume Companion 资料工具
 

@@ -7,7 +7,7 @@ var __export = (target, all) => {
 };
 
 // src/browser-supervisor.ts
-import { chmod as chmod2, unlink as unlink3 } from "node:fs/promises";
+import { chmod as chmod2, open as open2, readFile as readFile2, unlink as unlink3 } from "node:fs/promises";
 import { createConnection, createServer as createServer2 } from "node:net";
 
 // src/chrome-profile.ts
@@ -5792,6 +5792,16 @@ async function replaceCurrentHandle(state) {
   state.handles.add(recovered);
   return recovered;
 }
+async function replaceWithSettledHandle(state, timeoutMs = 600) {
+  const deadline = Date.now() + timeoutMs;
+  let recovered = await replaceCurrentHandle(state);
+  while (Date.now() < deadline) {
+    await new Promise((resolveDelay) => setTimeout(resolveDelay, 20));
+    if (state.current === recovered && await handleConnectionState(recovered) !== "detached") return recovered;
+    recovered = await replaceCurrentHandle(state);
+  }
+  return recovered;
+}
 async function runLocatorAction(state, transforms, action, args) {
   const attemptedHandle = state.current;
   const initialLocator = locatorFrom(attemptedHandle, transforms);
@@ -5799,7 +5809,29 @@ async function runLocatorAction(state, transforms, action, args) {
   if (typeof initialMethod !== "function") throw new Error(`stale_action_incompatible: Locator action ${action} is unavailable`);
   const observation = observeLocatorAction(initialLocator);
   try {
-    return await Reflect.apply(initialMethod, initialLocator, args);
+    const result = await Reflect.apply(initialMethod, initialLocator, args);
+    if (action !== "fill" || await handleConnectionState(attemptedHandle) !== "detached" && await intendedValueIsPresent(attemptedHandle, args[0])) {
+      return result;
+    }
+    if (state.actionRecoveryUsed) {
+      throw new Error(`stale_action_retry_exhausted: Element uid ${state.uid} lost the filled value after recovery. Take a fresh snapshot before retrying.`);
+    }
+    state.actionRecoveryUsed = true;
+    const recovered = await replaceWithSettledHandle(state);
+    if (await intendedValueIsPresent(recovered, args[0])) return result;
+    console.error(`[resume-companion] stale_action_postcheck_retry uid=${state.uid} action=fill`);
+    let retryLocator = locatorFrom(recovered, transforms);
+    if (typeof retryLocator.setWaitForStableBoundingBox === "function") {
+      retryLocator = Reflect.apply(retryLocator.setWaitForStableBoundingBox, retryLocator, [false]);
+    }
+    const retryMethod = retryLocator.fill;
+    if (typeof retryMethod !== "function") throw new Error("stale_action_incompatible: Locator action fill is unavailable");
+    const retryResult = await Reflect.apply(retryMethod, retryLocator, args);
+    const verified = await handleConnectionState(recovered) === "detached" ? await replaceWithSettledHandle(state) : recovered;
+    if (!await intendedValueIsPresent(verified, args[0])) {
+      throw new Error(`stale_action_retry_exhausted: Element uid ${state.uid} did not retain the filled value after one semantic recovery. Take a fresh snapshot before retrying.`);
+    }
+    return retryResult;
   } catch (originalError) {
     if (await handleConnectionState(attemptedHandle) !== "detached") throw originalError;
     if (state.actionRecoveryUsed) {
@@ -5810,7 +5842,7 @@ async function runLocatorAction(state, transforms, action, args) {
     }
     state.actionRecoveryUsed = true;
     const actionStarted = observation.didStart();
-    const recovered = await replaceCurrentHandle(state);
+    const recovered = action === "fill" ? await replaceWithSettledHandle(state) : await replaceCurrentHandle(state);
     if (action === "fill" && await intendedValueIsPresent(recovered, args[0])) {
       console.error(`[resume-companion] stale_action_already_applied uid=${state.uid} action=fill`);
       return void 0;
@@ -5933,7 +5965,7 @@ function installStaleUidRecovery(McpPage) {
 import { readFileSync } from "node:fs";
 import { dirname as dirname2, resolve as resolve2 } from "node:path";
 import { fileURLToPath } from "node:url";
-var PLUGIN_VERSION = "0.16.0";
+var PLUGIN_VERSION = "0.16.1";
 var BROWSER_SUPERVISOR_PROTOCOL = 1;
 function resolveRuntimePluginVersion(moduleUrl) {
   const directory = dirname2(fileURLToPath(moduleUrl));
@@ -11717,6 +11749,9 @@ function supervisorSocketPath(profileDir3) {
   const id = profileHash(profileDir3);
   return process.platform === "win32" ? `\\\\.\\pipe\\resume-companion-browser-${id}` : join3(tmpdir2(), `rc-browser-${id}.sock`);
 }
+function supervisorStartupLockPath(profileDir3) {
+  return join3(tmpdir2(), `rc-browser-${profileHash(profileDir3)}.start.lock`);
+}
 function compareVersions(left, right) {
   const parse2 = (value) => value.split("+")[0].split("-")[0].split(".").map((item) => Number(item) || 0);
   const a = parse2(left);
@@ -11738,11 +11773,53 @@ function compareVersions(left, right) {
 // src/browser-supervisor.ts
 var profileDir2 = resolveChromeProfileDir();
 var endpoint = supervisorSocketPath(profileDir2);
+var startupLockPath = supervisorStartupLockPath(profileDir2);
 var host = new ResumeBrowserHost();
 var sessions = /* @__PURE__ */ new Map();
 var listener;
 var closing = false;
 var emptyTimer;
+function processExists2(pid) {
+  if (!Number.isSafeInteger(pid) || pid <= 0) return false;
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error2) {
+    return typeof error2 === "object" && error2 !== null && "code" in error2 && error2.code === "EPERM";
+  }
+}
+async function acquireStartupLock() {
+  for (let attempt = 0; attempt < 200; attempt++) {
+    try {
+      const handle = await open2(startupLockPath, "wx", 384);
+      await handle.writeFile(`${JSON.stringify({ pid: process.pid, started_at: (/* @__PURE__ */ new Date()).toISOString() })}
+`, "utf8");
+      await handle.sync();
+      return handle;
+    } catch (error2) {
+      const code = typeof error2 === "object" && error2 !== null && "code" in error2 ? error2.code : void 0;
+      if (code !== "EEXIST") throw error2;
+      if (await endpointIsLive()) return null;
+      try {
+        const record2 = JSON.parse(await readFile2(startupLockPath, "utf8"));
+        if (typeof record2.pid !== "number" || !processExists2(record2.pid)) {
+          await unlink3(startupLockPath).catch(() => void 0);
+          continue;
+        }
+      } catch {
+        if (attempt >= 20) await unlink3(startupLockPath).catch(() => void 0);
+        else await new Promise((resolveDelay) => setTimeout(resolveDelay, 25));
+        continue;
+      }
+      await new Promise((resolveDelay) => setTimeout(resolveDelay, 25));
+    }
+  }
+  throw new Error("browser_supervisor_startup_timeout: another process did not finish starting");
+}
+async function releaseStartupLock(handle) {
+  await handle.close().catch(() => void 0);
+  await unlink3(startupLockPath).catch(() => void 0);
+}
 function reply(socket, value) {
   return new Promise((resolveReply, reject) => {
     socket.write(`${JSON.stringify(value)}
@@ -11869,6 +11946,13 @@ async function dispatchHandshake(socket, line) {
         void shutdown();
       }, 20);
     }
+    if (hello.kind === "shutdown") {
+      await reply(socket, { status: "shutting_down", supervisor_version: RUNTIME_PLUGIN_VERSION, protocol: BROWSER_SUPERVISOR_PROTOCOL });
+      socket.end();
+      return void setTimeout(() => {
+        void shutdown();
+      }, 20);
+    }
     if (hello.kind !== "connect") {
       await reply(socket, { status: "error", supervisor_version: RUNTIME_PLUGIN_VERSION, protocol: BROWSER_SUPERVISOR_PROTOCOL, message: "unsupported supervisor command" });
       socket.end();
@@ -11905,23 +11989,31 @@ async function shutdown() {
   if (process.platform !== "win32") await unlink3(endpoint).catch(() => void 0);
   process.exit(0);
 }
-if (!await prepareEndpoint()) process.exit(0);
-listener = createServer2((socket) => {
-  void handleHandshake(socket);
-});
-listener.on("error", (error2) => {
-  if (error2.code === "EADDRINUSE") process.exit(0);
-  console.error(`Resume Browser supervisor failed: ${error2.message}`);
-  process.exit(1);
-});
-await new Promise((resolveListen, reject) => {
-  listener.once("error", reject);
-  listener.listen(endpoint, () => {
-    listener.off("error", reject);
-    resolveListen();
+var startupLock = await acquireStartupLock();
+if (!startupLock) process.exit(0);
+try {
+  if (!await prepareEndpoint()) {
+    await releaseStartupLock(startupLock);
+    process.exit(0);
+  }
+  listener = createServer2((socket) => {
+    void handleHandshake(socket);
   });
-});
-if (process.platform !== "win32") await chmod2(endpoint, 384);
+  await new Promise((resolveListen, reject) => {
+    listener.once("error", reject);
+    listener.listen(endpoint, () => {
+      listener.off("error", reject);
+      resolveListen();
+    });
+  });
+  if (process.platform !== "win32") await chmod2(endpoint, 384);
+  await releaseStartupLock(startupLock);
+} catch (error2) {
+  await releaseStartupLock(startupLock);
+  if (error2.code === "EADDRINUSE") process.exit(0);
+  console.error(`Resume Browser supervisor failed: ${error2 instanceof Error ? error2.message : String(error2)}`);
+  process.exit(1);
+}
 process.once("SIGTERM", () => {
   void shutdown();
 });

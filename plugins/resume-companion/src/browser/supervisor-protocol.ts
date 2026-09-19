@@ -23,6 +23,10 @@ export function supervisorSocketPath(profileDir: string): string {
     : join(tmpdir(), `rc-browser-${id}.sock`);
 }
 
+export function supervisorStartupLockPath(profileDir: string): string {
+  return join(tmpdir(), `rc-browser-${profileHash(profileDir)}.start.lock`);
+}
+
 export function compareVersions(left: string, right: string): number {
   const parse = (value: string): number[] => value.split('+')[0]!.split('-')[0]!.split('.').map(item => Number(item) || 0);
   const a = parse(left);

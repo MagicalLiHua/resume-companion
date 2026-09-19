@@ -48,8 +48,10 @@ const second = createClient('resume-companion-chrome-package-smoke-second');
 let firstClosed = false;
 
 try {
-  await first.client.connect(first.transport);
-  await second.client.connect(second.transport);
+  await Promise.all([
+    first.client.connect(first.transport),
+    second.client.connect(second.transport),
+  ]);
   const firstNames = (await first.client.listTools()).tools.map(tool => tool.name);
   const secondNames = (await second.client.listTools()).tools.map(tool => tool.name);
   for (const required of ['list_pages', 'browser_takeover', 'form_observe', 'form_fill_fields', 'form_select_option', 'form_select_path', 'form_set_date', 'form_activate', 'take_snapshot', 'fill_form', 'list_network_requests', 'evaluate_script']) {
@@ -71,6 +73,10 @@ try {
   const secondRevoked = await second.client.callTool({ name: 'list_pages', arguments: {} });
   assert(secondRevoked.isError && textOf(secondRevoked).includes('browser_lease_revoked'), `Previous owner must be fenced after explicit reclaim:\n${textOf(secondRevoked)}`);
   console.log('Two packaged clients share one Chrome; new-task takeover and explicit reclaim are fenced: OK');
+} catch (error) {
+  const diagnostics = [first.diagnostic(), second.diagnostic()].filter(Boolean).join('\n--- second client ---\n');
+  if (diagnostics) console.error(`Resume Browser launcher diagnostics:\n${diagnostics}`);
+  throw error;
 } finally {
   if (!firstClosed) await first.client.close().catch(() => undefined);
   await second.client.close().catch(() => undefined);

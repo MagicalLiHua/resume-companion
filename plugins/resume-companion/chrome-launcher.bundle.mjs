@@ -30,7 +30,7 @@ function profileHash(profileDir2) {
 import { readFileSync } from "node:fs";
 import { dirname as dirname2, resolve as resolve2 } from "node:path";
 import { fileURLToPath } from "node:url";
-var PLUGIN_VERSION = "0.16.0";
+var PLUGIN_VERSION = "0.16.1";
 var BROWSER_SUPERVISOR_PROTOCOL = 1;
 function resolveRuntimePluginVersion(moduleUrl) {
   const directory = dirname2(fileURLToPath(moduleUrl));

@@ -1,8 +1,8 @@
 # 开发说明
 
-0.16.0 的产品代码使用严格 TypeScript。Resume Companion 实现本地资料服务、Browser Supervisor 和 Resume Browser MCP；后者在固定的 `chrome-devtools-mcp@1.9.0` 浏览器生命周期与诊断能力之上维护页面语义缓存、局部/增量观察、事务式表单动作和敏感值脱敏。
+0.16.1 的产品代码使用严格 TypeScript。Resume Companion 实现本地资料服务、Browser Supervisor 和 Resume Browser MCP；后者在固定的 `chrome-devtools-mcp@1.9.0` 浏览器生命周期与诊断能力之上维护页面语义缓存、局部/增量观察、事务式表单动作和敏感值脱敏。
 
-0.16.0 的浏览器层由独立 TypeScript Supervisor 和每任务 MCP 会话组成：固定上游浏览器生命周期和诊断能力，在一个共享页面上下文中增加租约、局部观察、语义重定位和事务式表单动作。架构讨论、竞品分析和阶段评测保留在本地研发资料中，不随公开仓库和安装包发布。
+0.16.1 的浏览器层由独立 TypeScript Supervisor 和每任务 MCP 会话组成：固定上游浏览器生命周期和诊断能力，在一个共享页面上下文中增加租约、局部观察、语义重定位和事务式表单动作。架构讨论、竞品分析和阶段评测保留在本地研发资料中，不随公开仓库和安装包发布。
 
 ## 命令
 
