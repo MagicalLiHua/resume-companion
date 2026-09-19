@@ -60,7 +60,7 @@ Use:
 - `form_set_date` for a complete date or month value. Success means the final value was read back; a year or month intermediate state is not completion.
 - `form_activate` with an explicit intent for focus, open, close, add record, save ordinary record or ordinary next step.
 
-Keep `operation_id` stable when retrying an uncertain client transport result. The server returns the completed result without repeating the browser action. Enable `test_mode` for synthetic acceptance work; later observations can return a local cleanup ledger. The ledger never deletes website data automatically.
+Keep `operation_id` stable when retrying an uncertain client transport result. The server returns the completed result without repeating the browser action. After every transaction that may write to the page, use the returned `generation` for the next transaction; do not keep the generation from an older observation. Enable `test_mode` for synthetic acceptance work; later observations can return a local cleanup ledger. Pass the same `test_mode` and an `operation_id` to a low-level fallback so it is recorded as `low_level_unverified`. The ledger never deletes website data automatically.
 
 If `expected_generation` conflicts, observe the target again and rebuild only the affected batch. If a batch is partial, compare its per-field results and retry only missing or incorrect items.
 
@@ -72,7 +72,7 @@ Stop mechanical retries after one strategy change. Use the returned code:
 - `target_ambiguous`: add the named section or repeated-record scope; never choose by DOM order.
 - `constraint_violation`: adjust the proposed value to the reported length, range or pattern.
 - `option_not_found`: confirm the page displayed the candidate; for asynchronous search, use one targeted query and wait.
-- `action_result_unknown`: observe the field, record count, popup or navigation result before retrying the same action.
+- `action_result_unknown`: the page may already have changed. If the result says the overlay is open, focus-observe that overlay and continue from its visible candidate layer; do not reopen the trigger. Otherwise observe the field, record count or navigation result before retrying the same action.
 - `generation_conflict` or `page_changed`: discard the old plan for that section and observe the new structure.
 - `manual_boundary`: leave the control to the user.
 

@@ -4052,14 +4052,196 @@ var coerce = {
 };
 var NEVER = INVALID;
 
-// src/browser/form-engine.ts
+// src/browser/debug-bridge.ts
+import { chmod, unlink as unlink2 } from "node:fs/promises";
+import { createServer } from "node:net";
+import { tmpdir } from "node:os";
+import { join as join2 } from "node:path";
+
+// src/chrome-profile.ts
 import { createHash, randomUUID } from "node:crypto";
+import { lstat, mkdir, open, readFile, readlink, unlink } from "node:fs/promises";
+import { homedir } from "node:os";
+import { dirname, isAbsolute, join, resolve } from "node:path";
+function resolveChromeProfileDir(value = process.env.RESUME_COMPANION_CHROME_DATA_DIR) {
+  if (value) {
+    const expanded = value === "~" ? homedir() : value.startsWith("~/") ? join(homedir(), value.slice(2)) : value;
+    return isAbsolute(expanded) ? resolve(expanded) : resolve(process.cwd(), expanded);
+  }
+  if (process.platform === "darwin") return join(homedir(), "Library", "Application Support", "Resume Companion", "chrome-profile");
+  if (process.platform === "win32") return join(process.env.LOCALAPPDATA || join(homedir(), "AppData", "Local"), "Resume Companion", "chrome-profile");
+  return join(process.env.XDG_STATE_HOME || join(homedir(), ".local", "state"), "resume-companion", "chrome-profile");
+}
+function profileHash(profileDir2) {
+  return createHash("sha256").update(profileDir2).digest("hex").slice(0, 12);
+}
+function processExists(pid) {
+  if (!Number.isSafeInteger(pid) || pid <= 0) return false;
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    return typeof error === "object" && error !== null && "code" in error && error.code === "EPERM";
+  }
+}
+async function chromeProfileIsBusy(profileDir2) {
+  const singletonLock = join(profileDir2, "SingletonLock");
+  try {
+    const metadata = await lstat(singletonLock);
+    if (!metadata.isSymbolicLink()) return true;
+    const target = await readlink(singletonLock);
+    const pid = /-(\d+)$/.exec(target)?.[1];
+    return pid ? processExists(Number(pid)) : true;
+  } catch (error) {
+    const code = typeof error === "object" && error !== null && "code" in error ? error.code : void 0;
+    if (code === "ENOENT") return false;
+    return true;
+  }
+}
+var ChromeProfileLock = class {
+  lockPath;
+  profileDir;
+  token = randomUUID();
+  held = false;
+  constructor(profileDir2) {
+    this.profileDir = profileDir2;
+    this.lockPath = join(dirname(profileDir2), "chrome-mcp.lock");
+  }
+  async acquire() {
+    await mkdir(this.profileDir, { recursive: true, mode: 448 });
+    await mkdir(dirname(this.lockPath), { recursive: true, mode: 448 });
+    const record = {
+      format: "resume-companion-chrome-lock",
+      pid: process.pid,
+      token: this.token,
+      started_at: (/* @__PURE__ */ new Date()).toISOString(),
+      profile_hash: profileHash(this.profileDir)
+    };
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const handle = await open(this.lockPath, "wx", 384);
+        await handle.writeFile(`${JSON.stringify(record)}
+`, "utf8");
+        await handle.sync();
+        await handle.close();
+        this.held = true;
+        if (await chromeProfileIsBusy(this.profileDir)) {
+          await this.release();
+          throw new Error("profile_in_use: \u4E13\u7528 Chrome Profile \u6B63\u7531\u6B8B\u7559\u6216\u5916\u90E8 Chrome \u8FDB\u7A0B\u4F7F\u7528\uFF1B\u8BF7\u5148\u5173\u95ED\u5BF9\u5E94 Chrome \u7A97\u53E3");
+        }
+        return;
+      } catch (error) {
+        const code = typeof error === "object" && error !== null && "code" in error ? error.code : void 0;
+        if (code !== "EEXIST") throw error;
+        const existing = await this.readExisting();
+        if (!existing || processExists(existing.pid)) {
+          throw new Error("profile_in_use: Resume Companion \u4E13\u7528 Chrome \u6B63\u7531\u53E6\u4E00\u4E2A\u4EFB\u52A1\u4F7F\u7528\uFF1B\u8BF7\u5173\u95ED\u90A3\u4E2A\u4EFB\u52A1\u540E\u91CD\u8BD5");
+        }
+        if (await chromeProfileIsBusy(this.profileDir)) {
+          throw new Error("profile_in_use: \u4E0A\u4E00\u4E2A MCP \u8FDB\u7A0B\u5DF2\u9000\u51FA\uFF0C\u4F46\u4E13\u7528 Chrome \u4ECD\u5728\u4F7F\u7528 Profile\uFF1B\u8BF7\u5148\u5173\u95ED\u8BE5 Chrome \u7A97\u53E3");
+        }
+        await unlink(this.lockPath).catch(() => void 0);
+      }
+    }
+    throw new Error("profile_in_use: \u65E0\u6CD5\u5B89\u5168\u53D6\u5F97 Resume Companion \u4E13\u7528 Chrome \u7684\u5B9E\u4F8B\u9501");
+  }
+  async release() {
+    if (!this.held) return;
+    const existing = await this.readExisting();
+    if (existing?.token === this.token) await unlink(this.lockPath).catch(() => void 0);
+    this.held = false;
+  }
+  async readExisting() {
+    try {
+      const raw = JSON.parse(await readFile(this.lockPath, "utf8"));
+      if (raw.format !== "resume-companion-chrome-lock" || typeof raw.pid !== "number" || typeof raw.token !== "string") return null;
+      return raw;
+    } catch {
+      return null;
+    }
+  }
+};
+
+// src/browser/debug-bridge.ts
+function debugSocketPath(profileDir2) {
+  const id = profileHash(profileDir2);
+  return process.platform === "win32" ? `\\\\.\\pipe\\resume-companion-debug-${id}` : join2(tmpdir(), `rc-debug-${id}.sock`);
+}
+var BrowserDebugBridge = class {
+  constructor(profileDir2, handle) {
+    this.handle = handle;
+    this.endpoint = debugSocketPath(profileDir2);
+  }
+  handle;
+  endpoint;
+  server;
+  async start() {
+    if (this.server) return;
+    if (process.platform !== "win32") await unlink2(this.endpoint).catch(() => void 0);
+    const server = createServer((socket) => this.accept(socket));
+    this.server = server;
+    await new Promise((resolve3, reject) => {
+      server.once("error", reject);
+      server.listen(this.endpoint, () => {
+        server.off("error", reject);
+        resolve3();
+      });
+    });
+    if (process.platform !== "win32") await chmod(this.endpoint, 384);
+  }
+  async close() {
+    const server = this.server;
+    this.server = void 0;
+    if (server) await new Promise((resolve3) => server.close(() => resolve3()));
+    if (process.platform !== "win32") await unlink2(this.endpoint).catch(() => void 0);
+  }
+  accept(socket) {
+    socket.setEncoding("utf8");
+    let buffer = "";
+    socket.on("data", (chunk) => {
+      buffer += chunk;
+      if (Buffer.byteLength(buffer, "utf8") > 64 * 1024) {
+        socket.end(`${JSON.stringify({ ok: false, error: "request_too_large" })}
+`);
+        return;
+      }
+      const newline = buffer.indexOf("\n");
+      if (newline === -1) return;
+      const line = buffer.slice(0, newline);
+      buffer = "";
+      void this.dispatch(socket, line);
+    });
+  }
+  async dispatch(socket, line) {
+    try {
+      const request = JSON.parse(line);
+      const result = await this.handle(request);
+      socket.end(`${JSON.stringify({ ok: true, result })}
+`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      socket.end(`${JSON.stringify({ ok: false, error: message.slice(0, 500) })}
+`);
+    }
+  }
+};
+
+// src/browser/privacy.ts
+function redactBrowserText(value) {
+  return value.replace(/([\w.+-]{1,64})@([\w.-]+\.[A-Za-z]{2,})/g, (_match, name, domain) => `${name.slice(0, Math.min(2, name.length))}******@${domain}`).replace(/(?<!\d)(1\d{2})\d{4}(\d{4})(?!\d)/g, "$1****$2").replace(/(?<!\d)(\d{3})\d{11}([\dXx]{4})(?![\dXx])/g, "$1***********$2").replace(/(?<!\d)(\d{3})\d{8}(\d{4})(?!\d)/g, "$1********$2").replace(/(?<!\d)(\d{4})\d{8,11}(\d{4})(?!\d)/g, "$1********$2").replace(/((?:出生日期|出生年月|生日)[^\n]{0,180}?value=")[^"]+(")/gi, "$1<masked>$2");
+}
+
+// src/browser/form-engine.ts
+import { createHash as createHash2, randomUUID as randomUUID2 } from "node:crypto";
 var DEFAULT_MAX_BYTES = 12e3;
 var MAX_MAX_BYTES = 8e4;
 var HISTORY_LIMIT = 8;
 var ACTION_TIMEOUT = 4e3;
+var OBSERVE_FRAME_TIMEOUT = 3500;
 var sensitiveLabelPattern = /(身份证|证件|护照|手机号|联系电话|手机号码|电子邮箱|邮箱|住址|地址|账号|银行卡)/i;
 var manualBoundaryPattern = /(最终提交|提交申请|立即申请|确认投递|声明|承诺|同意条款|上传|删除|支付|签署|验证码|密码)/i;
+var fieldControlRoles = ["input", "textarea", "select", "textbox", "combobox", "checkbox", "radio", "switch", "button"];
+var optionRoles = ["option", "treeitem", "menuitem", "li", "button"];
 function normalize(value) {
   return String(value ?? "").replace(/[\s*：:]+/g, "").trim().toLowerCase();
 }
@@ -4073,7 +4255,7 @@ function slug(value) {
   return latin.slice(0, 56) || "unnamed";
 }
 function shortHash(value) {
-  return createHash("sha256").update(value).digest("hex").slice(0, 7);
+  return createHash2("sha256").update(value).digest("hex").slice(0, 7);
 }
 function navigationId(url) {
   return `nav_${shortHash(url.split("#")[0] ?? url)}`;
@@ -4149,6 +4331,7 @@ function codedError(code, message, details = {}) {
 }
 function errorCode(error) {
   const message = error instanceof Error ? error.message : String(error);
+  if (/observe_timeout|phase=.*timeout|timed out/i.test(message)) return "operation_timeout";
   if (/ambiguous/i.test(message)) return "target_ambiguous";
   if (/not found|unresolved|no candidate/i.test(message)) return "target_unresolved";
   if (/constraint/i.test(message)) return "constraint_violation";
@@ -4211,6 +4394,9 @@ function collectDomForm() {
       const record = current.getAttribute("data-record-label");
       if (record) return text(record);
     }
+    const headings = Array.from(document.querySelectorAll('h1, h2, h3, h4, h5, h6, [role="heading"], .ant-card-head-title, .el-card__header, .form-title, .section-title')).filter((candidate) => visible(candidate) && Boolean(text(candidate.textContent))).filter((candidate) => Boolean(candidate.compareDocumentPosition(element) & Node.DOCUMENT_POSITION_FOLLOWING));
+    const nearest = headings.at(-1);
+    if (nearest) return text(nearest.textContent);
     return "";
   };
   const valueOf = (element) => {
@@ -4287,7 +4473,7 @@ function collectDomForm() {
     label: ownLabel(element) || text(element.getAttribute("aria-label")),
     options: Array.from(element.querySelectorAll('[role="option"], [role="treeitem"], [role="menuitem"], li, td, button')).filter(visible).map((option) => ownLabel(option) || text(option.textContent)).filter(Boolean).slice(0, 120)
   }));
-  const sections = Array.from(document.querySelectorAll('h1, h2, h3, h4, fieldset > legend, section[aria-label], [role="region"][aria-label]')).filter(visible).map((element) => text(element.getAttribute("aria-label") || element.textContent)).filter(Boolean);
+  const sections = Array.from(document.querySelectorAll('h1, h2, h3, h4, h5, h6, [role="heading"], .ant-card-head-title, .el-card__header, .form-title, .section-title, fieldset > legend, section[aria-label], [role="region"][aria-label]')).filter(visible).map((element) => text(element.getAttribute("aria-label") || element.textContent)).filter(Boolean);
   const validations = Array.from(document.querySelectorAll('[role="alert"], [aria-live], .ant-form-item-explain-error, .el-form-item__error, .error, .invalid-feedback')).filter(visible).map((element) => text(element.textContent)).filter(Boolean).slice(0, 80);
   return { fields, overlays, sections, validations };
 }
@@ -4333,6 +4519,9 @@ function findSemanticCandidates(spec) {
         if (heading && text(heading.textContent)) return text(heading.textContent);
       }
     }
+    const headings = Array.from(document.querySelectorAll('h1, h2, h3, h4, h5, h6, [role="heading"], .ant-card-head-title, .el-card__header, .form-title, .section-title')).filter((candidate) => visible(candidate) && Boolean(text(candidate.textContent))).filter((candidate) => Boolean(candidate.compareDocumentPosition(element) & Node.DOCUMENT_POSITION_FOLLOWING));
+    const nearest = headings.at(-1);
+    if (nearest) return text(nearest.textContent);
     return "";
   };
   const valueOf = (element) => {
@@ -4368,22 +4557,45 @@ function findSemanticCandidates(spec) {
   const scopeTarget = normalized2(spec.scope);
   const roleSet = new Set((spec.roles ?? []).map(normalized2));
   return Array.from(document.querySelectorAll(selector)).map((element, index) => {
+    if (!visible(element)) return null;
     const label = labelOf(element);
     const scope = scopeOf(element);
     const labelNorm = normalized2(label);
     const scopeNorm = normalized2(scope);
     const role = text(element.getAttribute("role") || (element instanceof HTMLButtonElement ? "button" : ""));
     const type = element instanceof HTMLInputElement ? element.type : text(element.getAttribute("type"));
+    const tag = element.tagName.toLowerCase();
+    const implicitRoles = new Set([
+      normalized2(role),
+      normalized2(type),
+      normalized2(tag),
+      element instanceof HTMLInputElement ? "input" : "",
+      element instanceof HTMLTextAreaElement ? "textarea" : "",
+      element instanceof HTMLSelectElement ? "select" : "",
+      element instanceof HTMLButtonElement ? "button" : "",
+      element instanceof HTMLOptionElement ? "option" : "",
+      element instanceof HTMLInputElement && !["checkbox", "radio", "button", "submit"].includes(element.type) ? "textbox" : "",
+      element instanceof HTMLSelectElement ? "combobox" : ""
+    ].filter(Boolean));
+    if (roleSet.size && ![...roleSet].some((item) => implicitRoles.has(item))) return null;
     let score = 0;
-    if (labelNorm === target) score += 120;
-    else if (target && labelNorm.includes(target)) score += 72;
-    else if (target && target.includes(labelNorm) && labelNorm.length >= 2) score += 48;
+    let textMatched = false;
+    if (labelNorm === target) {
+      score += 120;
+      textMatched = true;
+    } else if (target && labelNorm.includes(target)) {
+      score += 72;
+      textMatched = true;
+    } else if (target && target.includes(labelNorm) && labelNorm.length >= 2) {
+      score += 48;
+      textMatched = true;
+    }
+    if (!textMatched) return null;
     if (scopeTarget && scopeNorm === scopeTarget) score += 55;
     else if (scopeTarget && (scopeNorm.includes(scopeTarget) || scopeTarget.includes(scopeNorm))) score += 28;
     if (scopeTarget && !scopeNorm) score -= 12;
     if (roleSet.size && (roleSet.has(normalized2(role)) || roleSet.has(normalized2(type)) || roleSet.has(normalized2(element.tagName)))) score += 16;
-    if (visible(element)) score += 12;
-    else score -= 100;
+    score += 12;
     if (element.disabled || element.getAttribute("aria-disabled") === "true") score -= 30;
     const value = valueOf(element);
     const control = element;
@@ -4392,7 +4604,7 @@ function findSemanticCandidates(spec) {
       index,
       label,
       scope,
-      tag: element.tagName.toLowerCase(),
+      tag,
       role,
       type,
       value: value.value,
@@ -4410,7 +4622,7 @@ function findSemanticCandidates(spec) {
         pattern: text(element.getAttribute("pattern")) || null
       }
     };
-  }).filter((candidate) => candidate.score > 0).sort((left, right) => right.score - left.score).slice(0, 20);
+  }).filter((candidate) => candidate !== null && candidate.score > 0).sort((left, right) => right.score - left.score).slice(0, 20);
 }
 function resolveSemanticElement(spec) {
   const normalized2 = (value) => String(value ?? "").replace(/[\s*：:]+/g, "").trim().toLowerCase();
@@ -4454,6 +4666,9 @@ function resolveSemanticElement(spec) {
         if (heading && text(heading.textContent)) return text(heading.textContent);
       }
     }
+    const headings = Array.from(document.querySelectorAll('h1, h2, h3, h4, h5, h6, [role="heading"], .ant-card-head-title, .el-card__header, .form-title, .section-title')).filter((candidate) => visible(candidate) && Boolean(text(candidate.textContent))).filter((candidate) => Boolean(candidate.compareDocumentPosition(element) & Node.DOCUMENT_POSITION_FOLLOWING));
+    const nearest = headings.at(-1);
+    if (nearest) return text(nearest.textContent);
     return "";
   };
   const selector = [
@@ -4481,25 +4696,48 @@ function resolveSemanticElement(spec) {
   const scopeTarget = normalized2(spec.scope);
   const roleSet = new Set((spec.roles ?? []).map(normalized2));
   const ranked = Array.from(document.querySelectorAll(selector)).map((element) => {
+    if (!visible(element)) return null;
     const label = labelOf(element);
     const scope = scopeOf(element);
     const labelNorm = normalized2(label);
     const scopeNorm = normalized2(scope);
     const role = text(element.getAttribute("role") || (element instanceof HTMLButtonElement ? "button" : ""));
     const type = element instanceof HTMLInputElement ? element.type : text(element.getAttribute("type"));
+    const tag = element.tagName.toLowerCase();
+    const implicitRoles = new Set([
+      normalized2(role),
+      normalized2(type),
+      normalized2(tag),
+      element instanceof HTMLInputElement ? "input" : "",
+      element instanceof HTMLTextAreaElement ? "textarea" : "",
+      element instanceof HTMLSelectElement ? "select" : "",
+      element instanceof HTMLButtonElement ? "button" : "",
+      element instanceof HTMLOptionElement ? "option" : "",
+      element instanceof HTMLInputElement && !["checkbox", "radio", "button", "submit"].includes(element.type) ? "textbox" : "",
+      element instanceof HTMLSelectElement ? "combobox" : ""
+    ].filter(Boolean));
+    if (roleSet.size && ![...roleSet].some((item) => implicitRoles.has(item))) return null;
     let score = 0;
-    if (labelNorm === target) score += 120;
-    else if (target && labelNorm.includes(target)) score += 72;
-    else if (target && target.includes(labelNorm) && labelNorm.length >= 2) score += 48;
+    let textMatched = false;
+    if (labelNorm === target) {
+      score += 120;
+      textMatched = true;
+    } else if (target && labelNorm.includes(target)) {
+      score += 72;
+      textMatched = true;
+    } else if (target && target.includes(labelNorm) && labelNorm.length >= 2) {
+      score += 48;
+      textMatched = true;
+    }
+    if (!textMatched) return null;
     if (scopeTarget && scopeNorm === scopeTarget) score += 55;
     else if (scopeTarget && (scopeNorm.includes(scopeTarget) || scopeTarget.includes(scopeNorm))) score += 28;
     if (scopeTarget && !scopeNorm) score -= 12;
     if (roleSet.size && (roleSet.has(normalized2(role)) || roleSet.has(normalized2(type)) || roleSet.has(normalized2(element.tagName)))) score += 16;
-    if (visible(element)) score += 12;
-    else score -= 100;
+    score += 12;
     if (element.disabled || element.getAttribute("aria-disabled") === "true") score -= 30;
     return { element, score };
-  }).filter((candidate) => candidate.score > 0).sort((left, right) => right.score - left.score);
+  }).filter((candidate) => candidate !== null && candidate.score > 0).sort((left, right) => right.score - left.score);
   if (!ranked[0] || ranked[0].score === ranked[1]?.score) return null;
   return ranked[0].element;
 }
@@ -4564,10 +4802,19 @@ var FormEngine = class {
   async observe(request) {
     const maxBytes = Math.min(Math.max(request.max_bytes ?? DEFAULT_MAX_BYTES, 2e3), MAX_MAX_BYTES);
     const includeValues = request.include_values ?? "state";
-    const raw = await this.collect(request.page_id);
+    let raw;
+    try {
+      raw = await this.collect(request.page_id);
+    } catch (error) {
+      return codedError("observe_timeout", this.safeError(error), {
+        phase: "frame_semantic_scan",
+        recovery: "retry_once_then_reload_page",
+        page_id: request.page_id
+      });
+    }
     const state = this.updateState(request.page_id, raw);
     const latest = state.latestObservationId ? state.snapshots.get(state.latestObservationId) : void 0;
-    const observationId = `obs_${state.generation}_${randomUUID().slice(0, 8)}`;
+    const observationId = `obs_${state.generation}_${randomUUID2().slice(0, 8)}`;
     const refs = /* @__PURE__ */ new Map();
     const publicFields = raw.fields.map((field) => {
       const base = `field:${slug(field.scope || "page")}/${slug(field.label || `${fieldKind(field)}-${field.index}`)}`;
@@ -4700,13 +4947,14 @@ var FormEngine = class {
   async fillFields(params) {
     const cached = this.operationResult(params.operationId);
     if (cached) return cached;
-    const conflict = this.checkGeneration(params.pageId, params.expectedGeneration);
+    const conflict = await this.prepareAction(params);
     if (conflict) return conflict;
+    const beforeGeneration = this.currentGeneration(params.pageId);
     const results = [];
     for (const field of params.fields) {
       try {
         const target = this.expandTarget(params.pageId, field.field, field.scope);
-        const candidate = await this.resolve(params.pageId, { field: target.label, scope: target.scope, roles: ["input", "textarea", "select", "textbox", "combobox", "checkbox", "radio", "switch"] });
+        const candidate = await this.resolve(params.pageId, { field: target.label, scope: target.scope, roles: fieldControlRoles });
         const wanted = field.value;
         const currentMatches = this.valueMatches(candidate.meta, wanted);
         if (currentMatches) {
@@ -4722,42 +4970,75 @@ var FormEngine = class {
           results.push({ field: field.field, status: "constraint_violation", constraint });
           continue;
         }
-        await this.fillResolved(params.pageId, { field: target.label, scope: target.scope }, wanted);
-        const after = await this.resolve(params.pageId, { field: target.label, scope: target.scope });
+        await this.fillResolved(params.pageId, { field: target.label, scope: target.scope, roles: fieldControlRoles }, wanted);
+        const after = await this.resolve(params.pageId, { field: target.label, scope: target.scope, roles: fieldControlRoles });
         results.push(this.valueMatches(after.meta, wanted) ? { field: field.field, status: "filled" } : { field: field.field, status: "postcondition_failed", state: this.safeCandidateState(after.meta) });
       } catch (error) {
         results.push({ field: field.field, status: errorCode(error), message: this.safeError(error) });
       }
     }
     const ok = results.every((result2) => result2.status === "filled" || result2.status === "unchanged" || result2.status === "preserved");
-    const result = contentResult({ ok, operation_id: params.operationId ?? randomUUID(), results, change_summary: this.summarize(results) }, !ok);
+    const attempted = results.some((result2) => !["unchanged", "preserved", "constraint_violation"].includes(String(result2.status)));
+    const generation = attempted ? await this.advanceGeneration(params.pageId, beforeGeneration) : this.currentGeneration(params.pageId);
+    const result = contentResult({ ok, operation_id: params.operationId ?? randomUUID2(), generation, results, change_summary: this.summarize(results) }, !ok);
     this.recordOperation(params, "form_fill_fields", `${params.fields.length} fields`, ok ? "completed" : "partial", result);
     return result;
   }
   async selectOption(params) {
     const cached = this.operationResult(params.operationId);
     if (cached) return cached;
-    const conflict = this.checkGeneration(params.pageId, params.expectedGeneration);
+    const conflict = await this.prepareAction(params);
     if (conflict) return conflict;
+    const beforeGeneration = this.currentGeneration(params.pageId);
     const target = this.expandTarget(params.pageId, params.field, params.scope);
+    let sideEffect = "none";
     try {
-      const trigger = await this.resolve(params.pageId, { field: target.label, scope: target.scope });
+      const triggerSpec = { field: target.label, scope: target.scope, roles: fieldControlRoles };
+      const trigger = await this.resolve(params.pageId, triggerSpec);
       if (trigger.meta.tag === "select") {
-        await this.fillResolved(params.pageId, { field: target.label, scope: target.scope }, params.value);
+        await this.fillResolved(params.pageId, triggerSpec, params.value);
+        sideEffect = "option_attempted";
       } else if (trigger.meta.type === "radio" || trigger.meta.type === "checkbox") {
         const option = await this.resolve(params.pageId, { field: params.value, scope: target.scope, roles: ["radio", "checkbox"] }).catch(() => trigger);
-        if (!this.valueMatches(option.meta, true)) await this.clickResolved(params.pageId, { field: option.meta.label, scope: option.meta.scope }, true);
+        if (!this.valueMatches(option.meta, true)) {
+          await this.clickResolved(params.pageId, { field: option.meta.label, scope: option.meta.scope, roles: ["radio", "checkbox"] }, true);
+          sideEffect = "option_attempted";
+        }
       } else {
-        await this.clickResolved(params.pageId, { field: target.label, scope: target.scope }, true);
-        if (params.query) await this.fillResolved(params.pageId, { field: target.label, scope: target.scope }, params.query);
-        const option = await this.waitResolve(params.pageId, { field: target.label, scope: target.scope, option: params.value, roles: ["option", "treeitem", "menuitem", "li"] });
-        await this.clickResolved(params.pageId, { field: option.meta.label, scope: option.meta.scope, option: params.value }, true);
+        const optionSpec = { field: target.label, option: params.value, roles: optionRoles };
+        let option = await this.resolve(params.pageId, optionSpec).catch(() => null);
+        if (!option) {
+          try {
+            await this.clickResolved(params.pageId, triggerSpec, true);
+            sideEffect = "overlay_opened";
+          } catch (openError) {
+            let optionError;
+            option = await this.waitResolve(params.pageId, optionSpec).catch((error) => {
+              optionError = error;
+              return null;
+            });
+            if (!option) throw new Error(`${this.safeError(openError)}; option_resolution=${this.safeError(optionError)}`);
+            sideEffect = "overlay_opened";
+          }
+          if (params.query) await this.fillResolved(params.pageId, triggerSpec, params.query);
+          option ??= await this.waitResolve(params.pageId, optionSpec);
+        }
+        try {
+          await this.clickResolved(params.pageId, { field: option.meta.label, option: params.value, roles: optionRoles }, true);
+          sideEffect = "option_attempted";
+        } catch (clickError) {
+          const selectedDespiteError = await this.verifySelected(params.pageId, target, params.value);
+          if (!selectedDespiteError && !await this.keyboardConfirmActiveOption(params.pageId, params.value)) throw clickError;
+          sideEffect = "option_attempted";
+        }
       }
       await this.delay(30);
       const verified = await this.verifySelected(params.pageId, target, params.value);
+      const generation = await this.advanceGeneration(params.pageId, beforeGeneration);
       const data = {
         ok: verified,
-        operation_id: params.operationId ?? randomUUID(),
+        operation_id: params.operationId ?? randomUUID2(),
+        generation,
         field: params.field,
         selected: params.value,
         field_state: verified ? "selected" : "unknown",
@@ -4767,30 +5048,63 @@ var FormEngine = class {
       this.recordOperation(params, "form_select_option", params.field, verified ? "completed" : "unknown", result);
       return result;
     } catch (error) {
-      const result = codedError(errorCode(error), this.safeError(error), { field: params.field, value: params.value });
-      this.recordOperation(params, "form_select_option", params.field, "failed", result);
+      const overlay = await this.overlayState(params.pageId);
+      const generation = await this.advanceGeneration(params.pageId, beforeGeneration);
+      const partial = sideEffect !== "none" || overlay === "open";
+      const result = codedError(partial ? "action_result_unknown" : errorCode(error), this.safeError(error), {
+        field: params.field,
+        value: params.value,
+        generation,
+        status: partial ? "partial" : "failed",
+        side_effects: sideEffect,
+        overlay,
+        recovery: overlay === "open" ? "observe the focused overlay; do not reopen the trigger" : "focus-observe the field and retry once"
+      });
+      this.recordOperation(params, "form_select_option", params.field, partial ? "partial" : "failed", result);
       return result;
     }
   }
   async selectPath(params) {
     const cached = this.operationResult(params.operationId);
     if (cached) return cached;
-    const conflict = this.checkGeneration(params.pageId, params.expectedGeneration);
+    const conflict = await this.prepareAction(params);
     if (conflict) return conflict;
+    const beforeGeneration = this.currentGeneration(params.pageId);
     const target = this.expandTarget(params.pageId, params.field, params.scope);
     const completed = [];
+    let overlayOpened = false;
     try {
-      await this.clickResolved(params.pageId, { field: target.label, scope: target.scope }, true);
-      for (const segment of params.path) {
-        const option = await this.waitResolve(params.pageId, { field: target.label, scope: target.scope, option: segment, roles: ["option", "treeitem", "menuitem", "li"] });
-        await this.clickResolved(params.pageId, { field: option.meta.label, scope: option.meta.scope, option: segment }, true);
+      const triggerSpec = { field: target.label, scope: target.scope, roles: fieldControlRoles };
+      const firstOption = { field: target.label, option: params.path[0], roles: optionRoles };
+      if (!await this.resolve(params.pageId, firstOption).then(() => true).catch(() => false)) {
+        try {
+          await this.clickResolved(params.pageId, triggerSpec, true);
+          overlayOpened = true;
+        } catch (openError) {
+          if (!await this.waitResolve(params.pageId, firstOption).then(() => true).catch(() => false)) throw openError;
+          overlayOpened = true;
+        }
+      } else {
+        overlayOpened = true;
+      }
+      for (const [index, segment] of params.path.entries()) {
+        const option = await this.waitResolve(params.pageId, { field: target.label, option: segment, roles: optionRoles });
+        try {
+          await this.clickResolved(params.pageId, { field: option.meta.label, option: segment, roles: optionRoles }, true);
+        } catch (clickError) {
+          const nextSegment = params.path[index + 1];
+          const advancedDespiteError = nextSegment ? await this.waitResolve(params.pageId, { field: target.label, option: nextSegment, roles: optionRoles }).then(() => true).catch(() => false) : await this.verifySelected(params.pageId, target, segment);
+          if (!advancedDespiteError) throw clickError;
+        }
         completed.push(segment);
         await this.delay(35);
       }
       const verified = await this.verifySelected(params.pageId, target, params.path.at(-1) ?? "");
+      const generation = await this.advanceGeneration(params.pageId, beforeGeneration);
       const data = {
         ok: verified,
-        operation_id: params.operationId ?? randomUUID(),
+        operation_id: params.operationId ?? randomUUID2(),
+        generation,
         field: params.field,
         requested_path: params.path,
         completed_path: completed,
@@ -4801,36 +5115,48 @@ var FormEngine = class {
       this.recordOperation(params, "form_select_path", params.field, verified ? "completed" : "partial", result);
       return result;
     } catch (error) {
-      const result = codedError(errorCode(error), this.safeError(error), {
+      const overlay = await this.overlayState(params.pageId);
+      const generation = await this.advanceGeneration(params.pageId, beforeGeneration);
+      const partial = overlayOpened || completed.length > 0 || overlay === "open";
+      const result = codedError(partial ? "action_result_unknown" : errorCode(error), this.safeError(error), {
         field: params.field,
         requested_path: params.path,
         completed_path: completed,
-        failed_level: completed.length
+        failed_level: completed.length,
+        generation,
+        status: partial ? "partial" : "failed",
+        side_effects: overlayOpened ? "overlay_opened" : "none",
+        overlay,
+        recovery: overlay === "open" ? "continue from the visible candidate layer; do not reopen the trigger" : "focus-observe the field and retry once"
       });
-      this.recordOperation(params, "form_select_path", params.field, "failed", result);
+      this.recordOperation(params, "form_select_path", params.field, partial ? "partial" : "failed", result);
       return result;
     }
   }
   async setDate(params) {
     const cached = this.operationResult(params.operationId);
     if (cached) return cached;
-    const conflict = this.checkGeneration(params.pageId, params.expectedGeneration);
+    const conflict = await this.prepareAction(params);
     if (conflict) return conflict;
+    const beforeGeneration = this.currentGeneration(params.pageId);
     const target = this.expandTarget(params.pageId, params.field, params.scope);
     try {
-      const before = await this.resolve(params.pageId, { field: target.label, scope: target.scope });
+      const spec = { field: target.label, scope: target.scope, roles: fieldControlRoles };
+      const before = await this.resolve(params.pageId, spec);
       if (!params.overwrite && before.meta.value && !this.valueMatches(before.meta, params.value)) {
-        return contentResult({ ok: true, operation_id: params.operationId ?? randomUUID(), field: params.field, status: "preserved", value_state: "existing" });
+        return contentResult({ ok: true, operation_id: params.operationId ?? randomUUID2(), generation: beforeGeneration, field: params.field, status: "preserved", value_state: "existing" });
       }
       const constraint = this.constraintError(before.meta, params.value);
-      if (constraint) return codedError("constraint_violation", constraint, { field: params.field });
-      await this.fillResolved(params.pageId, { field: target.label, scope: target.scope }, params.value);
+      if (constraint) return codedError("constraint_violation", constraint, { field: params.field, generation: beforeGeneration });
+      await this.fillResolved(params.pageId, spec, params.value);
       await this.delay(40);
-      const after = await this.resolve(params.pageId, { field: target.label, scope: target.scope });
+      const after = await this.resolve(params.pageId, spec);
       const verified = this.valueMatches(after.meta, params.value);
+      const generation = await this.advanceGeneration(params.pageId, beforeGeneration);
       const data = {
         ok: verified,
-        operation_id: params.operationId ?? randomUUID(),
+        operation_id: params.operationId ?? randomUUID2(),
+        generation,
         field: params.field,
         status: verified ? "filled" : "partial",
         value_state: verified ? "matched" : "mismatched"
@@ -4839,7 +5165,8 @@ var FormEngine = class {
       this.recordOperation(params, "form_set_date", params.field, verified ? "completed" : "partial", result);
       return result;
     } catch (error) {
-      const result = codedError(errorCode(error), this.safeError(error), { field: params.field, status: "partial" });
+      const generation = await this.advanceGeneration(params.pageId, beforeGeneration);
+      const result = codedError(errorCode(error), this.safeError(error), { field: params.field, generation, status: "partial", side_effects: "value_may_have_changed" });
       this.recordOperation(params, "form_set_date", params.field, "failed", result);
       return result;
     }
@@ -4847,21 +5174,33 @@ var FormEngine = class {
   async activate(params) {
     const cached = this.operationResult(params.operationId);
     if (cached) return cached;
-    const conflict = this.checkGeneration(params.pageId, params.expectedGeneration);
+    const conflict = await this.prepareAction(params);
     if (conflict) return conflict;
     if (manualBoundaryPattern.test(params.target)) return codedError("manual_boundary", "\u8BE5\u63A7\u4EF6\u5C5E\u4E8E\u6700\u7EC8\u63D0\u4EA4\u3001\u58F0\u660E\u3001\u4E0A\u4F20\u6216\u4E0D\u53EF\u9006\u8FB9\u754C\uFF0C\u5FC5\u987B\u7531\u7528\u6237\u64CD\u4F5C", { target: params.target });
+    const beforeGeneration = this.currentGeneration(params.pageId);
     const target = this.expandTarget(params.pageId, params.target, params.scope);
     try {
       const before = await this.collect(params.pageId);
       if (params.intent === "focus") await this.focusResolved(params.pageId, { field: target.label, scope: target.scope });
-      else await this.clickResolved(params.pageId, { field: target.label, scope: target.scope, roles: ["button"] }, params.intent === "open" || params.intent === "close");
+      else {
+        const roles = params.intent === "open" || params.intent === "close" ? fieldControlRoles : ["button"];
+        try {
+          await this.clickResolved(params.pageId, { field: target.label, scope: target.scope, roles }, params.intent === "open" || params.intent === "close");
+        } catch (error) {
+          if (params.intent !== "close" || !before.overlays.length) throw error;
+          const page = this.getPage(params.pageId);
+          await page.pptrPage.keyboard.press("Escape");
+        }
+      }
       await this.delay(60);
       const after = await this.collect(params.pageId);
       const changed = structuralHash(before) !== structuralHash(after) || !sameJson(before.validations, after.validations);
       const accepted = params.intent === "focus" || changed || params.intent === "save_record";
+      const generation = await this.advanceGeneration(params.pageId, beforeGeneration);
       const data = {
         ok: accepted,
-        operation_id: params.operationId ?? randomUUID(),
+        operation_id: params.operationId ?? randomUUID2(),
+        generation,
         target: params.target,
         intent: params.intent,
         result: accepted ? "completed" : "action_result_unknown",
@@ -4873,7 +5212,8 @@ var FormEngine = class {
       this.recordOperation(params, "form_activate", params.target, accepted ? "completed" : "unknown", result);
       return result;
     } catch (error) {
-      const result = codedError(errorCode(error), this.safeError(error), { target: params.target, intent: params.intent });
+      const generation = await this.advanceGeneration(params.pageId, beforeGeneration);
+      const result = codedError(errorCode(error), this.safeError(error), { target: params.target, intent: params.intent, generation, status: "partial", side_effects: "action_may_have_started" });
       this.recordOperation(params, "form_activate", params.target, "failed", result);
       return result;
     }
@@ -4881,21 +5221,46 @@ var FormEngine = class {
   async collect(pageId) {
     const page = this.getPage(pageId);
     const frames = page.pptrPage.frames();
+    let mainFrameFailed = false;
     const gathered = await Promise.all(frames.map(async (frame, frameIndex) => {
       try {
-        const part = await frame.evaluate(collectDomForm);
+        const part = await this.withTimeout(
+          frame.evaluate(collectDomForm),
+          OBSERVE_FRAME_TIMEOUT,
+          `observe_timeout: phase=frame_semantic_scan frame=${frameIndex}`
+        );
         return {
           ...part,
           fields: part.fields.map((field) => ({ ...field, frame: frameIndex })),
           overlays: part.overlays.map((overlay) => ({ ...overlay, frame: frameIndex }))
         };
       } catch {
+        if (frameIndex === 0) mainFrameFailed = true;
         return { fields: [], overlays: [], sections: [], validations: [] };
       }
     }));
+    if (mainFrameFailed) {
+      await this.delay(40);
+      try {
+        const main = frames[0];
+        if (!main) throw new Error("main frame unavailable");
+        const retry = await this.withTimeout(
+          main.evaluate(collectDomForm),
+          OBSERVE_FRAME_TIMEOUT,
+          "observe_timeout: phase=frame_semantic_scan frame=0 retry=1 recovery=reload_page"
+        );
+        gathered[0] = {
+          ...retry,
+          fields: retry.fields.map((field) => ({ ...field, frame: 0 })),
+          overlays: retry.overlays.map((overlay) => ({ ...overlay, frame: 0 }))
+        };
+      } catch (error) {
+        throw new Error(`observe_timeout: phase=frame_semantic_scan recovery=reload_page (${this.safeError(error)})`);
+      }
+    }
     return {
       url: cleanText(page.pptrPage.url()),
-      title: cleanText(await page.pptrPage.title()),
+      title: cleanText(await this.withTimeout(page.pptrPage.title(), OBSERVE_FRAME_TIMEOUT, "observe_timeout: phase=page_metadata recovery=reload_page")),
       fields: gathered.flatMap((part) => part.fields),
       overlays: gathered.flatMap((part) => part.overlays),
       sections: [...new Set(gathered.flatMap((part) => part.sections))],
@@ -4904,15 +5269,15 @@ var FormEngine = class {
   }
   updateState(pageId, raw) {
     const nav = navigationId(raw.url);
+    const currentHash = structuralHash(raw);
     const existing = this.states.get(pageId);
     if (!existing || existing.navigationId !== nav) {
-      const created = { navigationId: nav, url: raw.url, generation: 1, snapshots: /* @__PURE__ */ new Map(), refToTarget: /* @__PURE__ */ new Map() };
+      const created = { navigationId: nav, url: raw.url, generation: 1, lastStructuralHash: currentHash, snapshots: /* @__PURE__ */ new Map(), refToTarget: /* @__PURE__ */ new Map() };
       this.states.set(pageId, created);
       return created;
     }
-    const latest = existing.latestObservationId ? existing.snapshots.get(existing.latestObservationId) : void 0;
-    const currentHash = structuralHash(raw);
-    if (latest && latest.structuralHash !== currentHash) existing.generation += 1;
+    if (existing.lastStructuralHash !== currentHash) existing.generation += 1;
+    existing.lastStructuralHash = currentHash;
     existing.url = raw.url;
     return existing;
   }
@@ -4954,6 +5319,47 @@ var FormEngine = class {
     if (expected === void 0) return null;
     const current = this.states.get(pageId)?.generation;
     return current !== void 0 && current !== expected ? codedError("generation_conflict", "\u9875\u9762\u7ED3\u6784\u5DF2\u7ECF\u53D8\u5316\uFF0C\u8BF7\u5148\u6267\u884C focus \u6216 delta \u89C2\u5BDF", { expected_generation: expected, current_generation: current }) : null;
+  }
+  async prepareAction(context) {
+    try {
+      const raw = await this.collect(context.pageId);
+      this.updateState(context.pageId, raw);
+    } catch (error) {
+      return codedError("operation_timeout", this.safeError(error), {
+        phase: "action_preflight_observation",
+        recovery: "retry_once_then_reload_page",
+        page_id: context.pageId
+      });
+    }
+    return this.checkGeneration(context.pageId, context.expectedGeneration);
+  }
+  currentGeneration(pageId) {
+    return this.states.get(pageId)?.generation ?? 1;
+  }
+  async advanceGeneration(pageId, beforeGeneration) {
+    try {
+      const raw = await this.collect(pageId);
+      const state = this.updateState(pageId, raw);
+      if (state.generation <= beforeGeneration) state.generation = beforeGeneration + 1;
+      return state.generation;
+    } catch {
+      const state = this.states.get(pageId);
+      if (!state) return beforeGeneration + 1;
+      state.generation = Math.max(state.generation, beforeGeneration + 1);
+      return state.generation;
+    }
+  }
+  recordLowLevelOperation(pageId, action, operationId, target, resultName) {
+    const entries = this.ledger.get(pageId) ?? [];
+    entries.push({
+      operation_id: operationId ?? randomUUID2(),
+      action,
+      target,
+      result: resultName,
+      tracking: "low_level_unverified",
+      created_at: (/* @__PURE__ */ new Date()).toISOString()
+    });
+    this.ledger.set(pageId, entries.slice(-100));
   }
   async resolve(pageId, spec) {
     const page = this.getPage(pageId);
@@ -5074,6 +5480,28 @@ var FormEngine = class {
     }
     throw lastError ?? new Error(`option_not_found: ${spec.option ?? spec.field}`);
   }
+  async keyboardConfirmActiveOption(pageId, value) {
+    const page = this.getPage(pageId);
+    const wanted = normalize(value);
+    for (const frame of page.pptrPage.frames()) {
+      try {
+        const active = await frame.evaluate((expected) => {
+          const norm = (item) => String(item ?? "").replace(/[\s*：:]+/g, "").trim().toLowerCase();
+          const focused = document.activeElement;
+          const activeId = focused?.getAttribute("aria-activedescendant");
+          const byId = activeId ? document.getElementById(activeId) : null;
+          const highlighted = byId ?? document.querySelector('[role="option"][aria-selected="true"], .ant-select-item-option-active, .el-select-dropdown__item.hover, .el-cascader-node.in-active-path');
+          return Boolean(highlighted && norm(highlighted.innerText || highlighted.textContent) === expected);
+        }, wanted);
+        if (!active) continue;
+        await page.pptrPage.keyboard.press("Enter");
+        await this.delay(30);
+        return true;
+      } catch {
+      }
+    }
+    return false;
+  }
   valueMatches(candidate, wanted) {
     if (candidate.checked !== null) return candidate.checked === Boolean(wanted);
     const actual = normalize(candidate.value);
@@ -5105,9 +5533,9 @@ var FormEngine = class {
   }
   async verifySelected(pageId, target, value) {
     try {
-      const field = await this.resolve(pageId, { field: target.label, scope: target.scope });
+      const field = await this.resolve(pageId, { field: target.label, scope: target.scope, roles: fieldControlRoles });
       if (normalize(field.meta.value).includes(normalize(value))) return true;
-      const selected = await this.resolve(pageId, { field: value, scope: target.scope, roles: ["option", "radio", "checkbox", "treeitem"] });
+      const selected = await this.resolve(pageId, { field: value, roles: ["option", "radio", "checkbox", "treeitem"] });
       return selected.meta.checked === true || normalize(selected.meta.value).includes(normalize(value));
     } catch {
       try {
@@ -5155,10 +5583,11 @@ var FormEngine = class {
     if (!context.testMode) return;
     const entries = this.ledger.get(context.pageId) ?? [];
     entries.push({
-      operation_id: context.operationId ?? randomUUID(),
+      operation_id: context.operationId ?? randomUUID2(),
       action,
       target,
       result: resultName,
+      tracking: "semantic",
       created_at: (/* @__PURE__ */ new Date()).toISOString()
     });
     this.ledger.set(context.pageId, entries.slice(-100));
@@ -5169,6 +5598,19 @@ var FormEngine = class {
   }
   delay(milliseconds) {
     return new Promise((resolve3) => setTimeout(resolve3, milliseconds));
+  }
+  async withTimeout(promise, milliseconds, message) {
+    let timer;
+    try {
+      return await Promise.race([
+        promise,
+        new Promise((_resolve, reject) => {
+          timer = setTimeout(() => reject(new Error(message)), milliseconds);
+        })
+      ]);
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
   }
 };
 
@@ -5484,110 +5926,6 @@ function installStaleUidRecovery(McpPage) {
   prototype[installedSymbol] = true;
 }
 
-// src/chrome-profile.ts
-import { createHash as createHash2, randomUUID as randomUUID2 } from "node:crypto";
-import { lstat, mkdir, open, readFile, readlink, unlink } from "node:fs/promises";
-import { homedir } from "node:os";
-import { dirname, isAbsolute, join, resolve } from "node:path";
-function resolveChromeProfileDir(value = process.env.RESUME_COMPANION_CHROME_DATA_DIR) {
-  if (value) {
-    const expanded = value === "~" ? homedir() : value.startsWith("~/") ? join(homedir(), value.slice(2)) : value;
-    return isAbsolute(expanded) ? resolve(expanded) : resolve(process.cwd(), expanded);
-  }
-  if (process.platform === "darwin") return join(homedir(), "Library", "Application Support", "Resume Companion", "chrome-profile");
-  if (process.platform === "win32") return join(process.env.LOCALAPPDATA || join(homedir(), "AppData", "Local"), "Resume Companion", "chrome-profile");
-  return join(process.env.XDG_STATE_HOME || join(homedir(), ".local", "state"), "resume-companion", "chrome-profile");
-}
-function profileHash(profileDir2) {
-  return createHash2("sha256").update(profileDir2).digest("hex").slice(0, 12);
-}
-function processExists(pid) {
-  if (!Number.isSafeInteger(pid) || pid <= 0) return false;
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch (error) {
-    return typeof error === "object" && error !== null && "code" in error && error.code === "EPERM";
-  }
-}
-async function chromeProfileIsBusy(profileDir2) {
-  const singletonLock = join(profileDir2, "SingletonLock");
-  try {
-    const metadata = await lstat(singletonLock);
-    if (!metadata.isSymbolicLink()) return true;
-    const target = await readlink(singletonLock);
-    const pid = /-(\d+)$/.exec(target)?.[1];
-    return pid ? processExists(Number(pid)) : true;
-  } catch (error) {
-    const code = typeof error === "object" && error !== null && "code" in error ? error.code : void 0;
-    if (code === "ENOENT") return false;
-    return true;
-  }
-}
-var ChromeProfileLock = class {
-  lockPath;
-  profileDir;
-  token = randomUUID2();
-  held = false;
-  constructor(profileDir2) {
-    this.profileDir = profileDir2;
-    this.lockPath = join(dirname(profileDir2), "chrome-mcp.lock");
-  }
-  async acquire() {
-    await mkdir(this.profileDir, { recursive: true, mode: 448 });
-    await mkdir(dirname(this.lockPath), { recursive: true, mode: 448 });
-    const record = {
-      format: "resume-companion-chrome-lock",
-      pid: process.pid,
-      token: this.token,
-      started_at: (/* @__PURE__ */ new Date()).toISOString(),
-      profile_hash: profileHash(this.profileDir)
-    };
-    for (let attempt = 0; attempt < 2; attempt++) {
-      try {
-        const handle = await open(this.lockPath, "wx", 384);
-        await handle.writeFile(`${JSON.stringify(record)}
-`, "utf8");
-        await handle.sync();
-        await handle.close();
-        this.held = true;
-        if (await chromeProfileIsBusy(this.profileDir)) {
-          await this.release();
-          throw new Error("profile_in_use: \u4E13\u7528 Chrome Profile \u6B63\u7531\u6B8B\u7559\u6216\u5916\u90E8 Chrome \u8FDB\u7A0B\u4F7F\u7528\uFF1B\u8BF7\u5148\u5173\u95ED\u5BF9\u5E94 Chrome \u7A97\u53E3");
-        }
-        return;
-      } catch (error) {
-        const code = typeof error === "object" && error !== null && "code" in error ? error.code : void 0;
-        if (code !== "EEXIST") throw error;
-        const existing = await this.readExisting();
-        if (!existing || processExists(existing.pid)) {
-          throw new Error("profile_in_use: Resume Companion \u4E13\u7528 Chrome \u6B63\u7531\u53E6\u4E00\u4E2A\u4EFB\u52A1\u4F7F\u7528\uFF1B\u8BF7\u5173\u95ED\u90A3\u4E2A\u4EFB\u52A1\u540E\u91CD\u8BD5");
-        }
-        if (await chromeProfileIsBusy(this.profileDir)) {
-          throw new Error("profile_in_use: \u4E0A\u4E00\u4E2A MCP \u8FDB\u7A0B\u5DF2\u9000\u51FA\uFF0C\u4F46\u4E13\u7528 Chrome \u4ECD\u5728\u4F7F\u7528 Profile\uFF1B\u8BF7\u5148\u5173\u95ED\u8BE5 Chrome \u7A97\u53E3");
-        }
-        await unlink(this.lockPath).catch(() => void 0);
-      }
-    }
-    throw new Error("profile_in_use: \u65E0\u6CD5\u5B89\u5168\u53D6\u5F97 Resume Companion \u4E13\u7528 Chrome \u7684\u5B9E\u4F8B\u9501");
-  }
-  async release() {
-    if (!this.held) return;
-    const existing = await this.readExisting();
-    if (existing?.token === this.token) await unlink(this.lockPath).catch(() => void 0);
-    this.held = false;
-  }
-  async readExisting() {
-    try {
-      const raw = JSON.parse(await readFile(this.lockPath, "utf8"));
-      if (raw.format !== "resume-companion-chrome-lock" || typeof raw.pid !== "number" || typeof raw.token !== "string") return null;
-      return raw;
-    } catch {
-      return null;
-    }
-  }
-};
-
 // src/resume-browser-server.ts
 var moduleDirectory = dirname2(fileURLToPath(import.meta.url));
 var runtimeEntry = process.env.RESUME_COMPANION_DEVTOOLS_RUNTIME ?? [
@@ -5652,19 +5990,38 @@ var operationFields = {
   operation_id: external_exports.string().min(4).max(120).optional().describe("\u53EF\u9009\u5E42\u7B49 ID\uFF1B\u540C\u4E00\u8FDB\u7A0B\u5185\u91CD\u590D\u8C03\u7528\u8FD4\u56DE\u7B2C\u4E00\u6B21\u7ED3\u679C\u3002"),
   test_mode: external_exports.boolean().optional().describe("\u8BB0\u5F55\u672C\u6B21\u6D4B\u8BD5\u64CD\u4F5C\u6E05\u5355\uFF0C\u4E0D\u5199\u5165\u957F\u671F\u8D44\u6599\u5E93\u3002")
 };
+var snapshotBearingTools = /* @__PURE__ */ new Set(["take_snapshot", "wait_for", "fill", "fill_form", "click", "hover", "press_key", "type_text"]);
+var ledgerAwareLowLevelTools = /* @__PURE__ */ new Set(["fill", "fill_form", "click", "hover", "press_key", "type_text"]);
+function sanitizeBrowserResult(value) {
+  if (typeof value === "string") return redactBrowserText(value);
+  if (Array.isArray(value)) return value.map(sanitizeBrowserResult);
+  if (!value || typeof value !== "object") return value;
+  return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, key === "data" ? item : sanitizeBrowserResult(item)]));
+}
+function annotateTimeout(result, toolName) {
+  const text = Array.isArray(result?.content) ? result.content.filter((item) => item.type === "text").map((item) => item.text).join("\n") : "";
+  if (!result?.isError || !/timed out after waiting \d+ms|timeout/i.test(text)) return result;
+  const phase = ["fill", "fill_form", "click", "hover", "press_key", "type_text"].includes(toolName) ? "element_locator_or_event_confirmation" : toolName === "take_screenshot" ? "screenshot_capture" : "upstream_page_operation";
+  const note = `Resume Companion: timeout_phase=${phase}; recovery=take_snapshot_or_form_observe_then_retry_once; if the page remains continuously updating, reload the page once.`;
+  return {
+    ...result,
+    content: [...result.content ?? [], { type: "text", text: note }]
+  };
+}
 var ResumeBrowserServer = class _ResumeBrowserServer {
   server;
   mutex;
   browser;
   context;
   engine;
+  debugBridge;
   lockHeld = false;
   closing = false;
   constructor() {
     this.server = new thirdPartyModule.McpServer({
       name: "resume_browser",
       title: "Resume Browser MCP",
-      version: "0.15.0"
+      version: "0.15.1"
     }, { capabilities: { logging: {} } });
     this.mutex = new thirdPartyModule.Mutex();
   }
@@ -5677,12 +6034,14 @@ var ResumeBrowserServer = class _ResumeBrowserServer {
   async connect() {
     const transport = new thirdPartyModule.StdioServerTransport();
     await this.server.connect(transport);
-    console.error(`Resume Browser MCP 0.15.0 ready; Chrome profile ${profileHash(profileDir)} is acquired on first browser call.`);
+    console.error(`Resume Browser MCP 0.15.1 ready; Chrome profile ${profileHash(profileDir)} is acquired on first browser call.`);
   }
   async close() {
     if (this.closing) return;
     this.closing = true;
     this.engine?.clear();
+    await this.debugBridge?.close();
+    this.debugBridge = void 0;
     this.context?.dispose?.();
     this.context = void 0;
     this.engine = void 0;
@@ -5700,11 +6059,33 @@ var ResumeBrowserServer = class _ResumeBrowserServer {
       if (blocked.has(tool.name)) continue;
       const handler = new toolHandlerModule.ToolHandler(tool, upstreamArgs, () => this.getContext(), this.mutex);
       if (!handler.shouldRegister) continue;
+      if (ledgerAwareLowLevelTools.has(tool.name)) {
+        handler.inputSchema = {
+          ...handler.inputSchema,
+          operation_id: external_exports.string().min(4).max(120).optional().describe("\u53EF\u9009\u7684\u6D4B\u8BD5\u64CD\u4F5C\u5173\u8054 ID\u3002"),
+          test_mode: external_exports.boolean().optional().describe("\u628A\u8FD9\u6B21\u4F4E\u5C42\u56DE\u9000\u8BB0\u5165\u77ED\u671F\u6D4B\u8BD5\u6E05\u5355\uFF1B\u5B57\u6BB5\u8BED\u4E49\u548C\u6E05\u7406\u72B6\u6001\u4ECD\u6807\u8BB0\u4E3A\u672A\u9A8C\u8BC1\u3002")
+        };
+        handler.registeredInputSchema = external_exports.object(handler.inputSchema).passthrough();
+      }
       this.server.registerTool(tool.name, {
         description: tool.description,
         inputSchema: handler.registeredInputSchema,
         annotations: tool.annotations
-      }, async (params) => await handler.handle(params));
+      }, async (params) => {
+        let result = await handler.handle(params);
+        result = annotateTimeout(result, tool.name);
+        if (snapshotBearingTools.has(tool.name)) result = sanitizeBrowserResult(result);
+        if (params.test_mode && typeof params.pageId === "number") {
+          this.engine?.recordLowLevelOperation(
+            params.pageId,
+            tool.name,
+            params.operation_id,
+            typeof params.uid === "string" ? params.uid : Array.isArray(params.elements) ? `${params.elements.length} elements` : "keyboard_or_pointer_target",
+            result?.isError ? "failed_or_partial" : "completed_unverified"
+          );
+        }
+        return result;
+      });
     }
   }
   registerFormTools() {
@@ -5871,9 +6252,53 @@ var ResumeBrowserServer = class _ResumeBrowserServer {
       const context = this.context;
       if (!context) throw new Error("browser_context_unavailable");
       this.engine = new FormEngine((id) => context.getPageById(id));
+      await this.debugBridge?.close();
+      this.debugBridge = new BrowserDebugBridge(profileDir, (request) => this.handleDebugRequest(request));
+      await this.debugBridge.start();
+      console.error(`Resume Browser read-only debug socket ready at ${this.debugBridge.endpoint}`);
     }
     if (!this.context) throw new Error("browser_context_unavailable");
     return this.context;
+  }
+  async handleDebugRequest(request) {
+    const guard = await this.mutex.acquire();
+    try {
+      const context = this.context;
+      const engine = this.engine;
+      if (!context || !engine) throw new Error("browser_context_unavailable");
+      if (request.command === "status") {
+        return { version: "0.15.1", pid: process.pid, profile_hash: profileHash(profileDir), pages: context.getPages().length };
+      }
+      if (request.command === "list_pages") {
+        const pages = await Promise.all(context.getPages().map(async (page) => ({
+          page_id: page.id,
+          title: String(await page.pptrPage.title()).slice(0, 200),
+          url: redactDiagnostic(String(page.pptrPage.url()))
+        })));
+        return { pages };
+      }
+      if (request.command === "observe") {
+        const pageId = Number(request.page_id);
+        if (!Number.isInteger(pageId) || pageId <= 0) throw new Error("invalid page_id");
+        context.getPageById(pageId);
+        const mode = request.mode === "focus" || request.mode === "delta" || request.mode === "full" ? request.mode : "overview";
+        const includeValues = request.include_values === "masked" || request.include_values === "needed" ? request.include_values : "state";
+        const result = await engine.observe({
+          page_id: pageId,
+          mode,
+          ...typeof request.target === "string" ? { target: request.target } : {},
+          ...typeof request.scope === "string" ? { scope: request.scope } : {},
+          ...typeof request.since_observation_id === "string" ? { since_observation_id: request.since_observation_id } : {},
+          max_bytes: typeof request.max_bytes === "number" ? Math.min(request.max_bytes, 2e4) : 8e3,
+          include_values: includeValues,
+          include_test_ledger: Boolean(request.include_test_ledger)
+        });
+        return result.structuredContent ?? result;
+      }
+      throw new Error("unsupported debug command; use status, list_pages, or observe");
+    } finally {
+      guard[Symbol.dispose]();
+    }
   }
 };
 function redactDiagnostic(value) {

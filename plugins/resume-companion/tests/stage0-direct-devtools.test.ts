@@ -1,10 +1,12 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import { mkdtemp, readlink, rm } from 'node:fs/promises';
+import { createConnection } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+import { debugSocketPath } from '../src/browser/debug-bridge.js';
 
 type ToolResult = Awaited<ReturnType<Client['callTool']>>;
 
@@ -121,6 +123,20 @@ async function connectChromeMcp(): Promise<Client> {
   return connected;
 }
 
+async function debugRequest(request: Record<string, unknown>): Promise<Record<string, any>> {
+  return await new Promise((resolveResponse, reject) => {
+    const socket = createConnection(debugSocketPath(profileDir));
+    let output = '';
+    socket.setEncoding('utf8');
+    socket.once('connect', () => socket.write(`${JSON.stringify(request)}\n`));
+    socket.on('data', chunk => { output += chunk; });
+    socket.once('end', () => {
+      try { resolveResponse(JSON.parse(output) as Record<string, any>); } catch (error) { reject(error); }
+    });
+    socket.once('error', reject);
+  });
+}
+
 beforeAll(async () => {
   await ensureLab();
   client = await connectChromeMcp();
@@ -150,6 +166,22 @@ describe('Stage 0 direct Chrome DevTools MCP validation', () => {
     expect(names).not.toContain('click_at');
   });
 
+  test.skipIf(process.platform === 'win32')('supports read-only live debugging through the owning browser process', async () => {
+    const status = await debugRequest({ command: 'status' });
+    expect(status.ok).toBe(true);
+    expect(status.result.version).toBe('0.15.1');
+    expect(status.result.pages).toBeGreaterThan(0);
+
+    const pages = await debugRequest({ command: 'list_pages' });
+    expect(pages.ok).toBe(true);
+    expect(pages.result.pages.some((page: { page_id: number }) => page.page_id === pageId)).toBe(true);
+
+    const observation = await debugRequest({ command: 'observe', page_id: pageId, mode: 'focus', target: '姓名' });
+    expect(observation.ok).toBe(true);
+    expect(observation.result.page_id).toBe(pageId);
+    expect(observation.result.metrics.response_bytes).toBeLessThanOrEqual(8_500);
+  });
+
   test('returns a budgeted semantic overview instead of the complete 220-field page', async () => {
     const opened = await call('new_page', { url: `http://127.0.0.1:4174/long-form.html?semantic=${Date.now()}` });
     pageId = selectedPageId(textOf(opened));
@@ -170,6 +202,72 @@ describe('Stage 0 direct Chrome DevTools MCP validation', () => {
     expect(data.truncated).toBe(true);
     expect(Buffer.byteLength(output, 'utf8')).toBeLessThanOrEqual(5_400);
   }, 20_000);
+
+  test('separates field triggers from popup options, advances generation, finds heading scopes, redacts raw snapshots and tracks low-level fallback', async () => {
+    const opened = await call('new_page', { url: `http://127.0.0.1:4174/semantic-regressions.html?run=${Date.now()}` });
+    pageId = selectedPageId(textOf(opened));
+    const initial = JSON.parse(textOf(await call('form_observe', {
+      page_id: pageId,
+      mode: 'focus',
+      target: '性别',
+      scope: '基本信息',
+      include_values: 'state',
+    }))) as { generation: number; sections: string[]; fields: Array<{ label: string; scope?: string }> };
+    expect(initial.sections).toContain('基本信息');
+    expect(initial.fields.some(field => field.label === '性别' && field.scope === '基本信息')).toBe(true);
+
+    const selectedGender = JSON.parse(textOf(await call('form_select_option', {
+      page_id: pageId,
+      expected_generation: initial.generation,
+      operation_id: `gender-${Date.now()}`,
+      field: '性别',
+      scope: '基本信息',
+      value: '男',
+      test_mode: true,
+    }))) as { ok: boolean; generation: number; field_state: string };
+    expect(selectedGender.ok).toBe(true);
+    expect(selectedGender.field_state).toBe('selected');
+    expect(selectedGender.generation).toBeGreaterThan(initial.generation);
+
+    const stale = await client!.callTool({
+      name: 'form_select_path',
+      arguments: { page_id: pageId, expected_generation: initial.generation, field: '籍贯', path: ['北京市', '海淀区'] },
+    });
+    expect(stale.isError).toBe(true);
+    expect(textOf(stale)).toContain('generation_conflict');
+
+    const selectedOrigin = JSON.parse(textOf(await call('form_select_path', {
+      page_id: pageId,
+      expected_generation: selectedGender.generation,
+      operation_id: `origin-${Date.now()}`,
+      field: '籍贯',
+      scope: '基本信息',
+      path: ['北京市', '海淀区'],
+      test_mode: true,
+    }))) as { ok: boolean; generation: number; completed_path: string[] };
+    expect(selectedOrigin.ok).toBe(true);
+    expect(selectedOrigin.completed_path).toEqual(['北京市', '海淀区']);
+    expect(selectedOrigin.generation).toBeGreaterThan(selectedGender.generation);
+
+    const snapshot = textOf(await call('take_snapshot', { pageId }));
+    expect(snapshot).toContain('138****1234');
+    expect(snapshot).toContain('pe******@example.com');
+    expect(snapshot).not.toContain('11010120000101123X');
+    expect(snapshot).not.toContain('2000-01-02');
+    await call('hover', {
+      pageId,
+      uid: uidFor(snapshot, '北京市 / 海淀区'),
+      operation_id: `low-level-${Date.now()}`,
+      test_mode: true,
+    });
+    const ledger = JSON.parse(textOf(await call('form_observe', {
+      page_id: pageId,
+      mode: 'focus',
+      target: '籍贯',
+      include_test_ledger: true,
+    }))) as { test_ledger: Array<{ action: string; tracking?: string }> };
+    expect(ledger.test_ledger.some(entry => entry.action === 'hover' && entry.tracking === 'low_level_unverified')).toBe(true);
+  }, 35_000);
 
   test('fills a semantic batch and masks existing phone and email values in observations', async () => {
     const opened = await call('new_page', { url: `http://127.0.0.1:4174/index.html?semantic-fill=${Date.now()}` });
@@ -237,7 +335,9 @@ describe('Stage 0 direct Chrome DevTools MCP validation', () => {
       value: '上海',
       test_mode: true,
     });
-    expect(JSON.parse(textOf(location)).ok).toBe(true);
+    const locationResult = JSON.parse(textOf(location)) as { ok: boolean; generation: number };
+    expect(locationResult.ok).toBe(true);
+    expect(locationResult.generation).toBeGreaterThan(initial.generation);
     expect(textOf(await call('form_select_option', {
       page_id: pageId,
       operation_id: locationOperation,
@@ -245,15 +345,30 @@ describe('Stage 0 direct Chrome DevTools MCP validation', () => {
       value: '深圳',
     }))).toBe(textOf(location));
 
-    expect(JSON.parse(textOf(await call('form_set_date', {
+    const staleDate = await client!.callTool({ name: 'form_set_date', arguments: {
       page_id: pageId,
+      expected_generation: initial.generation,
       field: '经历开始月份',
       value: '2024-09',
-    }))).ok).toBe(true);
-    expect(JSON.parse(textOf(await call('form_fill_fields', {
+    } });
+    expect(staleDate.isError).toBe(true);
+    expect(textOf(staleDate)).toContain('generation_conflict');
+
+    const dateResult = JSON.parse(textOf(await call('form_set_date', {
       page_id: pageId,
+      expected_generation: locationResult.generation,
+      field: '经历开始月份',
+      value: '2024-09',
+    }))) as { ok: boolean; generation: number };
+    expect(dateResult.ok).toBe(true);
+    expect(dateResult.generation).toBeGreaterThan(locationResult.generation);
+    const summaryResult = JSON.parse(textOf(await call('form_fill_fields', {
+      page_id: pageId,
+      expected_generation: dateResult.generation,
       fields: [{ field: '个人简介', value: '用于验证局部观察的区域外变化。' }],
-    }))).ok).toBe(true);
+    }))) as { ok: boolean; generation: number };
+    expect(summaryResult.ok).toBe(true);
+    expect(summaryResult.generation).toBeGreaterThan(dateResult.generation);
 
     const delta = JSON.parse(textOf(await call('form_observe', {
       page_id: pageId,
@@ -333,7 +448,8 @@ describe('Stage 0 direct Chrome DevTools MCP validation', () => {
     const output = textOf(filled);
     expect(output).toContain('Successfully filled out the form');
     expect(output).toContain('阶段零示例同学');
-    expect(output).toContain('stage0@example.com');
+    expect(output).toContain('st******@example.com');
+    expect(output).not.toContain('stage0@example.com');
     expect(output).toMatch(/checked|true/);
     expect(Buffer.byteLength(output, 'utf8')).toBeGreaterThan(100);
     expect(elapsedMs).toBeLessThan(15_000);
@@ -418,7 +534,8 @@ describe('Stage 0 direct Chrome DevTools MCP validation', () => {
       }));
       durations.push(performance.now() - startedAt);
       responseBytes.push(Buffer.byteLength(latest, 'utf8'));
-      expect(latest).toContain('benchmark@example.com');
+      expect(latest).toContain('be******@example.com');
+      expect(latest).not.toContain('benchmark@example.com');
       expect(latest).toContain('TypeScript');
       expect(latest).toMatch(/checked|true/);
     }

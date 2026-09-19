@@ -1,8 +1,8 @@
 # 开发说明
 
-0.15.0 的产品代码使用严格 TypeScript。Resume Companion 实现本地资料服务和 Resume Browser MCP；后者在固定的 `chrome-devtools-mcp@1.9.0` 浏览器生命周期与诊断能力之上维护页面语义缓存、局部/增量观察、事务式表单动作和敏感值脱敏。
+0.15.1 的产品代码使用严格 TypeScript。Resume Companion 实现本地资料服务和 Resume Browser MCP；后者在固定的 `chrome-devtools-mcp@1.9.0` 浏览器生命周期与诊断能力之上维护页面语义缓存、局部/增量观察、事务式表单动作和敏感值脱敏。
 
-0.15.0 的浏览器层由同进程 TypeScript 组合服务实现：固定上游浏览器生命周期和诊断能力，在共享页面上下文中增加局部观察、语义重定位和事务式表单动作。架构讨论、竞品分析和阶段评测保留在本地研发资料中，不随公开仓库和安装包发布。
+0.15.1 的浏览器层由同进程 TypeScript 组合服务实现：固定上游浏览器生命周期和诊断能力，在共享页面上下文中增加局部观察、语义重定位和事务式表单动作。架构讨论、竞品分析和阶段评测保留在本地研发资料中，不随公开仓库和安装包发布。
 
 ## 命令
 
@@ -22,6 +22,8 @@ npm run package
 需要在专用持久 Chrome 中进行人工 Agent 验收时，先运行 `npm run lab`。完整四步网申使用 `tests/fixtures/acceptance-task.md`；十五类控件配方使用 `tests/fixtures/control-recipes-task.md`。两者都只读取配套虚构资料，且最终提交计数必须保持为 0。
 
 商业插件研究材料和真实网站捕获保持在 git 忽略目录，只允许把重新设计后的原创实现和合成测试加入公开仓库。
+
+专用 Chrome 已由另一个 Agent 任务持有时，不要再启动第二个浏览器 MCP。0.15.1 起，持有者在首次浏览器调用后会创建仅限本机用户访问的只读调试 socket。开发侧可运行 `npm run debug:browser -- status`、`npm run debug:browser -- pages`，或 `npm run debug:browser -- observe <page-id> [target] [scope]` 实时查看同一个浏览器上下文。调试通道只支持状态、列页和脱敏语义观察，不执行填写、点击、脚本或 Network 正文读取。
 
 ## 目录
 

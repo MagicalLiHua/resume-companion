@@ -4,6 +4,8 @@ import { existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { z } from 'zod';
+import { BrowserDebugBridge } from './browser/debug-bridge.js';
+import { redactBrowserText } from './browser/privacy.js';
 import { FormEngine, type FieldRequest, type ObserveRequest } from './browser/form-engine.js';
 import { installStaleUidRecovery } from './browser/stale-uid-recovery.js';
 import { ChromeProfileLock, profileHash, resolveChromeProfileDir } from './chrome-profile.js';
@@ -79,12 +81,36 @@ const operationFields = {
   test_mode: z.boolean().optional().describe('记录本次测试操作清单，不写入长期资料库。'),
 };
 
+const snapshotBearingTools = new Set(['take_snapshot', 'wait_for', 'fill', 'fill_form', 'click', 'hover', 'press_key', 'type_text']);
+const ledgerAwareLowLevelTools = new Set(['fill', 'fill_form', 'click', 'hover', 'press_key', 'type_text']);
+
+function sanitizeBrowserResult(value: unknown): unknown {
+  if (typeof value === 'string') return redactBrowserText(value);
+  if (Array.isArray(value)) return value.map(sanitizeBrowserResult);
+  if (!value || typeof value !== 'object') return value;
+  return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, key === 'data' ? item : sanitizeBrowserResult(item)]));
+}
+
+function annotateTimeout(result: AnyRecord, toolName: string): AnyRecord {
+  const text = Array.isArray(result?.content) ? result.content.filter((item: AnyRecord) => item.type === 'text').map((item: AnyRecord) => item.text).join('\n') : '';
+  if (!result?.isError || !/timed out after waiting \d+ms|timeout/i.test(text)) return result;
+  const phase = ['fill', 'fill_form', 'click', 'hover', 'press_key', 'type_text'].includes(toolName)
+    ? 'element_locator_or_event_confirmation'
+    : toolName === 'take_screenshot' ? 'screenshot_capture' : 'upstream_page_operation';
+  const note = `Resume Companion: timeout_phase=${phase}; recovery=take_snapshot_or_form_observe_then_retry_once; if the page remains continuously updating, reload the page once.`;
+  return {
+    ...result,
+    content: [...(result.content ?? []), { type: 'text', text: note }],
+  };
+}
+
 export class ResumeBrowserServer {
   private readonly server: AnyRecord;
   private readonly mutex: AnyRecord;
   private browser: AnyRecord | undefined;
   private context: AnyRecord | undefined;
   private engine: FormEngine | undefined;
+  private debugBridge: BrowserDebugBridge | undefined;
   private lockHeld = false;
   private closing = false;
 
@@ -92,7 +118,7 @@ export class ResumeBrowserServer {
     this.server = new thirdPartyModule.McpServer({
       name: 'resume_browser',
       title: 'Resume Browser MCP',
-      version: '0.15.0',
+      version: '0.15.1',
     }, { capabilities: { logging: {} } });
     this.mutex = new thirdPartyModule.Mutex();
   }
@@ -107,13 +133,15 @@ export class ResumeBrowserServer {
   async connect(): Promise<void> {
     const transport = new thirdPartyModule.StdioServerTransport();
     await this.server.connect(transport);
-    console.error(`Resume Browser MCP 0.15.0 ready; Chrome profile ${profileHash(profileDir)} is acquired on first browser call.`);
+    console.error(`Resume Browser MCP 0.15.1 ready; Chrome profile ${profileHash(profileDir)} is acquired on first browser call.`);
   }
 
   async close(): Promise<void> {
     if (this.closing) return;
     this.closing = true;
     this.engine?.clear();
+    await this.debugBridge?.close();
+    this.debugBridge = undefined;
     this.context?.dispose?.();
     this.context = undefined;
     this.engine = undefined;
@@ -132,11 +160,33 @@ export class ResumeBrowserServer {
       if (blocked.has(tool.name)) continue;
       const handler = new toolHandlerModule.ToolHandler(tool, upstreamArgs, () => this.getContext(), this.mutex);
       if (!handler.shouldRegister) continue;
+      if (ledgerAwareLowLevelTools.has(tool.name)) {
+        handler.inputSchema = {
+          ...handler.inputSchema,
+          operation_id: z.string().min(4).max(120).optional().describe('可选的测试操作关联 ID。'),
+          test_mode: z.boolean().optional().describe('把这次低层回退记入短期测试清单；字段语义和清理状态仍标记为未验证。'),
+        };
+        handler.registeredInputSchema = z.object(handler.inputSchema).passthrough();
+      }
       this.server.registerTool(tool.name, {
         description: tool.description,
         inputSchema: handler.registeredInputSchema,
         annotations: tool.annotations,
-      }, async (params: AnyRecord) => await handler.handle(params));
+      }, async (params: AnyRecord) => {
+        let result = await handler.handle(params);
+        result = annotateTimeout(result, tool.name);
+        if (snapshotBearingTools.has(tool.name)) result = sanitizeBrowserResult(result) as AnyRecord;
+        if (params.test_mode && typeof params.pageId === 'number') {
+          this.engine?.recordLowLevelOperation(
+            params.pageId,
+            tool.name,
+            params.operation_id,
+            typeof params.uid === 'string' ? params.uid : Array.isArray(params.elements) ? `${params.elements.length} elements` : 'keyboard_or_pointer_target',
+            result?.isError ? 'failed_or_partial' : 'completed_unverified',
+          );
+        }
+        return result;
+      });
     }
   }
 
@@ -311,9 +361,54 @@ export class ResumeBrowserServer {
       const context = this.context;
       if (!context) throw new Error('browser_context_unavailable');
       this.engine = new FormEngine(id => context.getPageById(id));
+      await this.debugBridge?.close();
+      this.debugBridge = new BrowserDebugBridge(profileDir, request => this.handleDebugRequest(request));
+      await this.debugBridge.start();
+      console.error(`Resume Browser read-only debug socket ready at ${this.debugBridge.endpoint}`);
     }
     if (!this.context) throw new Error('browser_context_unavailable');
     return this.context;
+  }
+
+  private async handleDebugRequest(request: AnyRecord): Promise<AnyRecord> {
+    const guard = await this.mutex.acquire();
+    try {
+      const context = this.context;
+      const engine = this.engine;
+      if (!context || !engine) throw new Error('browser_context_unavailable');
+      if (request.command === 'status') {
+        return { version: '0.15.1', pid: process.pid, profile_hash: profileHash(profileDir), pages: context.getPages().length };
+      }
+      if (request.command === 'list_pages') {
+        const pages = await Promise.all((context.getPages() as AnyRecord[]).map(async page => ({
+          page_id: page.id,
+          title: String(await page.pptrPage.title()).slice(0, 200),
+          url: redactDiagnostic(String(page.pptrPage.url())),
+        })));
+        return { pages };
+      }
+      if (request.command === 'observe') {
+        const pageId = Number(request.page_id);
+        if (!Number.isInteger(pageId) || pageId <= 0) throw new Error('invalid page_id');
+        context.getPageById(pageId);
+        const mode: ObserveRequest['mode'] = request.mode === 'focus' || request.mode === 'delta' || request.mode === 'full' ? request.mode : 'overview';
+        const includeValues: NonNullable<ObserveRequest['include_values']> = request.include_values === 'masked' || request.include_values === 'needed' ? request.include_values : 'state';
+        const result = await engine.observe({
+          page_id: pageId,
+          mode,
+          ...(typeof request.target === 'string' ? { target: request.target } : {}),
+          ...(typeof request.scope === 'string' ? { scope: request.scope } : {}),
+          ...(typeof request.since_observation_id === 'string' ? { since_observation_id: request.since_observation_id } : {}),
+          max_bytes: typeof request.max_bytes === 'number' ? Math.min(request.max_bytes, 20_000) : 8_000,
+          include_values: includeValues,
+          include_test_ledger: Boolean(request.include_test_ledger),
+        });
+        return result.structuredContent ?? result;
+      }
+      throw new Error('unsupported debug command; use status, list_pages, or observe');
+    } finally {
+      guard[Symbol.dispose]();
+    }
   }
 }
 

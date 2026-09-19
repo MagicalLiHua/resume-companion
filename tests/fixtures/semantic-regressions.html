@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>真实 SPA 语义回归</title>
+  <style>
+    body{font-family:system-ui,sans-serif;padding:24px}.ant-form-item{margin:14px 0}.ant-form-item>label{display:inline-block;width:120px}
+    input,button{padding:8px}.popup{position:fixed;left:180px;top:100px;background:white;border:1px solid #999;padding:8px;z-index:10}
+    [role=option],[role=treeitem]{display:block;width:180px;padding:7px;text-align:left}.columns{display:flex;gap:8px}.active{background:#def}
+  </style>
+</head>
+<body>
+  <h1>交通银行式复杂表单合成复现</h1>
+  <h2>基本信息</h2>
+  <form id="basic-form">
+    <div class="ant-form-item"><label for="gender">性别</label><input id="gender" role="combobox" readonly aria-expanded="false" value=""></div>
+    <div class="ant-form-item"><label>籍贯</label><button id="origin" type="button" aria-haspopup="tree" aria-expanded="false">请选择籍贯</button></div>
+    <div class="ant-form-item"><label for="phone">手机号</label><input id="phone" disabled value="13800001234"></div>
+    <div class="ant-form-item"><label for="id-card">身份证号码</label><input id="id-card" readonly value="11010120000101123X"></div>
+    <div class="ant-form-item"><label for="email">电子邮箱</label><input id="email" disabled value="person@example.com"></div>
+    <div class="ant-form-item"><label for="birth">出生日期</label><input id="birth" disabled value="2000-01-02"></div>
+  </form>
+  <script>
+    let genderChurn = true;
+    function attachGender(input) {
+      input.addEventListener('mousedown', () => {
+        openGender();
+        if (!genderChurn) return;
+        genderChurn = false;
+        const replacement = input.cloneNode(true);
+        attachGender(replacement);
+        input.replaceWith(replacement);
+        replacement.focus();
+      });
+      input.addEventListener('keydown', event => {
+        if (event.key !== 'Enter') return;
+        const active = document.querySelector('[role=option][aria-selected=true]');
+        active?.click();
+      });
+    }
+    function openGender() {
+      if (document.querySelector('#gender-options')) return;
+      const popup = document.createElement('div');
+      popup.id = 'gender-options'; popup.className = 'popup'; popup.setAttribute('role','listbox'); popup.setAttribute('aria-label','性别候选');
+      for (const value of ['男','女','不透露']) {
+        const option = document.createElement('button'); option.type='button'; option.setAttribute('role','option'); option.textContent=value;
+        if (value === '男') { option.setAttribute('aria-selected','true'); option.className='active'; }
+        option.onclick=()=>{document.querySelector('#gender').value=value; popup.remove(); document.querySelector('#gender').setAttribute('aria-expanded','false')};
+        popup.append(option);
+      }
+      document.body.append(popup); document.querySelector('#gender').setAttribute('aria-expanded','true');
+    }
+    attachGender(document.querySelector('#gender'));
+
+    const provinces = ['北京市','上海市','天津市','重庆市','河北省','河南省','云南省','辽宁省','黑龙江省','湖南省','安徽省','山东省','新疆','江苏省','浙江省','江西省','湖北省','广西','甘肃省','山西省'];
+    document.querySelector('#origin').onclick=()=>renderLevel(0,provinces);
+    function renderLevel(level, values) {
+      let popup=document.querySelector('#origin-options');
+      if(!popup){popup=document.createElement('div');popup.id='origin-options';popup.className='popup columns';popup.setAttribute('role','tree');popup.setAttribute('aria-label','籍贯候选');document.body.append(popup)}
+      while(popup.children.length>level)popup.lastElementChild.remove();
+      const column=document.createElement('div');popup.append(column);
+      values.forEach(value=>{const option=document.createElement('button');option.type='button';option.setAttribute('role','treeitem');option.textContent=value;column.append(option);option.onclick=()=>{
+        if(level===0){document.querySelector('#origin').dataset.province=value;renderLevel(1,value==='北京市'?['东城区','西城区','海淀区']:['市辖区','县'])}
+        else{const trigger=document.querySelector('#origin');trigger.textContent=`${trigger.dataset.province} / ${value}`;popup.remove()}
+      }})
+    }
+  </script>
+</body>
+</html>

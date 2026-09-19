@@ -131,6 +131,7 @@ interface PageState {
   navigationId: string;
   url: string;
   generation: number;
+  lastStructuralHash: string;
   snapshots: Map<string, CachedSnapshot>;
   refToTarget: Map<string, { label: string; scope: string }>;
   latestObservationId?: string;
@@ -142,6 +143,7 @@ interface LedgerEntry {
   target: string;
   scope?: string;
   result: string;
+  tracking?: 'semantic' | 'low_level_unverified';
   created_at: string;
 }
 
@@ -185,8 +187,11 @@ const DEFAULT_MAX_BYTES = 12_000;
 const MAX_MAX_BYTES = 80_000;
 const HISTORY_LIMIT = 8;
 const ACTION_TIMEOUT = 4_000;
+const OBSERVE_FRAME_TIMEOUT = 3_500;
 const sensitiveLabelPattern = /(身份证|证件|护照|手机号|联系电话|手机号码|电子邮箱|邮箱|住址|地址|账号|银行卡)/i;
 const manualBoundaryPattern = /(最终提交|提交申请|立即申请|确认投递|声明|承诺|同意条款|上传|删除|支付|签署|验证码|密码)/i;
+const fieldControlRoles = ['input', 'textarea', 'select', 'textbox', 'combobox', 'checkbox', 'radio', 'switch', 'button'];
+const optionRoles = ['option', 'treeitem', 'menuitem', 'li', 'button'];
 
 function normalize(value: unknown): string {
   return String(value ?? '').replace(/[\s*：:]+/g, '').trim().toLowerCase();
@@ -293,6 +298,7 @@ function codedError(code: string, message: string, details: AnyRecord = {}): Any
 
 function errorCode(error: unknown): string {
   const message = error instanceof Error ? error.message : String(error);
+  if (/observe_timeout|phase=.*timeout|timed out/i.test(message)) return 'operation_timeout';
   if (/ambiguous/i.test(message)) return 'target_ambiguous';
   if (/not found|unresolved|no candidate/i.test(message)) return 'target_unresolved';
   if (/constraint/i.test(message)) return 'constraint_violation';
@@ -357,6 +363,11 @@ export function collectDomForm(): Omit<RawPageForm, 'url' | 'title'> {
       const record = current.getAttribute('data-record-label');
       if (record) return text(record);
     }
+    const headings = Array.from(document.querySelectorAll('h1, h2, h3, h4, h5, h6, [role="heading"], .ant-card-head-title, .el-card__header, .form-title, .section-title'))
+      .filter(candidate => visible(candidate) && Boolean(text(candidate.textContent)))
+      .filter(candidate => Boolean(candidate.compareDocumentPosition(element) & Node.DOCUMENT_POSITION_FOLLOWING));
+    const nearest = headings.at(-1);
+    if (nearest) return text(nearest.textContent);
     return '';
   };
   const valueOf = (element: Element): { value: string; checked: boolean | null } => {
@@ -423,7 +434,7 @@ export function collectDomForm(): Omit<RawPageForm, 'url' | 'title'> {
     options: Array.from(element.querySelectorAll('[role="option"], [role="treeitem"], [role="menuitem"], li, td, button'))
       .filter(visible).map(option => ownLabel(option) || text(option.textContent)).filter(Boolean).slice(0, 120),
   }));
-  const sections = Array.from(document.querySelectorAll('h1, h2, h3, h4, fieldset > legend, section[aria-label], [role="region"][aria-label]'))
+  const sections = Array.from(document.querySelectorAll('h1, h2, h3, h4, h5, h6, [role="heading"], .ant-card-head-title, .el-card__header, .form-title, .section-title, fieldset > legend, section[aria-label], [role="region"][aria-label]'))
     .filter(visible).map(element => text(element.getAttribute('aria-label') || element.textContent)).filter(Boolean);
   const validations = Array.from(document.querySelectorAll('[role="alert"], [aria-live], .ant-form-item-explain-error, .el-form-item__error, .error, .invalid-feedback'))
     .filter(visible).map(element => text(element.textContent)).filter(Boolean).slice(0, 80);
@@ -473,6 +484,11 @@ function findSemanticCandidates(spec: TargetSpec): CandidateMeta[] {
         if (heading && text(heading.textContent)) return text(heading.textContent);
       }
     }
+    const headings = Array.from(document.querySelectorAll('h1, h2, h3, h4, h5, h6, [role="heading"], .ant-card-head-title, .el-card__header, .form-title, .section-title'))
+      .filter(candidate => visible(candidate) && Boolean(text(candidate.textContent)))
+      .filter(candidate => Boolean(candidate.compareDocumentPosition(element) & Node.DOCUMENT_POSITION_FOLLOWING));
+    const nearest = headings.at(-1);
+    if (nearest) return text(nearest.textContent);
     return '';
   };
   const valueOf = (element: Element): { value: string; checked: boolean | null } => {
@@ -495,22 +511,36 @@ function findSemanticCandidates(spec: TargetSpec): CandidateMeta[] {
   const scopeTarget = normalized(spec.scope);
   const roleSet = new Set((spec.roles ?? []).map(normalized));
   return Array.from(document.querySelectorAll(selector)).map((element, index) => {
+    if (!visible(element)) return null;
     const label = labelOf(element);
     const scope = scopeOf(element);
     const labelNorm = normalized(label);
     const scopeNorm = normalized(scope);
     const role = text(element.getAttribute('role') || (element instanceof HTMLButtonElement ? 'button' : ''));
     const type = element instanceof HTMLInputElement ? element.type : text(element.getAttribute('type'));
+    const tag = element.tagName.toLowerCase();
+    const implicitRoles = new Set([
+      normalized(role), normalized(type), normalized(tag),
+      element instanceof HTMLInputElement ? 'input' : '',
+      element instanceof HTMLTextAreaElement ? 'textarea' : '',
+      element instanceof HTMLSelectElement ? 'select' : '',
+      element instanceof HTMLButtonElement ? 'button' : '',
+      element instanceof HTMLOptionElement ? 'option' : '',
+      element instanceof HTMLInputElement && !['checkbox', 'radio', 'button', 'submit'].includes(element.type) ? 'textbox' : '',
+      element instanceof HTMLSelectElement ? 'combobox' : '',
+    ].filter(Boolean));
+    if (roleSet.size && ![...roleSet].some(item => implicitRoles.has(item))) return null;
     let score = 0;
-    if (labelNorm === target) score += 120;
-    else if (target && labelNorm.includes(target)) score += 72;
-    else if (target && target.includes(labelNorm) && labelNorm.length >= 2) score += 48;
+    let textMatched = false;
+    if (labelNorm === target) { score += 120; textMatched = true; }
+    else if (target && labelNorm.includes(target)) { score += 72; textMatched = true; }
+    else if (target && target.includes(labelNorm) && labelNorm.length >= 2) { score += 48; textMatched = true; }
+    if (!textMatched) return null;
     if (scopeTarget && scopeNorm === scopeTarget) score += 55;
     else if (scopeTarget && (scopeNorm.includes(scopeTarget) || scopeTarget.includes(scopeNorm))) score += 28;
     if (scopeTarget && !scopeNorm) score -= 12;
     if (roleSet.size && (roleSet.has(normalized(role)) || roleSet.has(normalized(type)) || roleSet.has(normalized(element.tagName)))) score += 16;
-    if (visible(element)) score += 12;
-    else score -= 100;
+    score += 12;
     if ((element as HTMLInputElement).disabled || element.getAttribute('aria-disabled') === 'true') score -= 30;
     const value = valueOf(element);
     const control = element as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
@@ -519,7 +549,7 @@ function findSemanticCandidates(spec: TargetSpec): CandidateMeta[] {
       index,
       label,
       scope,
-      tag: element.tagName.toLowerCase(),
+      tag,
       role,
       type,
       value: value.value,
@@ -537,7 +567,7 @@ function findSemanticCandidates(spec: TargetSpec): CandidateMeta[] {
         pattern: text(element.getAttribute('pattern')) || null,
       },
     };
-  }).filter(candidate => candidate.score > 0).sort((left, right) => right.score - left.score).slice(0, 20);
+  }).filter((candidate): candidate is CandidateMeta => candidate !== null && candidate.score > 0).sort((left, right) => right.score - left.score).slice(0, 20);
 }
 
 /** Runs inside a page frame. Keep this function self-contained. */
@@ -583,6 +613,11 @@ function resolveSemanticElement(spec: TargetSpec): Element | null {
         if (heading && text(heading.textContent)) return text(heading.textContent);
       }
     }
+    const headings = Array.from(document.querySelectorAll('h1, h2, h3, h4, h5, h6, [role="heading"], .ant-card-head-title, .el-card__header, .form-title, .section-title'))
+      .filter(candidate => visible(candidate) && Boolean(text(candidate.textContent)))
+      .filter(candidate => Boolean(candidate.compareDocumentPosition(element) & Node.DOCUMENT_POSITION_FOLLOWING));
+    const nearest = headings.at(-1);
+    if (nearest) return text(nearest.textContent);
     return '';
   };
   const selector = [
@@ -595,25 +630,39 @@ function resolveSemanticElement(spec: TargetSpec): Element | null {
   const scopeTarget = normalized(spec.scope);
   const roleSet = new Set((spec.roles ?? []).map(normalized));
   const ranked = Array.from(document.querySelectorAll(selector)).map(element => {
+    if (!visible(element)) return null;
     const label = labelOf(element);
     const scope = scopeOf(element);
     const labelNorm = normalized(label);
     const scopeNorm = normalized(scope);
     const role = text(element.getAttribute('role') || (element instanceof HTMLButtonElement ? 'button' : ''));
     const type = element instanceof HTMLInputElement ? element.type : text(element.getAttribute('type'));
+    const tag = element.tagName.toLowerCase();
+    const implicitRoles = new Set([
+      normalized(role), normalized(type), normalized(tag),
+      element instanceof HTMLInputElement ? 'input' : '',
+      element instanceof HTMLTextAreaElement ? 'textarea' : '',
+      element instanceof HTMLSelectElement ? 'select' : '',
+      element instanceof HTMLButtonElement ? 'button' : '',
+      element instanceof HTMLOptionElement ? 'option' : '',
+      element instanceof HTMLInputElement && !['checkbox', 'radio', 'button', 'submit'].includes(element.type) ? 'textbox' : '',
+      element instanceof HTMLSelectElement ? 'combobox' : '',
+    ].filter(Boolean));
+    if (roleSet.size && ![...roleSet].some(item => implicitRoles.has(item))) return null;
     let score = 0;
-    if (labelNorm === target) score += 120;
-    else if (target && labelNorm.includes(target)) score += 72;
-    else if (target && target.includes(labelNorm) && labelNorm.length >= 2) score += 48;
+    let textMatched = false;
+    if (labelNorm === target) { score += 120; textMatched = true; }
+    else if (target && labelNorm.includes(target)) { score += 72; textMatched = true; }
+    else if (target && target.includes(labelNorm) && labelNorm.length >= 2) { score += 48; textMatched = true; }
+    if (!textMatched) return null;
     if (scopeTarget && scopeNorm === scopeTarget) score += 55;
     else if (scopeTarget && (scopeNorm.includes(scopeTarget) || scopeTarget.includes(scopeNorm))) score += 28;
     if (scopeTarget && !scopeNorm) score -= 12;
     if (roleSet.size && (roleSet.has(normalized(role)) || roleSet.has(normalized(type)) || roleSet.has(normalized(element.tagName)))) score += 16;
-    if (visible(element)) score += 12;
-    else score -= 100;
+    score += 12;
     if ((element as HTMLInputElement).disabled || element.getAttribute('aria-disabled') === 'true') score -= 30;
     return { element, score };
-  }).filter(candidate => candidate.score > 0).sort((left, right) => right.score - left.score);
+  }).filter((candidate): candidate is { element: Element; score: number } => candidate !== null && candidate.score > 0).sort((left, right) => right.score - left.score);
   if (!ranked[0] || ranked[0].score === ranked[1]?.score) return null;
   return ranked[0].element;
 }
@@ -682,7 +731,16 @@ export class FormEngine {
   async observe(request: ObserveRequest): Promise<AnyRecord> {
     const maxBytes = Math.min(Math.max(request.max_bytes ?? DEFAULT_MAX_BYTES, 2_000), MAX_MAX_BYTES);
     const includeValues = request.include_values ?? 'state';
-    const raw = await this.collect(request.page_id);
+    let raw: RawPageForm;
+    try {
+      raw = await this.collect(request.page_id);
+    } catch (error) {
+      return codedError('observe_timeout', this.safeError(error), {
+        phase: 'frame_semantic_scan',
+        recovery: 'retry_once_then_reload_page',
+        page_id: request.page_id,
+      });
+    }
     const state = this.updateState(request.page_id, raw);
     const latest = state.latestObservationId ? state.snapshots.get(state.latestObservationId) : undefined;
     const observationId = `obs_${state.generation}_${randomUUID().slice(0, 8)}`;
@@ -829,13 +887,14 @@ export class FormEngine {
   async fillFields(params: ActionContext & { fields: FieldRequest[] }): Promise<AnyRecord> {
     const cached = this.operationResult(params.operationId);
     if (cached) return cached;
-    const conflict = this.checkGeneration(params.pageId, params.expectedGeneration);
+    const conflict = await this.prepareAction(params);
     if (conflict) return conflict;
+    const beforeGeneration = this.currentGeneration(params.pageId);
     const results: AnyRecord[] = [];
     for (const field of params.fields) {
       try {
         const target = this.expandTarget(params.pageId, field.field, field.scope);
-        const candidate = await this.resolve(params.pageId, { field: target.label, scope: target.scope, roles: ['input', 'textarea', 'select', 'textbox', 'combobox', 'checkbox', 'radio', 'switch'] });
+        const candidate = await this.resolve(params.pageId, { field: target.label, scope: target.scope, roles: fieldControlRoles });
         const wanted = field.value;
         const currentMatches = this.valueMatches(candidate.meta, wanted);
         if (currentMatches) {
@@ -851,8 +910,8 @@ export class FormEngine {
           results.push({ field: field.field, status: 'constraint_violation', constraint });
           continue;
         }
-        await this.fillResolved(params.pageId, { field: target.label, scope: target.scope }, wanted);
-        const after = await this.resolve(params.pageId, { field: target.label, scope: target.scope });
+        await this.fillResolved(params.pageId, { field: target.label, scope: target.scope, roles: fieldControlRoles }, wanted);
+        const after = await this.resolve(params.pageId, { field: target.label, scope: target.scope, roles: fieldControlRoles });
         results.push(this.valueMatches(after.meta, wanted)
           ? { field: field.field, status: 'filled' }
           : { field: field.field, status: 'postcondition_failed', state: this.safeCandidateState(after.meta) });
@@ -861,7 +920,9 @@ export class FormEngine {
       }
     }
     const ok = results.every(result => result.status === 'filled' || result.status === 'unchanged' || result.status === 'preserved');
-    const result = contentResult({ ok, operation_id: params.operationId ?? randomUUID(), results, change_summary: this.summarize(results) }, !ok);
+    const attempted = results.some(result => !['unchanged', 'preserved', 'constraint_violation'].includes(String(result.status)));
+    const generation = attempted ? await this.advanceGeneration(params.pageId, beforeGeneration) : this.currentGeneration(params.pageId);
+    const result = contentResult({ ok, operation_id: params.operationId ?? randomUUID(), generation, results, change_summary: this.summarize(results) }, !ok);
     this.recordOperation(params, 'form_fill_fields', `${params.fields.length} fields`, ok ? 'completed' : 'partial', result);
     return result;
   }
@@ -869,27 +930,55 @@ export class FormEngine {
   async selectOption(params: ActionContext & { field: string; value: string; scope?: string; query?: string }): Promise<AnyRecord> {
     const cached = this.operationResult(params.operationId);
     if (cached) return cached;
-    const conflict = this.checkGeneration(params.pageId, params.expectedGeneration);
+    const conflict = await this.prepareAction(params);
     if (conflict) return conflict;
+    const beforeGeneration = this.currentGeneration(params.pageId);
     const target = this.expandTarget(params.pageId, params.field, params.scope);
+    let sideEffect: 'none' | 'overlay_opened' | 'option_attempted' = 'none';
     try {
-      const trigger = await this.resolve(params.pageId, { field: target.label, scope: target.scope });
+      const triggerSpec = { field: target.label, scope: target.scope, roles: fieldControlRoles } satisfies TargetSpec;
+      const trigger = await this.resolve(params.pageId, triggerSpec);
       if (trigger.meta.tag === 'select') {
-        await this.fillResolved(params.pageId, { field: target.label, scope: target.scope }, params.value);
+        await this.fillResolved(params.pageId, triggerSpec, params.value);
+        sideEffect = 'option_attempted';
       } else if (trigger.meta.type === 'radio' || trigger.meta.type === 'checkbox') {
         const option = await this.resolve(params.pageId, { field: params.value, scope: target.scope, roles: ['radio', 'checkbox'] }).catch(() => trigger);
-        if (!this.valueMatches(option.meta, true)) await this.clickResolved(params.pageId, { field: option.meta.label, scope: option.meta.scope }, true);
+        if (!this.valueMatches(option.meta, true)) {
+          await this.clickResolved(params.pageId, { field: option.meta.label, scope: option.meta.scope, roles: ['radio', 'checkbox'] }, true);
+          sideEffect = 'option_attempted';
+        }
       } else {
-        await this.clickResolved(params.pageId, { field: target.label, scope: target.scope }, true);
-        if (params.query) await this.fillResolved(params.pageId, { field: target.label, scope: target.scope }, params.query);
-        const option = await this.waitResolve(params.pageId, { field: target.label, scope: target.scope, option: params.value, roles: ['option', 'treeitem', 'menuitem', 'li'] });
-        await this.clickResolved(params.pageId, { field: option.meta.label, scope: option.meta.scope, option: params.value }, true);
+        const optionSpec = { field: target.label, option: params.value, roles: optionRoles } satisfies TargetSpec;
+        let option = await this.resolve(params.pageId, optionSpec).catch(() => null);
+        if (!option) {
+          try {
+            await this.clickResolved(params.pageId, triggerSpec, true);
+            sideEffect = 'overlay_opened';
+          } catch (openError) {
+            let optionError: unknown;
+            option = await this.waitResolve(params.pageId, optionSpec).catch(error => { optionError = error; return null; });
+            if (!option) throw new Error(`${this.safeError(openError)}; option_resolution=${this.safeError(optionError)}`);
+            sideEffect = 'overlay_opened';
+          }
+          if (params.query) await this.fillResolved(params.pageId, triggerSpec, params.query);
+          option ??= await this.waitResolve(params.pageId, optionSpec);
+        }
+        try {
+          await this.clickResolved(params.pageId, { field: option.meta.label, option: params.value, roles: optionRoles }, true);
+          sideEffect = 'option_attempted';
+        } catch (clickError) {
+          const selectedDespiteError = await this.verifySelected(params.pageId, target, params.value);
+          if (!selectedDespiteError && !await this.keyboardConfirmActiveOption(params.pageId, params.value)) throw clickError;
+          sideEffect = 'option_attempted';
+        }
       }
       await this.delay(30);
       const verified = await this.verifySelected(params.pageId, target, params.value);
+      const generation = await this.advanceGeneration(params.pageId, beforeGeneration);
       const data = {
         ok: verified,
         operation_id: params.operationId ?? randomUUID(),
+        generation,
         field: params.field,
         selected: params.value,
         field_state: verified ? 'selected' : 'unknown',
@@ -899,8 +988,19 @@ export class FormEngine {
       this.recordOperation(params, 'form_select_option', params.field, verified ? 'completed' : 'unknown', result);
       return result;
     } catch (error) {
-      const result = codedError(errorCode(error), this.safeError(error), { field: params.field, value: params.value });
-      this.recordOperation(params, 'form_select_option', params.field, 'failed', result);
+      const overlay = await this.overlayState(params.pageId);
+      const generation = await this.advanceGeneration(params.pageId, beforeGeneration);
+      const partial = sideEffect !== 'none' || overlay === 'open';
+      const result = codedError(partial ? 'action_result_unknown' : errorCode(error), this.safeError(error), {
+        field: params.field,
+        value: params.value,
+        generation,
+        status: partial ? 'partial' : 'failed',
+        side_effects: sideEffect,
+        overlay,
+        recovery: overlay === 'open' ? 'observe the focused overlay; do not reopen the trigger' : 'focus-observe the field and retry once',
+      });
+      this.recordOperation(params, 'form_select_option', params.field, partial ? 'partial' : 'failed', result);
       return result;
     }
   }
@@ -908,22 +1008,46 @@ export class FormEngine {
   async selectPath(params: ActionContext & { field: string; path: string[]; scope?: string }): Promise<AnyRecord> {
     const cached = this.operationResult(params.operationId);
     if (cached) return cached;
-    const conflict = this.checkGeneration(params.pageId, params.expectedGeneration);
+    const conflict = await this.prepareAction(params);
     if (conflict) return conflict;
+    const beforeGeneration = this.currentGeneration(params.pageId);
     const target = this.expandTarget(params.pageId, params.field, params.scope);
     const completed: string[] = [];
+    let overlayOpened = false;
     try {
-      await this.clickResolved(params.pageId, { field: target.label, scope: target.scope }, true);
-      for (const segment of params.path) {
-        const option = await this.waitResolve(params.pageId, { field: target.label, scope: target.scope, option: segment, roles: ['option', 'treeitem', 'menuitem', 'li'] });
-        await this.clickResolved(params.pageId, { field: option.meta.label, scope: option.meta.scope, option: segment }, true);
+      const triggerSpec = { field: target.label, scope: target.scope, roles: fieldControlRoles } satisfies TargetSpec;
+      const firstOption = { field: target.label, option: params.path[0]!, roles: optionRoles } satisfies TargetSpec;
+      if (!await this.resolve(params.pageId, firstOption).then(() => true).catch(() => false)) {
+        try {
+          await this.clickResolved(params.pageId, triggerSpec, true);
+          overlayOpened = true;
+        } catch (openError) {
+          if (!await this.waitResolve(params.pageId, firstOption).then(() => true).catch(() => false)) throw openError;
+          overlayOpened = true;
+        }
+      } else {
+        overlayOpened = true;
+      }
+      for (const [index, segment] of params.path.entries()) {
+        const option = await this.waitResolve(params.pageId, { field: target.label, option: segment, roles: optionRoles });
+        try {
+          await this.clickResolved(params.pageId, { field: option.meta.label, option: segment, roles: optionRoles }, true);
+        } catch (clickError) {
+          const nextSegment = params.path[index + 1];
+          const advancedDespiteError = nextSegment
+            ? await this.waitResolve(params.pageId, { field: target.label, option: nextSegment, roles: optionRoles }).then(() => true).catch(() => false)
+            : await this.verifySelected(params.pageId, target, segment);
+          if (!advancedDespiteError) throw clickError;
+        }
         completed.push(segment);
         await this.delay(35);
       }
       const verified = await this.verifySelected(params.pageId, target, params.path.at(-1) ?? '');
+      const generation = await this.advanceGeneration(params.pageId, beforeGeneration);
       const data = {
         ok: verified,
         operation_id: params.operationId ?? randomUUID(),
+        generation,
         field: params.field,
         requested_path: params.path,
         completed_path: completed,
@@ -934,13 +1058,21 @@ export class FormEngine {
       this.recordOperation(params, 'form_select_path', params.field, verified ? 'completed' : 'partial', result);
       return result;
     } catch (error) {
-      const result = codedError(errorCode(error), this.safeError(error), {
+      const overlay = await this.overlayState(params.pageId);
+      const generation = await this.advanceGeneration(params.pageId, beforeGeneration);
+      const partial = overlayOpened || completed.length > 0 || overlay === 'open';
+      const result = codedError(partial ? 'action_result_unknown' : errorCode(error), this.safeError(error), {
         field: params.field,
         requested_path: params.path,
         completed_path: completed,
         failed_level: completed.length,
+        generation,
+        status: partial ? 'partial' : 'failed',
+        side_effects: overlayOpened ? 'overlay_opened' : 'none',
+        overlay,
+        recovery: overlay === 'open' ? 'continue from the visible candidate layer; do not reopen the trigger' : 'focus-observe the field and retry once',
       });
-      this.recordOperation(params, 'form_select_path', params.field, 'failed', result);
+      this.recordOperation(params, 'form_select_path', params.field, partial ? 'partial' : 'failed', result);
       return result;
     }
   }
@@ -948,23 +1080,27 @@ export class FormEngine {
   async setDate(params: ActionContext & { field: string; value: string; scope?: string; overwrite?: boolean }): Promise<AnyRecord> {
     const cached = this.operationResult(params.operationId);
     if (cached) return cached;
-    const conflict = this.checkGeneration(params.pageId, params.expectedGeneration);
+    const conflict = await this.prepareAction(params);
     if (conflict) return conflict;
+    const beforeGeneration = this.currentGeneration(params.pageId);
     const target = this.expandTarget(params.pageId, params.field, params.scope);
     try {
-      const before = await this.resolve(params.pageId, { field: target.label, scope: target.scope });
+      const spec = { field: target.label, scope: target.scope, roles: fieldControlRoles } satisfies TargetSpec;
+      const before = await this.resolve(params.pageId, spec);
       if (!params.overwrite && before.meta.value && !this.valueMatches(before.meta, params.value)) {
-        return contentResult({ ok: true, operation_id: params.operationId ?? randomUUID(), field: params.field, status: 'preserved', value_state: 'existing' });
+        return contentResult({ ok: true, operation_id: params.operationId ?? randomUUID(), generation: beforeGeneration, field: params.field, status: 'preserved', value_state: 'existing' });
       }
       const constraint = this.constraintError(before.meta, params.value);
-      if (constraint) return codedError('constraint_violation', constraint, { field: params.field });
-      await this.fillResolved(params.pageId, { field: target.label, scope: target.scope }, params.value);
+      if (constraint) return codedError('constraint_violation', constraint, { field: params.field, generation: beforeGeneration });
+      await this.fillResolved(params.pageId, spec, params.value);
       await this.delay(40);
-      const after = await this.resolve(params.pageId, { field: target.label, scope: target.scope });
+      const after = await this.resolve(params.pageId, spec);
       const verified = this.valueMatches(after.meta, params.value);
+      const generation = await this.advanceGeneration(params.pageId, beforeGeneration);
       const data = {
         ok: verified,
         operation_id: params.operationId ?? randomUUID(),
+        generation,
         field: params.field,
         status: verified ? 'filled' : 'partial',
         value_state: verified ? 'matched' : 'mismatched',
@@ -973,7 +1109,8 @@ export class FormEngine {
       this.recordOperation(params, 'form_set_date', params.field, verified ? 'completed' : 'partial', result);
       return result;
     } catch (error) {
-      const result = codedError(errorCode(error), this.safeError(error), { field: params.field, status: 'partial' });
+      const generation = await this.advanceGeneration(params.pageId, beforeGeneration);
+      const result = codedError(errorCode(error), this.safeError(error), { field: params.field, generation, status: 'partial', side_effects: 'value_may_have_changed' });
       this.recordOperation(params, 'form_set_date', params.field, 'failed', result);
       return result;
     }
@@ -982,21 +1119,33 @@ export class FormEngine {
   async activate(params: ActionContext & { target: string; scope?: string; intent: 'focus' | 'open' | 'close' | 'add_record' | 'save_record' | 'next_step' }): Promise<AnyRecord> {
     const cached = this.operationResult(params.operationId);
     if (cached) return cached;
-    const conflict = this.checkGeneration(params.pageId, params.expectedGeneration);
+    const conflict = await this.prepareAction(params);
     if (conflict) return conflict;
     if (manualBoundaryPattern.test(params.target)) return codedError('manual_boundary', '该控件属于最终提交、声明、上传或不可逆边界，必须由用户操作', { target: params.target });
+    const beforeGeneration = this.currentGeneration(params.pageId);
     const target = this.expandTarget(params.pageId, params.target, params.scope);
     try {
       const before = await this.collect(params.pageId);
       if (params.intent === 'focus') await this.focusResolved(params.pageId, { field: target.label, scope: target.scope });
-      else await this.clickResolved(params.pageId, { field: target.label, scope: target.scope, roles: ['button'] }, params.intent === 'open' || params.intent === 'close');
+      else {
+        const roles = params.intent === 'open' || params.intent === 'close' ? fieldControlRoles : ['button'];
+        try {
+          await this.clickResolved(params.pageId, { field: target.label, scope: target.scope, roles }, params.intent === 'open' || params.intent === 'close');
+        } catch (error) {
+          if (params.intent !== 'close' || !before.overlays.length) throw error;
+          const page = this.getPage(params.pageId);
+          await (page.pptrPage.keyboard.press as (key: string) => Promise<void>)('Escape');
+        }
+      }
       await this.delay(60);
       const after = await this.collect(params.pageId);
       const changed = structuralHash(before) !== structuralHash(after) || !sameJson(before.validations, after.validations);
       const accepted = params.intent === 'focus' || changed || params.intent === 'save_record';
+      const generation = await this.advanceGeneration(params.pageId, beforeGeneration);
       const data = {
         ok: accepted,
         operation_id: params.operationId ?? randomUUID(),
+        generation,
         target: params.target,
         intent: params.intent,
         result: accepted ? 'completed' : 'action_result_unknown',
@@ -1008,7 +1157,8 @@ export class FormEngine {
       this.recordOperation(params, 'form_activate', params.target, accepted ? 'completed' : 'unknown', result);
       return result;
     } catch (error) {
-      const result = codedError(errorCode(error), this.safeError(error), { target: params.target, intent: params.intent });
+      const generation = await this.advanceGeneration(params.pageId, beforeGeneration);
+      const result = codedError(errorCode(error), this.safeError(error), { target: params.target, intent: params.intent, generation, status: 'partial', side_effects: 'action_may_have_started' });
       this.recordOperation(params, 'form_activate', params.target, 'failed', result);
       return result;
     }
@@ -1017,21 +1167,46 @@ export class FormEngine {
   private async collect(pageId: number): Promise<RawPageForm> {
     const page = this.getPage(pageId);
     const frames = page.pptrPage.frames() as AnyRecord[];
+    let mainFrameFailed = false;
     const gathered = await Promise.all(frames.map(async (frame, frameIndex) => {
       try {
-        const part = await (frame.evaluate as (fn: typeof collectDomForm) => Promise<Omit<RawPageForm, 'url' | 'title'>>)(collectDomForm);
+        const part = await this.withTimeout(
+          (frame.evaluate as (fn: typeof collectDomForm) => Promise<Omit<RawPageForm, 'url' | 'title'>>)(collectDomForm),
+          OBSERVE_FRAME_TIMEOUT,
+          `observe_timeout: phase=frame_semantic_scan frame=${frameIndex}`,
+        );
         return {
           ...part,
           fields: part.fields.map(field => ({ ...field, frame: frameIndex })),
           overlays: part.overlays.map(overlay => ({ ...overlay, frame: frameIndex })),
         };
       } catch {
+        if (frameIndex === 0) mainFrameFailed = true;
         return { fields: [], overlays: [], sections: [], validations: [] };
       }
     }));
+    if (mainFrameFailed) {
+      await this.delay(40);
+      try {
+        const main = frames[0];
+        if (!main) throw new Error('main frame unavailable');
+        const retry = await this.withTimeout(
+          (main.evaluate as (fn: typeof collectDomForm) => Promise<Omit<RawPageForm, 'url' | 'title'>>)(collectDomForm),
+          OBSERVE_FRAME_TIMEOUT,
+          'observe_timeout: phase=frame_semantic_scan frame=0 retry=1 recovery=reload_page',
+        );
+        gathered[0] = {
+          ...retry,
+          fields: retry.fields.map(field => ({ ...field, frame: 0 })),
+          overlays: retry.overlays.map(overlay => ({ ...overlay, frame: 0 })),
+        };
+      } catch (error) {
+        throw new Error(`observe_timeout: phase=frame_semantic_scan recovery=reload_page (${this.safeError(error)})`);
+      }
+    }
     return {
       url: cleanText((page.pptrPage.url as () => string)()),
-      title: cleanText(await (page.pptrPage.title as () => Promise<string>)()),
+      title: cleanText(await this.withTimeout((page.pptrPage.title as () => Promise<string>)(), OBSERVE_FRAME_TIMEOUT, 'observe_timeout: phase=page_metadata recovery=reload_page')),
       fields: gathered.flatMap(part => part.fields),
       overlays: gathered.flatMap(part => part.overlays),
       sections: [...new Set(gathered.flatMap(part => part.sections))],
@@ -1041,15 +1216,15 @@ export class FormEngine {
 
   private updateState(pageId: number, raw: RawPageForm): PageState {
     const nav = navigationId(raw.url);
+    const currentHash = structuralHash(raw);
     const existing = this.states.get(pageId);
     if (!existing || existing.navigationId !== nav) {
-      const created: PageState = { navigationId: nav, url: raw.url, generation: 1, snapshots: new Map(), refToTarget: new Map() };
+      const created: PageState = { navigationId: nav, url: raw.url, generation: 1, lastStructuralHash: currentHash, snapshots: new Map(), refToTarget: new Map() };
       this.states.set(pageId, created);
       return created;
     }
-    const latest = existing.latestObservationId ? existing.snapshots.get(existing.latestObservationId) : undefined;
-    const currentHash = structuralHash(raw);
-    if (latest && latest.structuralHash !== currentHash) existing.generation += 1;
+    if (existing.lastStructuralHash !== currentHash) existing.generation += 1;
+    existing.lastStructuralHash = currentHash;
     existing.url = raw.url;
     return existing;
   }
@@ -1096,6 +1271,51 @@ export class FormEngine {
     return current !== undefined && current !== expected
       ? codedError('generation_conflict', '页面结构已经变化，请先执行 focus 或 delta 观察', { expected_generation: expected, current_generation: current })
       : null;
+  }
+
+  private async prepareAction(context: ActionContext): Promise<AnyRecord | null> {
+    try {
+      const raw = await this.collect(context.pageId);
+      this.updateState(context.pageId, raw);
+    } catch (error) {
+      return codedError('operation_timeout', this.safeError(error), {
+        phase: 'action_preflight_observation',
+        recovery: 'retry_once_then_reload_page',
+        page_id: context.pageId,
+      });
+    }
+    return this.checkGeneration(context.pageId, context.expectedGeneration);
+  }
+
+  private currentGeneration(pageId: number): number {
+    return this.states.get(pageId)?.generation ?? 1;
+  }
+
+  private async advanceGeneration(pageId: number, beforeGeneration: number): Promise<number> {
+    try {
+      const raw = await this.collect(pageId);
+      const state = this.updateState(pageId, raw);
+      if (state.generation <= beforeGeneration) state.generation = beforeGeneration + 1;
+      return state.generation;
+    } catch {
+      const state = this.states.get(pageId);
+      if (!state) return beforeGeneration + 1;
+      state.generation = Math.max(state.generation, beforeGeneration + 1);
+      return state.generation;
+    }
+  }
+
+  recordLowLevelOperation(pageId: number, action: string, operationId: string | undefined, target: string, resultName: string): void {
+    const entries = this.ledger.get(pageId) ?? [];
+    entries.push({
+      operation_id: operationId ?? randomUUID(),
+      action,
+      target,
+      result: resultName,
+      tracking: 'low_level_unverified',
+      created_at: new Date().toISOString(),
+    });
+    this.ledger.set(pageId, entries.slice(-100));
   }
 
   private async resolve(pageId: number, spec: TargetSpec): Promise<ResolvedCandidate> {
@@ -1224,6 +1444,30 @@ export class FormEngine {
     throw lastError ?? new Error(`option_not_found: ${spec.option ?? spec.field}`);
   }
 
+  private async keyboardConfirmActiveOption(pageId: number, value: string): Promise<boolean> {
+    const page = this.getPage(pageId);
+    const wanted = normalize(value);
+    for (const frame of page.pptrPage.frames() as AnyRecord[]) {
+      try {
+        const active = await (frame.evaluate as (fn: (expected: string) => boolean, expected: string) => Promise<boolean>)((expected: string) => {
+          const norm = (item: unknown): string => String(item ?? '').replace(/[\s*：:]+/g, '').trim().toLowerCase();
+          const focused = document.activeElement;
+          const activeId = focused?.getAttribute('aria-activedescendant');
+          const byId = activeId ? document.getElementById(activeId) : null;
+          const highlighted = byId ?? document.querySelector('[role="option"][aria-selected="true"], .ant-select-item-option-active, .el-select-dropdown__item.hover, .el-cascader-node.in-active-path');
+          return Boolean(highlighted && norm((highlighted as HTMLElement).innerText || highlighted.textContent) === expected);
+        }, wanted);
+        if (!active) continue;
+        await (page.pptrPage.keyboard.press as (key: string) => Promise<void>)('Enter');
+        await this.delay(30);
+        return true;
+      } catch {
+        // Try the next live frame.
+      }
+    }
+    return false;
+  }
+
   private valueMatches(candidate: CandidateMeta, wanted: string | boolean | number): boolean {
     if (candidate.checked !== null) return candidate.checked === Boolean(wanted);
     const actual = normalize(candidate.value);
@@ -1259,9 +1503,9 @@ export class FormEngine {
 
   private async verifySelected(pageId: number, target: { label: string; scope?: string }, value: string): Promise<boolean> {
     try {
-      const field = await this.resolve(pageId, { field: target.label, scope: target.scope });
+      const field = await this.resolve(pageId, { field: target.label, scope: target.scope, roles: fieldControlRoles });
       if (normalize(field.meta.value).includes(normalize(value))) return true;
-      const selected = await this.resolve(pageId, { field: value, scope: target.scope, roles: ['option', 'radio', 'checkbox', 'treeitem'] });
+      const selected = await this.resolve(pageId, { field: value, roles: ['option', 'radio', 'checkbox', 'treeitem'] });
       return selected.meta.checked === true || normalize(selected.meta.value).includes(normalize(value));
     } catch {
       try {
@@ -1318,6 +1562,7 @@ export class FormEngine {
       action,
       target,
       result: resultName,
+      tracking: 'semantic',
       created_at: new Date().toISOString(),
     });
     this.ledger.set(context.pageId, entries.slice(-100));
@@ -1330,5 +1575,17 @@ export class FormEngine {
 
   private delay(milliseconds: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, milliseconds));
+  }
+
+  private async withTimeout<T>(promise: Promise<T>, milliseconds: number, message: string): Promise<T> {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      return await Promise.race([
+        promise,
+        new Promise<T>((_resolve, reject) => { timer = setTimeout(() => reject(new Error(message)), milliseconds); }),
+      ]);
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
   }
 }
