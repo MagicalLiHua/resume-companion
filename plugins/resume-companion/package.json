@@ -11,7 +11,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "npm run typecheck && npm run test:unit",
     "test:unit": "vitest run --exclude tests/stage0-direct-devtools.test.ts --exclude tests/runtime-recovery.browser.test.ts --exclude tests/recruitment-observation.browser.test.ts",
-    "test:devtools": "vitest run tests/stage0-direct-devtools.test.ts tests/runtime-recovery.browser.test.ts tests/recruitment-observation.browser.test.ts",
+    "test:devtools": "vitest run --no-file-parallelism --maxWorkers=1 tests/stage0-direct-devtools.test.ts tests/runtime-recovery.browser.test.ts tests/recruitment-observation.browser.test.ts",
     "test:core": "node scripts/core-self-test.mjs",
     "test:clients": "node scripts/client-integrations-test.mjs",
     "config:agent": "node scripts/print-agent-config.mjs",
