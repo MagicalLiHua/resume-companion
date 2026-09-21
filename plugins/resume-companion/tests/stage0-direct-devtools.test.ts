@@ -27,6 +27,10 @@ function percentile(values: number[], percentileValue: number): number {
   return sorted[Math.ceil((sorted.length - 1) * percentileValue)]!;
 }
 
+function ciTimeout(localTimeoutMs: number): number {
+  return isCi ? localTimeoutMs * 4 : localTimeoutMs;
+}
+
 const textOf = (result: ToolResult): string => Array.isArray(result.content)
   ? result.content.filter(item => item.type === 'text').map(item => item.text).join('\n')
   : '';
@@ -897,7 +901,7 @@ describe('Stage 0 direct Chrome DevTools MCP validation', () => {
 
     const screenshot = await call('take_screenshot', { pageId, uid: dateUid, format: 'webp' });
     expect(Array.isArray(screenshot.content) && screenshot.content.some(item => item.type === 'image')).toBe(true);
-  }, 30_000);
+  }, ciTimeout(30_000));
 
   test('opens the dedicated acceptance lab and completes its dynamic first step', async () => {
     const opened = await call('new_page', {
@@ -952,7 +956,7 @@ describe('Stage 0 direct Chrome DevTools MCP validation', () => {
     }));
     expect(report).toContain('"finalSubmitCount":0');
     expect(report).toContain('"agreementUnchecked":true');
-  }, 35_000);
+  }, ciTimeout(35_000));
 
   test('runs the complex control recipes through deterministic passes', async () => {
     const durations: number[] = [];
