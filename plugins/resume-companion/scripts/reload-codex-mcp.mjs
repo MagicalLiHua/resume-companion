@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { spawn } from 'node:child_process';
+import { spawn, execFileSync } from 'node:child_process';
 import { createHash, randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { createConnection } from 'node:net';
@@ -24,14 +24,18 @@ function profileDirectory() {
   return join(process.env.XDG_STATE_HOME || join(homedir(), '.local', 'state'), 'resume-companion', 'chrome-profile');
 }
 
-function supervisorEndpoint() {
+function supervisorEndpoints() {
   const id = createHash('sha256').update(profileDirectory()).digest('hex').slice(0, 12);
-  return process.platform === 'win32' ? `\\\\.\\pipe\\resume-companion-browser-${id}` : join(tmpdir(), `rc-browser-${id}.sock`);
+  if(process.platform === 'win32')return [String.raw`\\.\pipe\resume-companion-browser-${id}`];
+  const folders=[tmpdir(),'/tmp'];
+  if(process.platform==='darwin')try {folders.push(execFileSync('/usr/bin/getconf',['DARWIN_USER_TEMP_DIR'],{encoding:'utf8',timeout:1500}).trim());}catch{}
+  return [...new Set([`/tmp/resume-companion-${process.getuid()}/${id}.sock`,...folders.filter(Boolean).map(folder=>join(folder,`rc-browser-${id}.sock`))])]
+    .filter(path=>Buffer.byteLength(path)<=(process.platform==='darwin'?103:107));
 }
 
-async function stopBrowserSupervisor() {
+async function stopBrowserSupervisorAt(endpoint) {
   return await new Promise(resolveStop => {
-    const socket = createConnection(supervisorEndpoint());
+    const socket = createConnection(endpoint);
     let output = '';
     const finish = value => {
       clearTimeout(timer);
@@ -61,6 +65,14 @@ async function stopBrowserSupervisor() {
       }
     });
   });
+}
+
+async function stopBrowserSupervisor() {
+  for(const endpoint of supervisorEndpoints()) {
+    const result=await stopBrowserSupervisorAt(endpoint);
+    if(result!=='absent')return result;
+  }
+  return 'absent';
 }
 
 async function reloadCodexMcp() {
@@ -108,14 +120,16 @@ async function reloadCodexMcp() {
       jsonrpc: '2.0',
       id: 1,
       method: 'initialize',
-      params: { clientInfo: { name: 'resume_companion_updater', title: 'Resume Companion updater', version: pluginVersion }, capabilities: {} },
+      params: { clientInfo: { name: 'resume_companion_updater', title: 'ApplyMCP updater', version: pluginVersion }, capabilities: {} },
     });
   });
 }
 
 try {
-  const supervisor = await stopBrowserSupervisor();
+  const restartAllowed=process.argv.includes('--restart-browser');
+  const supervisor = restartAllowed ? await stopBrowserSupervisor() : 'preserved';
   const reloaded = await reloadCodexMcp();
+  if(supervisor==='preserved')console.log('Preserved the dedicated browser and unsaved pages. A version change remains pending until you authorize --restart-browser.');
   if (supervisor === 'stopped') console.log('Stopped the previous Resume Browser supervisor and revoked its browser sessions.');
   else if (supervisor === 'unsupported') console.log('The previous Resume Browser supervisor predates graceful shutdown; start a new task after this one-time migration.');
   if (reloaded) console.log('Codex MCP configuration reloaded; loaded tasks were queued for refresh.');

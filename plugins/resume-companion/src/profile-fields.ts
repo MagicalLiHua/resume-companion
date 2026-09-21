@@ -1,0 +1,20 @@
+import {z} from 'zod';
+
+const text=z.string().max(6000).nullable();
+const date=z.string().regex(/^\d{4}-(0[1-9]|1[0-2])(?:-(0[1-9]|[12]\d|3[01]))?$/).refine(value=>{const [y,m,d]=value.split('-').map(Number);return !!y&&(!d||d<=new Date(Date.UTC(y,m!,0)).getUTCDate());},'无效日期').nullable();
+const month=z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/).nullable();
+const optional=(schema:typeof text)=>schema.default(null);
+export const presenceKeys=['education','work','internships','projects','languages','awards','certificates','competitions','campus'] as const;
+export const presenceShape=Object.fromEntries(presenceKeys.map(key=>[key,z.enum(['unknown','none','provided']).default('unknown')])) as Record<typeof presenceKeys[number],z.ZodDefault<z.ZodEnum<['unknown','none','provided']>>>;
+export const presenceSchema=z.object(presenceShape).strict();
+export const basicExtras={gender:optional(text),birth_date:date.default(null),employment_status:optional(text),highest_education:optional(text),recent_company:optional(text),self_description:optional(text),portfolio_url:optional(text)};
+export const educationExtras={college:optional(text),description:optional(text),gpa:optional(text)};
+export const experienceExtras={description:optional(text)};
+export const projectExtras={description:optional(text),responsibilities:optional(text),url:optional(text)};
+export const certificateExtras={description:optional(text)};
+const salary=z.object({amount:z.number().nonnegative(),currency:z.string().max(16),period:z.enum(['month','year']),tax:z.enum(['before','after','unknown']),benefits:z.enum(['included','excluded','unknown'])}).strict().nullable();
+export const intentSchema=z.object({cities:z.array(z.string().max(160)).max(20).default([]),current_salary:salary.default(null),expected_salary:salary.default(null),available_date:date.default(null),industry:optional(text),occupation:optional(text)}).strict();
+export const languageShape={name:text,overall:optional(text),speaking:optional(text),writing:optional(text)};
+export const awardShape={name:text,obtained_month:month,description:optional(text)};
+export const campusShape={organization:text,role:text,start_month:month,end_month:month,is_current:z.boolean().nullable(),description:optional(text)};
+export const competitionShape={name:text,description:optional(text),obtained_month:month.default(null)};

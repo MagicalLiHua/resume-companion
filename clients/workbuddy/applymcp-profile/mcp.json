@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "resume_companion": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["./server.bundle.mjs"],
+      "cwd": ".",
+      "runtime": {
+        "type": "node",
+        "version": "24"
+      }
+    }
+  }
+}

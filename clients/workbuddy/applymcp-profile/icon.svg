@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="ApplyMCP">
+  <rect width="64" height="64" rx="12" fill="#111827"/>
+  <path d="M17 47 28 17h8l11 30h-8l-2-7H27l-2 7h-8Zm12-14h6l-3-10-3 10Z" fill="#f9fafb"/>
+  <circle cx="48" cy="17" r="6" fill="#22c55e"/>
+</svg>

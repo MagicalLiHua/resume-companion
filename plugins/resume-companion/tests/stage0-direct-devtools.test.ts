@@ -1,5 +1,5 @@
 import { spawn, type ChildProcess } from 'node:child_process';
-import { access, mkdtemp, readlink, rm } from 'node:fs/promises';
+import { access, copyFile, mkdtemp, readlink, rm } from 'node:fs/promises';
 import { createConnection } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -115,6 +115,7 @@ async function connectChromeMcp(): Promise<Client> {
       RESUME_COMPANION_CHROME_DATA_DIR: profileDir,
       RESUME_COMPANION_CHROME_HEADLESS: '1',
       RESUME_COMPANION_SUPERVISOR_EPHEMERAL: '1',
+      RESUME_COMPANION_TEST_DIAGNOSTICS: '1',
     },
     stderr: 'pipe',
   });
@@ -166,6 +167,35 @@ afterAll(async () => {
 });
 
 describe('Stage 0 direct Chrome DevTools MCP validation', () => {
+  test('uses background defaults and validates handoff reasons through MCP',async()=>{
+    const catalog=(await client!.listTools()).tools;
+    expect((catalog.find(t=>t.name==='new_page')!.inputSchema.properties!.background as any).default).toBe(true);
+    expect((catalog.find(t=>t.name==='select_page')!.inputSchema.properties!.bringToFront as any).default).toBe(false);
+    const opened=await call('new_page',{url:'http://127.0.0.1:4174/agent-lab.html?quiet-tab'}),other=selectedPageId(textOf(opened));
+    try{
+      await call('select_page',{pageId:other});
+      const invalid=await client!.callTool({name:'select_page',arguments:{pageId:other,bringToFront:true}});
+      expect(invalid.isError).toBe(true);expect(textOf(invalid)).toContain('attention_reason_required');
+      const show={pageId:other,bringToFront:true,attention_reason:'manual_action',attention_event_id:'pause-photo'};
+      await call('select_page',show);await call('select_page',show);
+      // Upstream emulates focused pages for all tabs, so visibilityState cannot
+      // prove native focus. Dispatch de-duplication has a separate unit test.
+    }finally{await call('close_page',{pageId:other});await call('select_page',{pageId});}
+  });
+  test('uploads only explicitly authorized files to an actual file input', async () => {
+    const opened=await call('new_page',{url:'about:blank'}),id=selectedPageId(textOf(opened));
+    await call('evaluate_script',{pageId:id,function:`()=>{document.body.innerHTML='<label>测试照片<input type="file" id="photo"></label><button id="proxy" onclick="document.body.dataset.clicked=\\"yes\\"">上传代理</button>';return true;}`,waitForStableDom:false});
+    const snapshot=textOf(await call('take_snapshot',{pageId:id}));
+    const fixture=join(profileRoot,'test-blank-photo.jpg');await copyFile(resolve(projectRoot,'tests/fixtures/test-blank-photo.jpg'),fixture);
+    const args={pageId:id,uid:uidFor(snapshot,'测试照片'),filePaths:[fixture]};
+    const denied=await client!.callTool({name:'upload_file',arguments:args});
+    expect(denied.isError).toBe(true);expect(textOf(denied)).toContain('manual_boundary');
+    await call('upload_file',{...args,user_authorized:true});
+    expect(textOf(await call('evaluate_script',{pageId:id,function:`()=>document.querySelector('#photo').files[0].name`,waitForStableDom:false}))).toContain('test-blank-photo.jpg');
+    const proxy=await client!.callTool({name:'upload_file',arguments:{...args,uid:uidFor(snapshot,'上传代理'),user_authorized:true}});
+    expect(proxy.isError).toBe(true);expect(textOf(proxy)).toContain('upload_target_not_file_input');
+    await call('close_page',{pageId:id});
+  },20_000);
   test('exposes the expected stable tools without experimental vision', async () => {
     if (!client) throw new Error('client unavailable');
     const names = (await client.listTools()).tools.map(tool => tool.name);
@@ -174,9 +204,16 @@ describe('Stage 0 direct Chrome DevTools MCP validation', () => {
     expect(names).toContain('list_network_requests');
     expect(names).toContain('evaluate_script');
     expect(names).toEqual(expect.arrayContaining([
-      'browser_takeover', 'form_observe', 'form_fill_fields', 'form_select_option', 'form_select_path', 'form_set_date', 'form_activate',
+      'browser_takeover', 'form_support', 'form_observe', 'form_fill_fields', 'form_select_option', 'form_select_path', 'form_set_date', 'form_activate',
     ]));
     expect(names).not.toContain('click_at');
+    const catalog=JSON.parse(textOf(await call('form_support')));
+    expect(catalog.templates).toHaveLength(8);
+    expect(catalog.platforms).toHaveLength(6);
+    expect(catalog.templates.find((t:any)=>t.id==='dayee/faw').status).toBe('ordinary_fill_verified');
+    const inspection=JSON.parse(textOf(await call('form_support',{page_ids:[pageId,pageId]})));
+    expect(inspection.pages).toHaveLength(1);
+    expect(inspection.pages[0]).toMatchObject({page_id:pageId,support:{status:'fixture',autofill_allowed:true}});
   });
 
   test.skipIf(process.platform === 'win32')('supports read-only live debugging through the owning browser process', async () => {
@@ -300,10 +337,169 @@ describe('Stage 0 direct Chrome DevTools MCP validation', () => {
       page_id: pageId,
       mode: 'focus',
       target: '籍贯',
-      include_test_ledger: true,
+      include_test_ledger: true, ledger_limit: 25,
     }))) as { test_ledger: Array<{ action: string; tracking?: string }> };
     expect(ledger.test_ledger.some(entry => entry.action === 'hover' && entry.tracking === 'low_level_unverified')).toBe(true);
   }, 35_000);
+
+  test('handles nested Ant Select, StaticText options, variable-depth cascaders and exact scoped references', async () => {
+    pageId = selectedPageId(textOf(await call('new_page', { url: `http://127.0.0.1:4174/custom-select-regressions.html?run=${Date.now()}` })));
+    const observe = async (args: Record<string, unknown> = {}) => JSON.parse(textOf(await call('form_observe', { page_id: pageId, mode: 'overview', max_bytes: 20_000, ...args })));
+    const initial = await observe();
+    expect(initial.sections).toEqual(['基本信息', '教育信息', '其他信息']);
+    expect(initial.overlays).toHaveLength(0);
+    expect(initial.fields.find((field: any) => field.label === '预填性别').state).toBe('filled');
+    const gender = initial.fields.find((field: any) => field.label === '性别');
+    for (const target of ['性别', gender.ref]) {
+      const focus = await observe({ mode: 'focus', target, scope: 'page' });
+      expect(focus.fields.map((field: any) => field.label)).toContain('性别');
+    }
+    const missing = await client!.callTool({ name: 'form_observe', arguments: { page_id: pageId, mode: 'focus', target: '不存在', scope: 'page' } });
+    expect(textOf(missing)).toContain('target_unresolved');
+    await call('form_activate', { page_id: pageId, target: gender.ref, intent: 'open' });
+    const popup = await observe({ mode: 'focus', target: gender.ref });
+    expect(popup.overlays[0].options).toEqual(['男', '女']);
+    const absentOption = await client!.callTool({ name: 'form_select_option', arguments: { page_id: pageId, field: gender.ref, value: '不存在的选项' } });
+    expect(absentOption.isError).toBe(true);
+    expect((await observe({ mode: 'focus', target: gender.ref })).overlays[0].options).toEqual(['男', '女']);
+    await call('form_select_option', { page_id: pageId, field: gender.ref, value: '男' });
+    await call('form_select_option', { page_id: pageId, field: '民族', scope: '基本信息', value: '汉族' });
+    for (const [field, path] of [['籍贯', ['上海市', '浦东新区']], ['现居住地', ['北京市', '市辖区', '海淀区']]] as const) {
+      const result = JSON.parse(textOf(await call('form_select_path', { page_id: pageId, field, scope: '基本信息', path })));
+      expect(result.ok).toBe(true);
+      expect(result.completed_path).toEqual(path);
+    }
+    const filled = await observe();
+    for (const label of ['性别', '民族', '籍贯', '现居住地']) expect(filled.fields.find((field: any) => field.label === label).state).toBe('filled');
+    const saves = filled.fields.filter((field: any) => field.label.replace(/\s/g, '') === '保存');
+    expect(saves.map((field: any) => field.scope)).toEqual(['基本信息', '其他信息']);
+    const before = filled.generation;
+    const ambiguous = JSON.parse(textOf(await client!.callTool({ name: 'form_activate', arguments: { page_id: pageId, target: '保存', scope: 'page', intent: 'save_record' } })));
+    expect(ambiguous.error).toMatchObject({ code: 'target_ambiguous', generation: before, status: 'failed', side_effects: 'none' });
+    const wrongScope = await client!.callTool({ name: 'form_activate', arguments: { page_id: pageId, target: '保存', scope: '不存在', intent: 'save_record' } });
+    expect(textOf(wrongScope)).toContain('target_unresolved');
+    await call('form_activate', { page_id: pageId, target: saves[0].ref, scope: 'page', intent: 'save_record' });
+    await call('form_activate', { page_id: pageId, target: '保存', scope: '其他信息', intent: 'save_record' });
+    const duplicates = filled.fields.filter((field: any) => field.label === '重复动作');
+    await call('form_activate', { page_id: pageId, target: duplicates[1].ref, scope: 'page', intent: 'save_record' });
+    const events = textOf(await call('evaluate_script', { pageId, function: '() => window.events', waitForStableDom: false }));
+    expect(events).toContain('"basic":1'); expect(events).toContain('"other":1');
+    expect(events).toContain('"duplicateA":0'); expect(events).toContain('"duplicateB":1');
+    expect(events).toContain('"gender":1');
+    const tools = await client!.listTools();
+    expect(JSON.stringify(tools.tools.find(tool => tool.name === 'evaluate_script')?.inputSchema)).toContain('Element UIDs');
+  }, 30_000);
+
+  test('recognizes CSS-module selects, sibling titles, committed displays and scoped menus', async () => {
+    pageId = selectedPageId(textOf(await call('new_page', { url: `http://127.0.0.1:4174/sd-controls-regressions.html?run=${Date.now()}` })));
+    const observe = async (args: Record<string, unknown> = {}) => JSON.parse(textOf(await call('form_observe', { page_id: pageId, mode: 'overview', max_bytes: 20_000, ...args })));
+    const action = async (field: string, value: string, scope = '个人信息') => JSON.parse(textOf(await client!.callTool({ name: 'form_select_option', arguments: { page_id: pageId, field, value, scope } })));
+    const initial = await observe();
+    expect(initial.sections).toEqual(['个人信息', '其他信息', '教育背景', '自我描述']);
+    const gender = initial.fields.find((f: any) => f.label === '性别' && f.scope === '个人信息');
+    expect(gender.state).toBe('filled');
+    expect(gender.kind).toBe('combobox');
+    expect(initial.fields.filter((f: any) => f.label === '请选择')).toHaveLength(0);
+    expect(initial.fields.filter((f: any) => f.label === '手机号码')).toHaveLength(1);
+    expect(initial.fields.find((f: any) => f.label === '手机号码 / 区号').kind).toBe('combobox');
+    expect(initial.fields.find((f: any) => f.label === '简介').scope).toBe('自我描述');
+    expect(initial.fields.filter((f: any) => f.scope === '教育背景' && f.kind === 'combobox').map((f: any) => f.label)).toEqual([
+      '就读时间 / 开始年', '就读时间 / 开始月', '就读时间 / 结束年', '就读时间 / 结束月',
+    ]);
+    expect((await action('性别', '女')).status).toBe('preserved');
+    expect((await action(gender.ref, '男', 'page')).status).toBe('unchanged');
+    expect((await action('性别', '女', 'page')).error.code).toBe('target_ambiguous');
+    await call('form_activate', { page_id: pageId, target: '民族', scope: '个人信息', intent: 'open' });
+    const popup = await observe({ mode: 'focus', target: '民族', scope: '个人信息' });
+    expect(popup.overlays[0]).toMatchObject({ label: '民族', options: ['汉族', '蒙古族', '不可选'] });
+    // A search string is not a committed selection, even without ARIA roles.
+    await call('evaluate_script', { pageId, waitForStableDom: false, function: `() => { const input = Array.from(document.querySelectorAll('.field')).find(el => el.firstElementChild.textContent.startsWith('民族')).querySelector('input'); input.value = '汉'; input.dispatchEvent(new Event('input', {bubbles:true})); }` });
+    expect((await observe({ mode: 'focus', target: '民族' })).fields[0].state).toBe('blank');
+    expect((await action('民族', '汉族')).status).toBe('verified_ui');
+    expect((await observe({ mode: 'focus', target: '民族' })).fields[0].state).toBe('filled');
+    const disabled = JSON.parse(textOf(await client!.callTool({ name: 'form_select_option', arguments: { page_id: pageId, field: '民族', value: '不可选', scope: '个人信息', overwrite: true } })));
+    expect(disabled.error.code).toBe('constraint_violation');
+    expect((await action('政治面貌', '共青团员')).status).toBe('verified_ui');
+    expect((await action('性别', '女', '其他信息')).status).toBe('verified_ui');
+    expect((await action('就读时间 / 开始年', '2024', '教育背景')).status).toBe('verified_ui');
+    const duplicate = await action('重名选项', '甲');
+    expect(duplicate.error.code).toBe('option_ambiguous');
+    const facts = textOf(await call('evaluate_script', { pageId, function: '() => window.sdFixture()', waitForStableDom: false }));
+    expect(facts).toContain('"gender":"男"');
+    expect(facts).toContain('"otherGender":"女"');
+    expect(facts).toContain('"ethnicity":"汉族"');
+    expect(facts).toContain('"duplicate":0');
+    expect(facts).toContain('"ethnicity":1');
+  }, 30_000);
+
+  test('sets split year/month groups in one call with record isolation and current-state protection', async () => {
+    pageId = selectedPageId(textOf(await call('new_page', { url: `http://127.0.0.1:4174/sd-controls-regressions.html?extended=1&run=${Date.now()}` })));
+    const date = async (args: Record<string, unknown>) => JSON.parse(textOf(await client!.callTool({ name: 'form_set_date', arguments: { page_id: pageId, ...args } })));
+    const facts = async () => textOf(await call('evaluate_script', { pageId, function: '() => window.sdFixture()', waitForStableDom: false }));
+    const observed = JSON.parse(textOf(await call('form_observe', { page_id: pageId, mode: 'overview', max_bytes: 20_000 })));
+    const first = observed.fields.find((f: any) => f.label === '任职时间' && f.scope === '工作经历一');
+    expect(first.kind).toBe('date_group');
+    const batch = JSON.parse(textOf(await client!.callTool({ name: 'form_fill_fields', arguments: { page_id: pageId, fields: [
+      { field: '任职时间 / 开始月', scope: '工作经历一', value: '6' },
+      { field: '简介', scope: '自我描述', value: '先完成独立的简单字段' },
+    ] } })));
+    expect(batch.results.map((result: any) => result.status)).toEqual(['constraint_violation', 'filled']);
+    expect((await date({ field: '任职时间', range: { start: '2024-06', end: '2026-07' } })).error.code).toBe('target_ambiguous');
+    // Precision and reverse ranges are rejected without selecting any part.
+    expect((await date({ field: first.ref, range: { start: '2024-06-15', end: '2026-07-15' } })).error.code).toBe('date_precision_mismatch');
+    expect((await date({ field: first.ref, range: { start: '2026-07', end: '2024-06' } })).ok).toBe(false);
+    expect(await facts()).toContain('"工作经历一.startYear":0');
+    const args = { field: first.ref, range: { start: '2024-06', end: '2026-07' }, operation_id: 'split-month-range-1' };
+    expect((await date(args)).status).toBe('verified_ui');
+    const after = await facts();
+    expect(after).toContain('"工作经历一.startYear":"2024年"');
+    expect(after).toContain('"工作经历一.endMonth":"7月"');
+    expect(after).toContain('"工作经历二.startYear":""');
+    expect((await date(args)).status).toBe('verified_ui');
+    expect(await facts()).toBe(after);
+    expect((await date({ ...args, operation_id: 'split-month-range-2' })).status).toBe('unchanged');
+    expect(await facts()).toBe(after);
+    expect((await date({ field: first.ref, range: { start: '2024-06', current: true } })).status).toBe('preserved');
+    expect((await date({ field: first.ref, range: { start: '2024-06', current: true }, overwrite: true })).status).toBe('verified_ui');
+    expect(await facts()).toContain('"工作经历一.current":true');
+    expect((await date({ field: first.ref, range: { start: '2023-07', end: '2025-06' }, overwrite: true })).status).toBe('verified_ui');
+    expect(await facts()).toContain('"工作经历一.current":false');
+    expect((await date({ field: '获得月份', scope: '个人信息', value: '2025-07' })).status).toBe('verified_ui');
+    expect((await date({ field: '歧义月份', scope: '个人信息', value: '2024-06' })).error.code).toBe('option_ambiguous');
+    expect(await facts()).toContain('"ambiguousMonth":0');
+    const rollback = await date({ field: '回滚月份', scope: '个人信息', value: '2024-06' });
+    expect(rollback.ok).toBe(false);
+    expect(rollback.error.verification.matched).toBe(false);
+    const final = JSON.parse(textOf(await call('form_observe', { page_id: pageId, mode: 'focus', target: '任职时间', scope: '工作经历一', include_values: 'needed' })));
+    expect(final.fields.find((f: any) => f.kind === 'date_group').value).toBe('2023-07 / 2025-06');
+  }, 45_000);
+
+  test('selects scoped SD cascader columns and rejects incomplete or incorrect committed paths', async () => {
+    pageId = selectedPageId(textOf(await call('new_page', { url: `http://127.0.0.1:4174/sd-controls-regressions.html?extended=1&run=${Date.now()}` })));
+    const path = ['甲省', '甲城市', '同名区'];
+    const choose = async (field: string, parts = path, overwrite = false) => JSON.parse(textOf(await client!.callTool({ name: 'form_select_path', arguments: { page_id: pageId, field, scope: '个人信息', path: parts, overwrite } })));
+    const facts = async () => textOf(await call('evaluate_script', { pageId, function: '() => window.sdFixture()', waitForStableDom: false }));
+    // Another visible popup must not contribute candidates to this field.
+    await call('form_activate', { page_id: pageId, target: '异常选择', scope: '个人信息', intent: 'open' });
+    expect((await choose('完整地址')).status).toBe('verified_ui');
+    const after = await facts();
+    expect(after).toContain('"address":["甲省","甲城市","同名区"]');
+    expect(after).toContain('"address":3');
+    expect((await choose('完整地址')).status).toBe('unchanged');
+    expect(await facts()).toBe(after);
+    expect((await choose('完整地址', ['乙省','乙城市','同名区'])).status).toBe('preserved');
+    expect((await choose('完整地址', ['乙省','乙城市','同名区'], true)).status).toBe('verified_ui');
+    const leaf = await choose('叶子回显地址');
+    expect(leaf.error.verification.matched).toBe(false);
+    expect(leaf.error.status).toBe('partial');
+    const wrong = await choose('错误父级地址');
+    expect(wrong.error.verification.matched).toBe(false);
+    const missing = await choose('完整地址', ['甲省','甲城市','不存在的区'], true);
+    expect(missing.error.code).toBe('option_not_found');
+    expect(missing.error.completed_path).toEqual(['甲省','甲城市']);
+    const disabled = await choose('完整地址', ['甲省','甲城市','禁用区'], true);
+    expect(disabled.error.code).toBe('constraint_violation');
+  }, 45_000);
 
   test('fills a semantic batch and masks existing phone and email values in observations', async () => {
     const opened = await call('new_page', { url: `http://127.0.0.1:4174/index.html?semantic-fill=${Date.now()}` });
@@ -377,8 +573,9 @@ describe('Stage 0 direct Chrome DevTools MCP validation', () => {
     expect(textOf(await call('form_select_option', {
       page_id: pageId,
       operation_id: locationOperation,
-      field: '不会再次执行',
-      value: '深圳',
+      field: '请选择工作地点',
+      value: '上海',
+      test_mode: true,
     }))).toBe(textOf(location));
 
     const staleDate = await client!.callTool({ name: 'form_set_date', arguments: {
@@ -412,7 +609,7 @@ describe('Stage 0 direct Chrome DevTools MCP validation', () => {
       since_observation_id: initial.observation_id,
       include_values: 'needed',
       target: '经历开始月份',
-      include_test_ledger: true,
+      include_test_ledger: true, ledger_limit: 25,
     }))) as {
       changes: { fields: Array<{ label: string }> };
       locality: { changed_outside_scope: number; outside_change_labels: string[]; widen_recommended: boolean };
@@ -491,7 +688,7 @@ describe('Stage 0 direct Chrome DevTools MCP validation', () => {
     expect(elapsedMs).toBeLessThan(15_000);
   }, 25_000);
 
-  test('preserves a successful prefix when a later batch element fails so recovery can re-observe', async () => {
+  test('preflights all raw batch UIDs before writing a prefix', async () => {
     const snapshot = textOf(await call('take_snapshot', { pageId }));
     const result = await client!.callTool({
       name: 'fill_form',
@@ -506,7 +703,8 @@ describe('Stage 0 direct Chrome DevTools MCP validation', () => {
     });
     expect(result.isError).toBe(true);
     const after = textOf(await call('take_snapshot', { pageId }));
-    expect(after).toContain('部分成功市');
+    expect(after).not.toContain('部分成功市');
+    expect(after).toContain('示例市');
   }, 15_000);
 
   test('wait_for returns a reusable snapshot', async () => {
@@ -515,9 +713,27 @@ describe('Stage 0 direct Chrome DevTools MCP validation', () => {
     expect(waited).toContain('uid=');
   });
 
+  test('dismissed beforeunload reports cancelled navigation and preserves the draft', async () => {
+    const opened = await call('new_page', {url:'http://127.0.0.1:4174/long-form.html?cancelled-reload'});
+    const targetPage = selectedPageId(textOf(opened));
+    try {
+      await call('evaluate_script',{pageId:targetPage,waitForStableDom:false,function:'() => {window.testDraft = "unsaved"; window.onbeforeunload = e => {e.preventDefault(); e.returnValue="";}; return true;}'});
+      await call('press_key',{pageId:targetPage,key:'Tab'});
+      const result = await client!.callTool({name:'navigate_page',arguments:{pageId:targetPage,type:'reload',handleBeforeUnload:'dismiss',timeout:1000}});
+      expect(result.isError).toBe(true);
+      expect(result.structuredContent).toMatchObject({ok:false,error:{code:'navigation_cancelled'}});
+      const draft = await call('evaluate_script',{pageId:targetPage,waitForStableDom:false,function:'() => window.testDraft'});
+      expect(textOf(draft)).toContain('unsaved');
+    } finally {
+      await call('evaluate_script',{pageId:targetPage,waitForStableDom:false,function:'() => {window.onbeforeunload=null;return true;}'});
+      await call('close_page',{pageId:targetPage});
+    }
+  }, 15_000);
+
   test('completes a dynamic cascader record without any site-specific browser adapter', async () => {
     let snapshot = textOf(await call('take_snapshot', { pageId }));
-    snapshot = textOf(await call('click', { pageId, uid: uidFor(snapshot, '下一步'), includeSnapshot: true }));
+    await call('form_activate', {page_id:pageId,target:'下一步',intent:'next_step'});
+    snapshot = textOf(await call('take_snapshot', {pageId}));
     expect(snapshot).toContain('教育背景');
     snapshot = textOf(await call('click', { pageId, uid: uidFor(snapshot, '添加教育信息'), includeSnapshot: true }));
     snapshot = textOf(await call('click', { pageId, uid: uidFor(snapshot, '学校名称'), includeSnapshot: true }));

@@ -1,4 +1,5 @@
-import { tmpdir } from 'node:os';
+import { homedir } from 'node:os';
+import { lstat, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { profileHash } from '../chrome-profile.js';
 
@@ -20,11 +21,30 @@ export function supervisorSocketPath(profileDir: string): string {
   const id = profileHash(profileDir);
   return process.platform === 'win32'
     ? `\\\\.\\pipe\\resume-companion-browser-${id}`
-    : join(tmpdir(), `rc-browser-${id}.sock`);
+    : join(supervisorRuntimeDir(), `${id}.sock`);
 }
 
 export function supervisorStartupLockPath(profileDir: string): string {
-  return join(tmpdir(), `rc-browser-${profileHash(profileDir)}.start.lock`);
+  return join(supervisorRuntimeDir(), `${profileHash(profileDir)}.start.lock`);
+}
+
+// Clients in different tasks can receive different TMPDIR values. Discovery and
+// startup serialization must nevertheless address the same per-user service.
+// Keep Unix sockets short even when the user's home/profile path is long.
+export function supervisorRuntimeDir(): string {
+  return process.platform === 'win32'
+    ? join(process.env.LOCALAPPDATA || join(homedir(), 'AppData', 'Local'), 'Resume Companion', 'runtime')
+    : `/tmp/resume-companion-${process.getuid!()}`;
+}
+
+export async function ensureSupervisorRuntimeDir(): Promise<void> {
+  const directory = supervisorRuntimeDir();
+  await mkdir(directory, { recursive: true, mode: 0o700 });
+  const metadata = await lstat(directory);
+  if (!metadata.isDirectory() || metadata.isSymbolicLink()
+    || process.platform !== 'win32' && (metadata.uid !== process.getuid!() || (metadata.mode & 0o077) !== 0)) {
+    throw new Error('browser_supervisor_runtime_unsafe: runtime directory must be private and owned by this user');
+  }
 }
 
 export function compareVersions(left: string, right: string): number {

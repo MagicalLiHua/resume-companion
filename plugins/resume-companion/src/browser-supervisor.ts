@@ -5,7 +5,7 @@ import { createConnection, createServer, type Server, type Socket } from 'node:n
 import { resolveChromeProfileDir } from './chrome-profile.js';
 import { ResumeBrowserHost, ResumeBrowserServer } from './resume-browser-server.js';
 import { SocketServerTransport } from './browser/socket-transport.js';
-import { compareVersions, supervisorSocketPath, supervisorStartupLockPath, type SupervisorHello, type SupervisorReply } from './browser/supervisor-protocol.js';
+import { compareVersions, ensureSupervisorRuntimeDir, supervisorSocketPath, supervisorStartupLockPath, type SupervisorHello, type SupervisorReply } from './browser/supervisor-protocol.js';
 import { BROWSER_SUPERVISOR_PROTOCOL, RUNTIME_PLUGIN_VERSION } from './version.js';
 
 const profileDir = resolveChromeProfileDir();
@@ -212,6 +212,7 @@ async function shutdown(): Promise<void> {
   process.exit(0);
 }
 
+await ensureSupervisorRuntimeDir();
 const startupLock = await acquireStartupLock();
 if (!startupLock) process.exit(0);
 try {

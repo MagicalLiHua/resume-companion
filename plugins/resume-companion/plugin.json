@@ -1,0 +1,13 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "applymcp",
+  "version": "0.24.0",
+  "description": "Local resume profiles and supervised recruitment-form autofill for AI agents.",
+  "author": {
+    "name": "ApplyMCP"
+  },
+  "homepage": "https://github.com/MagicalLiHua/resume-companion",
+  "repository": "https://github.com/MagicalLiHua/resume-companion",
+  "license": "MIT",
+  "keywords": ["resume", "recruitment", "mcp", "autofill"]
+}

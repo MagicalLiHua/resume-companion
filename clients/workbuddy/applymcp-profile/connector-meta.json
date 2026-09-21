@@ -1,0 +1,20 @@
+{
+  "name": "ApplyMCP Profile",
+  "name_zh": "ApplyMCP 简历资料库",
+  "name_en": "ApplyMCP Profile",
+  "description": "Store and prepare versioned resume facts locally for recruitment forms.",
+  "description_zh": "在本机保存、读取并整理可复用的版本化简历资料。",
+  "description_en": "Store and prepare versioned resume facts locally for recruitment forms.",
+  "source": "applymcp-profile",
+  "type": "mcp",
+  "version": "0.24.0",
+  "minWorkbuddyVersion": "5.0.0",
+  "examples_zh": [
+    "把这份简历中的明确事实保存为校招版",
+    "生成一次性待补充信息清单"
+  ],
+  "examples_en": [
+    "Store the explicit facts from this resume as my campus profile",
+    "Generate one consolidated missing-information sheet"
+  ]
+}

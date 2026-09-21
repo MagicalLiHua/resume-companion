@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<title>Unlabelled component form regression</title>
+<style>
+  body { font: 16px sans-serif; padding: 20px; }
+  .block { border: 1px solid #ccc; padding: 16px; margin-bottom: 24px; }
+  .field { margin: 14px 0; }
+  [class^="title-"], [class^="blockTitle-"] { margin: 8px 0; }
+  [class^="sd-Input-container-"] { display: inline-flex; position: relative; width: 240px; border: 1px solid #999; padding: 8px; cursor: pointer; }
+  input { width: 110px; }
+  [class^="sd-Input-display-value-"] { min-width: 1px; }
+  [class^="sd-Dropdown-dropdown-"] { background: white; border: 1px solid #aaa; width: 260px; margin: 2px 0; }
+  [class^="sd-Select-scrollable-"] { max-height: 160px; overflow: auto; }
+  [class^="sd-Select-common-item-"] { padding: 8px; cursor: pointer; }
+  .sd-Menu-disabled-random { opacity: .4; }
+  [hidden] { display: none !important; }
+</style>
+<main id="form"></main>
+<script>
+  // Original synthetic UI: no captured page markup, site code, or personal data.
+  const state = { values: {}, selections: {}, opens: {} };
+  window.sdFixture = () => structuredClone(state);
+  function block(name) {
+    const root = document.createElement('div'); root.className = 'block';
+    root.innerHTML = `<div class="blockTitle-random"><span>${name}</span><button>添加</button></div><div class="fields"></div>`;
+    document.querySelector('#form').append(root); return root.lastElementChild;
+  }
+  function field(parent, name) {
+    const row = document.createElement('div'); row.className = 'field';
+    row.innerHTML = `<div class="title-random"><span>${name}</span><span class="required-asterisk-random">*</span></div><div class="ctrl"></div>`;
+    parent.append(row); return row.lastElementChild;
+  }
+  function select(parent, key, values, initial = '', placeholder = '请选择') {
+    state.values[key] = initial; state.selections[key] = 0; state.opens[key] = 0;
+    const wrap = document.createElement('div'); wrap.className = 'sd-Dropdown-container-random';
+    wrap.innerHTML = `<label class="sd-Input-container-random sd-Select-container-random"><span class="sd-Input-display-value-random"></span><input placeholder="${placeholder}"><span class="sd-Select-addon-random">▾</span></label><span class="popup-host"></span>`;
+    const display = wrap.querySelector('span'); display.textContent = initial;
+    const trigger = wrap.firstElementChild; const input = wrap.querySelector('input');
+    const host = wrap.lastElementChild; let opened = false;
+    function render() {
+      host.replaceChildren();
+      if (!opened) return;
+      const popup = document.createElement('div'); popup.className = 'sd-Dropdown-dropdown-random';
+      const menu = document.createElement('div'); menu.className = 'sd-Select-menu-random';
+      const list = document.createElement('div'); list.className = 'sd-Select-scrollable-random';
+      for (const value of values.filter(v => !input.value || v.includes(input.value))) {
+        const item = document.createElement('div'); item.className = 'sd-Select-common-item-random';
+        const disabled = value === '不可选';
+        item.innerHTML = `<div class="sd-Menu-container-random${disabled ? ' sd-Menu-disabled-random' : ''}"><div class="sd-Menu-content-random"><div class="sd-Menu-content-item-random">${value}</div></div></div>`;
+        if (disabled) item.classList.add('sd-Select-disabled-random');
+        item.onclick = () => {
+          if (disabled) return;
+          state.values[key] = value; state.selections[key]++; display.textContent = value;
+          input.value = ''; opened = false; render();
+          wrap.dispatchEvent(new CustomEvent('selected', { detail: value }));
+        };
+        list.append(item);
+      }
+      menu.append(list); popup.append(menu); host.append(popup);
+    }
+    trigger.onclick = event => {
+      // Native label activation also forwards a click to the input.
+      if (event.target !== input) return;
+      if (!opened) state.opens[key]++;
+      opened = !opened; render();
+    };
+    input.oninput = () => { opened = true; render(); };
+    input.onkeydown = event => { if (event.key === 'Escape') { opened = false; render(); } };
+    wrap.reset = () => { state.values[key] = ''; display.textContent = ''; input.value = ''; opened = false; render(); };
+    wrap.setDisabled = disabled => { input.disabled = disabled; trigger.classList.toggle('sd-Select-disabled-random', disabled); };
+    parent.append(wrap); return wrap;
+  }
+  const basic = block('个人信息');
+  select(field(basic, '性别'), 'gender', ['男', '女'], '男');
+  select(field(basic, '民族'), 'ethnicity', ['汉族', '蒙古族', '不可选']);
+  select(field(basic, '政治面貌'), 'politics', ['群众', '共青团员']);
+  const phone = field(basic, '手机号码');
+  select(phone, 'dialingCode', ['+86', '+1'], '+86');
+  const number = document.createElement('label'); number.className = 'sd-Input-container-random';
+  number.innerHTML = '<input placeholder="请输入手机号" type="tel">'; phone.append(number);
+  select(field(basic, '重名选项'), 'duplicate', ['甲', '甲']);
+  const other = block('其他信息');
+  select(field(other, '性别'), 'otherGender', ['男', '女']);
+  const education = block('教育背景');
+  const range = field(education, '就读时间');
+  for (const [key, placeholder, options] of [
+    ['startYear','年',['2023','2024']], ['startMonth','月',['6','7']],
+    ['endYear','年',['2025','2026']], ['endMonth','月',['6','7']]
+  ]) select(range, key, options, '', placeholder);
+  const description = block('自我描述');
+  const text = field(description, '简介');
+  text.innerHTML = '<div class="sd-Textarea-container-random"><textarea placeholder="请输入简介"></textarea></div>';
+  if (new URLSearchParams(location.search).has('extended')) {
+    function cascader(parent, key, { leafOnly = false, wrongParent = false } = {}) {
+      const tree = [{ label: '甲省', children: [{ label: '甲城市', children: [{ label: '同名区' }, { label: '禁用区', disabled: true }] }] },
+        { label: '乙省', children: [{ label: '乙城市', children: [{ label: '同名区' }] }] }];
+      state.values[key] = ''; state.selections[key] = 0;
+      const wrap = document.createElement('div'); wrap.className = 'sd-Dropdown-container-path';
+      wrap.innerHTML = '<label class="sd-Input-container-path"><span class="sd-Input-display-value-path"></span><input readonly placeholder="请选择地址"></label><span class="popup-host"></span>';
+      const input = wrap.querySelector('input'), display = wrap.querySelector('span'), host = wrap.lastElementChild;
+      let opened = false, trail = [], available = [tree];
+      function render() {
+        host.replaceChildren();
+        if (!opened) return;
+        const popup = document.createElement('div'); popup.className = 'sd-Dropdown-dropdown-path';
+        popup.style.cssText = 'display:flex;width:740px';
+        available.forEach((nodes, level) => {
+          const column = document.createElement('div'); column.className = 'sd-Select-menu-path';
+          column.style.cssText = 'width:220px;min-height:80px';
+          nodes.forEach(node => {
+            const row = document.createElement('div'); row.className = 'sd-Menu-container-path';
+            if (node.disabled) row.classList.add('sd-Menu-disabled-path');
+            // No ARIA selected marker: completion requires the full display path.
+            row.innerHTML = `<div class="sd-Menu-content-item-path" style="padding:10px;cursor:pointer">${node.label}</div>`;
+            row.onclick = () => {
+              if (node.disabled) return;
+              state.selections[key]++;
+              trail = trail.slice(0, level); trail[level] = node.label;
+              available = available.slice(0, level + 1);
+              if (node.children) {
+                render();
+                setTimeout(() => { available[level + 1] = node.children; render(); }, 130);
+              } else {
+                const committed = [...trail];
+                if (wrongParent) committed[0] = '乙省';
+                state.values[key] = committed;
+                display.textContent = leafOnly ? committed.at(-1) : committed.join(' / ');
+                opened = false; render();
+              }
+            };
+            column.append(row);
+          });
+          popup.append(column);
+        });
+        host.append(popup);
+      }
+      input.onclick = () => { opened = !opened; available = [tree]; trail = []; render(); };
+      input.onkeydown = event => { if (event.key === 'Escape') { opened = false; render(); } };
+      parent.append(wrap);
+    }
+    cascader(field(basic, '完整地址'), 'address');
+    cascader(field(basic, '叶子回显地址'), 'leafAddress', { leafOnly: true });
+    cascader(field(basic, '错误父级地址'), 'wrongAddress', { wrongParent: true });
+    for (const record of ['工作经历一', '工作经历二']) {
+      const parent = block(record);
+      const group = field(parent, '任职时间');
+      const controls = [
+        select(group, `${record}.startYear`, ['2023年','2024年'], '', '年'),
+        select(group, `${record}.startMonth`, ['06月','7月'], '', '月'),
+        select(group, `${record}.endYear`, ['2025年','2026年'], '', '年'),
+        select(group, `${record}.endMonth`, ['06月','7月'], '', '月'),
+      ];
+      controls.forEach(control => control.querySelector('input').readOnly = true);
+      for (const offset of [0, 2]) {
+        controls[offset + 1].setDisabled(true);
+        controls[offset].addEventListener('selected', () => {
+          controls[offset + 1].reset();
+          controls[offset + 1].setDisabled(true);
+          setTimeout(() => controls[offset + 1].setDisabled(false), 100);
+        });
+      }
+      // The month is disabled until its year is selected, just as dependent UI
+      // fields can become available only after a preceding selection commits.
+      const current = document.createElement('label');
+      current.innerHTML = '<input type="checkbox">至今';
+      current.querySelector('input').onchange = event => {
+        state.values[`${record}.current`] = event.target.checked;
+        controls[2].reset(); controls[3].reset();
+        controls[2].setDisabled(event.target.checked);
+        controls[3].setDisabled(event.target.checked);
+      };
+      group.append(current);
+    }
+    select(field(basic, '异常选择'), 'unknown', ['甲','乙']);
+    const single = field(basic, '获得月份');
+    select(single, 'awardYear', ['2024年','2025年'], '', '年');
+    select(single, 'awardMonth', ['06月','07月'], '', '月');
+    const ambiguous = field(basic, '歧义月份');
+    select(ambiguous, 'ambiguousYear', ['2024年'], '', '年');
+    select(ambiguous, 'ambiguousMonth', ['6月','06月'], '', '月');
+    const rollback = field(basic, '回滚月份');
+    select(rollback, 'rollbackYear', ['2024年'], '', '年');
+    const rollbackMonth = select(rollback, 'rollbackMonth', ['6月'], '', '月');
+    rollbackMonth.addEventListener('selected', () => setTimeout(() => rollbackMonth.reset(), 40));
+  }
+</script>
+</html>

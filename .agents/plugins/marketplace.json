@@ -1,11 +1,11 @@
 {
-  "name": "resume-companion",
+  "name": "applymcp",
   "interface": {
-    "displayName": "Resume Companion"
+    "displayName": "ApplyMCP"
   },
   "plugins": [
     {
-      "name": "resume-companion",
+      "name": "applymcp",
       "source": {
         "source": "local",
         "path": "./plugins/resume-companion"

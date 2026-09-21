@@ -1,0 +1,246 @@
+{
+  "name": "大易完整日期虚拟控件验收",
+  "changes": {
+    "basic": {
+      "full_name": "林星遥",
+      "gender": "女",
+      "birth_date": "2001-05-16",
+      "phone": "13000000000",
+      "email": "lin.xingyao@example.test",
+      "self_description": "全部为虚构测试数据，验证大易单页自动填写。"
+    },
+    "education": [
+      {
+        "school": null,
+        "major": "软件工程(计算机类)(普通本科)(中国大陆)",
+        "education_level": "bachelor",
+        "degree": null,
+        "expected_degree": null,
+        "completed": true,
+        "study_mode": "full_time",
+        "is_expected_end": false,
+        "description": "虚构专业描述，仅用于自动化验收。",
+        "start_month": "2020-09",
+        "end_month": "2024-06",
+        "is_current": false,
+        "id": "education_virtual1"
+      }
+    ],
+    "experience": [
+      {
+        "kind": "internship",
+        "organization": "虚拟测试单位",
+        "role": null,
+        "facts": [],
+        "description": "虚构实习经历，仅用于自动化验收。虚构实习经历，仅用于自动化验收。虚构实习经历，仅用于自动化验收。虚构实习经历，仅用于自动化验收。虚构实习经历，仅用于自动化验收。虚构实习经历，仅用于自动化验收。虚构实习经历，仅用于自动化验收。虚构实习经历，仅用于自动化验收。虚构实习经历，仅用于自动化验收。虚构实习经历，仅用于自动化验收。虚构实习经历，仅用于自动化验收。虚构实习经历，仅用于自动化验收。虚构实习经历，仅用于自动化验收。虚构实习经历，仅用于自动化验收。虚构实习经历，仅用于自动化验收。虚构实习经历，仅用于自动化验收。虚构实习经历，仅用于自动化验收。虚构实习经历，仅用于自动化验收。虚构实习经历，仅用于自动化验收。虚构实习经历，仅用于自动化验收。",
+        "start_month": "2020-09",
+        "end_month": "2024-06",
+        "is_current": false,
+        "id": "experience_virtual1"
+      }
+    ],
+    "projects": [
+      {
+        "name": "虚拟项目1",
+        "role": null,
+        "facts": [],
+        "technologies": [],
+        "description": "虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。",
+        "responsibilities": "虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。",
+        "start_month": "2020-09",
+        "end_month": "2024-06",
+        "is_current": false,
+        "id": "projects_virtual1"
+      },
+      {
+        "name": "虚拟项目2",
+        "role": null,
+        "facts": [],
+        "technologies": [],
+        "description": "虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。虚构项目描述。",
+        "responsibilities": "虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。虚构项目职责。",
+        "start_month": "2020-09",
+        "end_month": "2024-06",
+        "is_current": false,
+        "id": "projects_virtual2"
+      }
+    ],
+    "certificates": [
+      {
+        "name": "虚拟证书（自动化测试）",
+        "issuer": null,
+        "obtained_month": null
+      }
+    ],
+    "supplemental_fields": [
+      {
+        "field_key": "basic.ethnicity",
+        "label": "basic.ethnicity",
+        "description": "独立虚拟控件验收事实，不属于真实用户",
+        "value_type": "text",
+        "value": "汉族"
+      },
+      {
+        "field_key": "family.father.name",
+        "label": "family.father.name",
+        "description": "独立虚拟控件验收事实，不属于真实用户",
+        "value_type": "text",
+        "value": "虚拟父亲"
+      },
+      {
+        "field_key": "family.father.relation",
+        "label": "family.father.relation",
+        "description": "独立虚拟控件验收事实，不属于真实用户",
+        "value_type": "text",
+        "value": "父亲"
+      },
+      {
+        "field_key": "family.father.birth_date",
+        "label": "family.father.birth_date",
+        "description": "独立虚拟控件验收事实，不属于真实用户",
+        "value_type": "text",
+        "value": "1970-01-20"
+      },
+      {
+        "field_key": "family.father.organization",
+        "label": "family.father.organization",
+        "description": "独立虚拟控件验收事实，不属于真实用户",
+        "value_type": "text",
+        "value": "虚拟单位甲"
+      },
+      {
+        "field_key": "family.mother.name",
+        "label": "family.mother.name",
+        "description": "独立虚拟控件验收事实，不属于真实用户",
+        "value_type": "text",
+        "value": "虚拟母亲"
+      },
+      {
+        "field_key": "family.mother.relation",
+        "label": "family.mother.relation",
+        "description": "独立虚拟控件验收事实，不属于真实用户",
+        "value_type": "text",
+        "value": "母亲"
+      },
+      {
+        "field_key": "family.mother.birth_date",
+        "label": "family.mother.birth_date",
+        "description": "独立虚拟控件验收事实，不属于真实用户",
+        "value_type": "text",
+        "value": "1971-03-02"
+      },
+      {
+        "field_key": "family.mother.organization",
+        "label": "family.mother.organization",
+        "description": "独立虚拟控件验收事实，不属于真实用户",
+        "value_type": "text",
+        "value": "虚拟单位乙"
+      },
+      {
+        "field_key": "research.topic1.name",
+        "label": "research.topic1.name",
+        "description": "独立虚拟控件验收事实，不属于真实用户",
+        "value_type": "text",
+        "value": "虚拟科研课题"
+      },
+      {
+        "field_key": "research.topic1.start",
+        "label": "research.topic1.start",
+        "description": "独立虚拟控件验收事实，不属于真实用户",
+        "value_type": "text",
+        "value": "2021-09"
+      },
+      {
+        "field_key": "research.topic1.end",
+        "label": "research.topic1.end",
+        "description": "独立虚拟控件验收事实，不属于真实用户",
+        "value_type": "text",
+        "value": "2022-06"
+      },
+      {
+        "field_key": "research.topic1.description",
+        "label": "research.topic1.description",
+        "description": "独立虚拟控件验收事实，不属于真实用户",
+        "value_type": "text",
+        "value": "全部为虚构测试数据。验证科研记录与其他项目的独立映射。"
+      },
+      {
+        "field_key": "education.education_virtual1.start_date",
+        "label": "education.education_virtual1.start_date",
+        "description": "独立虚拟验收补充，非真实用户资料",
+        "value_type": "text",
+        "value": "2020-09-01"
+      },
+      {
+        "field_key": "education.education_virtual1.end_date",
+        "label": "education.education_virtual1.end_date",
+        "description": "独立虚拟验收补充，非真实用户资料",
+        "value_type": "text",
+        "value": "2024-06-15"
+      },
+      {
+        "field_key": "education.education_virtual1.enrollment_mode",
+        "label": "education.education_virtual1.enrollment_mode",
+        "description": "独立虚拟验收补充，非真实用户资料",
+        "value_type": "text",
+        "value": "统招"
+      },
+      {
+        "field_key": "internships.experience_virtual1.start_date",
+        "label": "internships.experience_virtual1.start_date",
+        "description": "独立虚拟验收补充，非真实用户资料",
+        "value_type": "text",
+        "value": "2020-09-01"
+      },
+      {
+        "field_key": "internships.experience_virtual1.end_date",
+        "label": "internships.experience_virtual1.end_date",
+        "description": "独立虚拟验收补充，非真实用户资料",
+        "value_type": "text",
+        "value": "2024-06-15"
+      },
+      {
+        "field_key": "projects.projects_virtual1.start_date",
+        "label": "projects.projects_virtual1.start_date",
+        "description": "独立虚拟验收补充，非真实用户资料",
+        "value_type": "text",
+        "value": "2020-09-01"
+      },
+      {
+        "field_key": "projects.projects_virtual1.end_date",
+        "label": "projects.projects_virtual1.end_date",
+        "description": "独立虚拟验收补充，非真实用户资料",
+        "value_type": "text",
+        "value": "2024-06-15"
+      },
+      {
+        "field_key": "projects.projects_virtual2.start_date",
+        "label": "projects.projects_virtual2.start_date",
+        "description": "独立虚拟验收补充，非真实用户资料",
+        "value_type": "text",
+        "value": "2020-09-01"
+      },
+      {
+        "field_key": "projects.projects_virtual2.end_date",
+        "label": "projects.projects_virtual2.end_date",
+        "description": "独立虚拟验收补充，非真实用户资料",
+        "value_type": "text",
+        "value": "2024-06-15"
+      },
+      {
+        "field_key": "research.topic1.start_date",
+        "label": "research.topic1.start_date",
+        "description": "独立虚拟验收补充，非真实用户资料",
+        "value_type": "text",
+        "value": "2021-09-01"
+      },
+      {
+        "field_key": "research.topic1.end_date",
+        "label": "research.topic1.end_date",
+        "description": "独立虚拟验收补充，非真实用户资料",
+        "value_type": "text",
+        "value": "2022-06-15"
+      }
+    ]
+  }
+}

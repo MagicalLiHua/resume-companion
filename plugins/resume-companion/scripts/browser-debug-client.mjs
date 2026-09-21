@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { homedir, tmpdir } from 'node:os';
+import { homedir } from 'node:os';
 import { isAbsolute, join, resolve } from 'node:path';
 import { createConnection } from 'node:net';
 
@@ -18,10 +18,12 @@ const profile = profileDir();
 const hash = createHash('sha256').update(profile).digest('hex').slice(0, 12);
 const endpoint = process.env.RESUME_COMPANION_DEBUG_SOCKET || (process.platform === 'win32'
   ? `\\\\.\\pipe\\resume-companion-debug-${hash}`
-  : join(tmpdir(), `rc-debug-${hash}.sock`));
+  : join(`/tmp/resume-companion-${process.getuid()}`, `${hash}.debug.sock`));
 const [command = 'status', pageId, target, scope] = process.argv.slice(2);
 const request = command === 'pages'
   ? { command: 'list_pages' }
+  : command === 'runtime'
+    ? { command: 'runtime_status', page_id: Number(pageId) }
   : command === 'observe'
     ? { command: 'observe', page_id: Number(pageId), mode: target ? 'focus' : 'overview', target, scope, include_values: 'state' }
     : { command: 'status' };

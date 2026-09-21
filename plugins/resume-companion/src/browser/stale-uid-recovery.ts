@@ -158,7 +158,16 @@ export function resolveSemanticReplacement(expected: NodePath, currentRoot: Acce
 }
 
 function isDetachedUidError(error: unknown): boolean {
-  return error instanceof Error && error.message.includes('no longer exists on the page');
+  if (!(error instanceof Error) || !error.message.includes('no longer exists on the page')) return false;
+  // Upstream wraps ALL elementHandle failures as "no longer exists", including
+  // execution-context timeouts. Those do not prove that the node was replaced.
+  if (error.cause instanceof Error) {
+    if (/timed out|timeout|execution context|cannot find context/i.test(error.cause.message)) {
+      throw new Error('page_context_unavailable: Element resolution could not access the browser execution context. No semantic replacement was attempted; preserve the tab and retry after runtime recovery.', {cause: error.cause});
+    }
+    if (!/no node|node.*(?:not found|does not belong|detached)|could not find.*node|no longer exists/i.test(error.cause.message)) return false;
+  }
+  return true;
 }
 
 function isDetachedHandleError(error: unknown): boolean {

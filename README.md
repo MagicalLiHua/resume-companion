@@ -6,11 +6,25 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Node.js 24](https://img.shields.io/badge/Node.js-24-339933.svg)](https://nodejs.org/)
 
-[开始使用](#三步开始使用) · [支持的招聘系统](#支持的招聘系统) · [隐私与人工边界](#隐私与人工边界) · [完整文档](#文档)
+[开始使用](#三步开始使用) · [Agent 客户端](#支持的-agent-客户端) · [招聘系统](#支持的招聘系统) · [隐私与人工边界](#隐私与人工边界) · [完整文档](#文档)
 
 把 PDF、Word 或 Markdown 简历交给你正在使用的 Agent。Agent 提取其中明确写出的事实，ApplyMCP 将它们保存在本机；开始网申时，它先扫描企业实际开放的栏目，再生成计划、填写并回读结果。
 
 当前 `0.24.0` 是有人监督的开发预览版。ApplyMCP 负责重复填写，登录、验证码、附件、声明和最终提交由用户完成。
+
+<p align="center">
+  <a href="https://developers.openai.com/codex/" title="Codex"><img src="docs/assets/agent-icons/codex.png" width="40" height="40" alt="Codex"></a>&nbsp;&nbsp;
+  <a href="https://www.anthropic.com/claude-code" title="Claude Code"><img src="docs/assets/agent-icons/claude-code.png" width="40" height="40" alt="Claude Code"></a>&nbsp;&nbsp;
+  <a href="https://cursor.com/" title="Cursor"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/agent-icons/cursor-dark.svg"><img src="docs/assets/agent-icons/cursor.svg" width="40" height="40" alt="Cursor"></picture></a>&nbsp;&nbsp;
+  <a href="https://www.kimi.com/code/en" title="Kimi Code"><img src="docs/assets/agent-icons/kimi-code.png" width="40" height="40" alt="Kimi Code"></a>&nbsp;&nbsp;
+  <a href="https://hermes-agent.nousresearch.com/" title="Hermes Agent"><img src="docs/assets/agent-icons/hermes-agent.png" width="40" height="40" alt="Hermes Agent"></a>&nbsp;&nbsp;
+  <a href="https://open.workbuddy.cn/" title="WorkBuddy"><img src="docs/assets/agent-icons/workbuddy.svg" width="40" height="40" alt="WorkBuddy"></a>&nbsp;&nbsp;
+  <a href="https://www.trae.ai/" title="Trae"><img src="docs/assets/agent-icons/trae.png" width="40" height="40" alt="Trae"></a>&nbsp;&nbsp;
+  <a href="https://opencode.ai/" title="OpenCode"><img src="docs/assets/agent-icons/opencode.png" width="40" height="40" alt="OpenCode"></a>&nbsp;&nbsp;
+  <a href="https://geminicli.com/" title="Gemini CLI"><img src="docs/assets/agent-icons/gemini-cli.png" width="40" height="40" alt="Gemini CLI"></a>
+  <br>
+  <sub>Codex · Claude Code · Cursor · Kimi Code · Hermes Agent · WorkBuddy · Trae · OpenCode · Gemini CLI</sub>
+</p>
 
 <p align="center">
   <a href="docs/assets/applymcp-demo.mp4">
@@ -30,14 +44,25 @@ https://github.com/MagicalLiHua/resume-companion
 
 先阅读仓库 README、docs/getting-started.md 和最新 Release。检查 Node.js 24 与 Google Chrome；不要覆盖已有 MCP 配置、本地简历资料或 Chrome 数据。
 
-Codex 使用仓库提供的 marketplace/plugin 安装方式；其他 stdio MCP 客户端按照文档配置。优先使用最新 Release 并核对 SHA-256。安装或升级后，确认 resume_companion 与 resume_browser 都能启动，资料工具可以完成虚构资料的创建、读取、更新冲突检查和删除，浏览器工具可以列出页面并执行 form_support 与 form_observe。
+先识别当前 Agent 客户端，再使用仓库提供的原生插件或配置生成器；不要把某个客户端的配置格式直接套到另一个客户端。优先使用最新 Release 并核对 SHA-256。安装或升级后，确认 resume_companion 与 resume_browser 都能启动，资料工具可以完成虚构资料的创建、读取、更新冲突检查和删除，浏览器工具可以列出页面并执行 form_support 与 form_observe。
 
 浏览器必须使用 ApplyMCP 专用 Chrome Profile，不连接默认 Chrome，也不开启远程调试端口。只允许用虚构资料完成安装验证；不要填写真实网站、保存真实草稿或提交申请。
 
 最后告诉我：安装版本和目录、专用 Chrome Profile 目录、修改过的配置、各项验证结果，以及一条可以直接开始建立简历资料的提示词。
 ```
 
-当前对 Codex 提供完整插件包。其他支持本地 stdio MCP 的客户端可以手动接入两个服务，但工具审批和热重载能力取决于客户端实现。
+仓库目前为 Codex、Claude Code、Cursor、Kimi Code CLI、Hermes Agent 和 WorkBuddy 提供原生清单或连接器；Trae、OpenCode、Gemini CLI 及其他 stdio MCP 客户端由同一配置生成器接入。各客户端的安装入口和验证层级见 [Agent 客户端接入](docs/agent-clients.md)。
+
+## 支持的 Agent 客户端
+
+| 接入层级 | 客户端 |
+| --- | --- |
+| 原生插件 / marketplace | Codex、Claude Code、Cursor、Kimi Code CLI；新版 Hermes Agent 支持 Agent Plugins v1 |
+| 原生连接器包 | WorkBuddy（资料库与浏览器两个 connector，需同时安装） |
+| 原生配置生成 | Trae IDE / CLI、OpenCode、Gemini CLI、旧版 Hermes Agent |
+| 通用配置生成 | 其他支持本地 stdio MCP 与 Agent Skills 的客户端 |
+
+招聘系统逻辑、资料 schema 和浏览器执行器只维护一份；客户端层只转换清单、路径和配置格式。当前自动测试验证所有清单引用同一版本及两个正确入口，并验证发布包包含 WorkBuddy 所需运行文件。第三方客户端的商店审核、UI 安装与具体权限体验仍分别受客户端版本影响。
 
 ## 三步开始使用
 
@@ -121,7 +146,7 @@ ApplyMCP 默认在本机保存结构化简历资料、版本备份，以及专�
 
 ## 从源码安装
 
-需要 Node.js 24、Google Chrome stable，以及支持本地 stdio MCP 的 Agent 客户端：
+需要 Node.js 24、Google Chrome stable，以及支持本地 stdio MCP 的 Agent 客户端。下面以 Codex 为例：
 
 ```sh
 git clone https://github.com/MagicalLiHua/resume-companion.git
@@ -130,7 +155,7 @@ npm ci
 npm ci --prefix plugins/resume-companion
 npm run build
 codex plugin marketplace add MagicalLiHua/resume-companion --ref main
-codex plugin add resume-companion@resume-companion
+codex plugin add applymcp@applymcp
 ```
 
 发布包已经包含构建产物和固定版本的 Chrome DevTools MCP 运行时。安装、升级、数据目录和故障处理见[安装与使用](docs/getting-started.md)。
@@ -146,15 +171,16 @@ ApplyMCP 由两个本地 MCP 和一个 Agent skill 组成：
 所有任务共享一个专用 Chrome Profile，同一时间只有一个任务持有浏览器操作租约。ApplyMCP 不需要浏览器扩展、Native Host 或默认 Chrome 的远程调试端口。
 
 <details>
-<summary>为什么仓库和内部服务仍使用 resume-companion 名称？</summary>
+<summary>为什么仓库和部分内部标识仍使用 resume-companion 名称？</summary>
 
-为了让已有安装继续工作，GitHub 仓库路径、插件 ID、MCP 服务名、本地数据格式和默认目录暂时保持兼容名称。更名不会迁移或删除已有用户数据。
+面向用户的插件名称和各客户端清单已经统一为 ApplyMCP。GitHub 仓库路径、两个 MCP 服务名、本地数据格式和默认目录暂时保持兼容名称；更名不会迁移或删除已有用户数据。
 
 </details>
 
 ## 文档
 
 - [安装与使用](docs/getting-started.md)
+- [Agent 客户端接入](docs/agent-clients.md)
 - [工具、审批与诊断边界](docs/mcp-tools.md)
 - [验证范围与原站证据](docs/validation.md)
 - [开发说明](docs/development.md)

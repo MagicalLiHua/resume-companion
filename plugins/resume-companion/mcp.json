@@ -1,0 +1,17 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "resume_companion": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["${PLUGIN_ROOT}/server.bundle.mjs"],
+      "cwd": "${PLUGIN_ROOT}"
+    },
+    "resume_browser": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["${PLUGIN_ROOT}/chrome-launcher.bundle.mjs"],
+      "cwd": "${PLUGIN_ROOT}"
+    }
+  }
+}

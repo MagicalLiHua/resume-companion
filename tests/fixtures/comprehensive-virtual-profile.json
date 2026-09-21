@@ -1,0 +1,2102 @@
+{
+  "name": "完整虚拟简历 2027 校招适配验收（纯测试）",
+  "changes": {
+    "basic": {
+      "full_name": "林星遥",
+      "gender": "女",
+      "birth_date": "2001-05-16",
+      "phone": "13000000000",
+      "email": "lin.xingyao@example.test",
+      "city": "浙江省 / 杭州市 / 西湖区",
+      "employment_status": "在校生",
+      "self_description": "全部资料为虚构测试数据，不代表真实候选人。\n\n我具备软件工程和数据科学的复合背景，能够从业务需求、数据质量和自动化测试三个角度分析问题。学习和实习期间，我持续参与复杂表单、数据治理与质量平台建设，习惯把模糊问题拆分为可观察、可复现和可验证的步骤。我重视事实依据、文档记录和跨团队沟通，能够在保证质量的同时推动任务按期落地。",
+      "highest_education": "硕士研究生"
+    },
+    "education": [
+      {
+        "school": "浙江工业大学",
+        "major": "软件工程",
+        "college": "计算机科学与工程学院",
+        "education_level": "bachelor",
+        "degree": "工学学士",
+        "expected_degree": null,
+        "completed": true,
+        "study_mode": "full_time",
+        "start_month": "2019-09",
+        "end_month": "2023-06",
+        "is_current": false,
+        "is_expected_end": false,
+        "id": "edu2",
+        "description": "虚构本科软件工程学习经历：数据结构、数据库、软件测试与毕业设计，仅用于插件验收。"
+      },
+      {
+        "school": "浙江大学",
+        "major": "软件工程",
+        "college": "金融科技学院",
+        "education_level": "master",
+        "degree": null,
+        "expected_degree": "工学硕士（预计）",
+        "completed": false,
+        "study_mode": "full_time",
+        "start_month": "2023-09",
+        "end_month": "2027-06",
+        "is_current": true,
+        "is_expected_end": true,
+        "id": "edu3",
+        "description": "虚构研究生经历，仅用于插件验收；预计 2027 年 6 月毕业。"
+      }
+    ],
+    "experience": [
+      {
+        "kind": "internship",
+        "organization": "云帆科技有限公司（虚构）",
+        "role": "质量工程实习生",
+        "start_month": "2022-07",
+        "end_month": "2022-10",
+        "is_current": false,
+        "facts": [],
+        "description": "- 使用 TypeScript、Playwright 和 GitLab CI 维护端到端测试。\n  - 为注册、登录、订单和审批表单设计 120 余条回归用例。\n  - 建立失败截图、控制台日志和网络请求的统一归档规范。\n  - 参与缺陷评审，协助开发定位异步下拉框和日期组件问题。\n- 将核心流程自动化覆盖率从 48% 提升至 76%。\n  - 将每日回归耗时从约 3 小时缩短至 55 分钟。",
+        "id": "exp1"
+      },
+      {
+        "kind": "internship",
+        "organization": "星海科技有限公司（虚构）",
+        "role": "数据分析实习生",
+        "start_month": "2024-03",
+        "end_month": "2024-08",
+        "is_current": false,
+        "facts": [],
+        "description": "- 使用 SQL 和 Python 清洗客户服务及渠道运营数据。\n  - 维护 15 张业务指标宽表和 6 个可视化看板。\n  - 编写数据质量规则，覆盖空值、重复值、跨表一致性和时间窗口异常。\n  - 与业务人员确认指标口径，并整理数据字典和验收记录。\n- 将月度报表人工整理时间由 2 天降低至 3 小时。\n  - 识别并推动修复 4 类历史口径不一致问题。",
+        "id": "exp2"
+      },
+      {
+        "kind": "work",
+        "organization": "海岬财经大学金融科技实验室（虚构）",
+        "role": "研究助理",
+        "start_month": "2024-09",
+        "end_month": "2026-05",
+        "is_current": false,
+        "facts": [],
+        "description": "- 整理金融业务流程的测试场景和标注规范。\n  - 使用 Python 构建表单字段映射、数据脱敏和结果校验工具。\n  - 协助维护实验数据、研究文档和复现实验脚本。",
+        "id": "exp3"
+      }
+    ],
+    "projects": [
+      {
+        "name": "招聘表单质量平台",
+        "role": "测试负责人",
+        "start_month": "2024-09",
+        "end_month": "2025-03",
+        "is_current": false,
+        "technologies": [
+          "TypeScript",
+          "Playwright",
+          "Node.js",
+          "SQLite",
+          "GitHub Actions"
+        ],
+        "facts": [],
+        "description": "为多步骤招聘表单设计自动化验收平台，覆盖动态字段、异步搜索、级联选择、草稿保存和失败恢复。",
+        "responsibilities": "- 设计页面观察、字段定位、操作事务和结果验证流程。\n  - 建立 80 个核心测试场景和 26 个异常恢复场景。\n  - 负责流水线、缺陷模板、回归报告和版本发布检查。",
+        "id": "project1"
+      },
+      {
+        "name": "银行网点客流预测与排班建议",
+        "role": "数据分析负责人",
+        "start_month": "2023-11",
+        "end_month": "2024-05",
+        "is_current": false,
+        "technologies": [
+          "Python",
+          "Pandas",
+          "LightGBM",
+          "SQL",
+          "Tableau"
+        ],
+        "facts": [],
+        "description": "根据历史客流、节假日和天气特征预测网点分时客流，并生成排班建议。",
+        "responsibilities": "- 完成数据清洗、特征工程、模型训练和误差分析。\n  - 制定时间序列交叉验证方案，比较 5 类基线模型。\n  - 将预测结果整理为可解释的网点运营看板。",
+        "id": "project2"
+      },
+      {
+        "name": "校园二手交易数据治理工具",
+        "role": "后端开发与质量负责人",
+        "start_month": "2021-10",
+        "end_month": "2022-04",
+        "is_current": false,
+        "technologies": [
+          "Python",
+          "FastAPI",
+          "PostgreSQL",
+          "Docker",
+          "Pytest"
+        ],
+        "facts": [],
+        "description": "实现商品发布、搜索、订单和评价数据的校验与治理。",
+        "responsibilities": "- 设计 REST API、数据库约束和审计日志。\n  - 编写单元测试、接口测试和数据迁移校验脚本。\n  - 负责敏感字段脱敏及测试数据生成。",
+        "id": "project3"
+      }
+    ],
+    "awards": [
+      {
+        "name": "校级一等奖学金",
+        "obtained_month": "2021-11",
+        "description": "本科阶段综合成绩与实践表现优秀。",
+        "id": "award1"
+      },
+      {
+        "name": "全国大学生数学建模竞赛地方赛区二等奖",
+        "obtained_month": "2022-10",
+        "description": "负责数据清洗、模型验证和论文图表。",
+        "id": "award2"
+      },
+      {
+        "name": "优秀毕业生评选一等奖（虚构）",
+        "obtained_month": "2023-06",
+        "description": "虚构校级评选测试奖项。",
+        "id": "award3"
+      },
+      {
+        "name": "金融科技创新实践一等奖",
+        "obtained_month": "2025-05",
+        "description": "项目为“招聘表单质量平台”。",
+        "id": "award4"
+      }
+    ],
+    "languages": [
+      {
+        "name": "普通话",
+        "overall": "精通",
+        "speaking": null,
+        "writing": null,
+        "id": "language1"
+      },
+      {
+        "name": "英语",
+        "overall": "大学英语六级",
+        "speaking": "熟练",
+        "writing": "熟练",
+        "id": "language2"
+      },
+      {
+        "name": "日语",
+        "overall": "一般",
+        "speaking": null,
+        "writing": null,
+        "id": "language3"
+      }
+    ],
+    "certificates": [
+      {
+        "name": "全国大学英语六级考试",
+        "issuer": "虚构测试机构",
+        "obtained_month": "2021-12",
+        "id": "certificate1"
+      },
+      {
+        "name": "全国计算机等级考试二级 Python",
+        "issuer": "虚构测试机构",
+        "obtained_month": "2021-09",
+        "id": "certificate2"
+      },
+      {
+        "name": "普通话水平测试二级甲等",
+        "issuer": "虚构测试机构",
+        "obtained_month": "2022-05",
+        "id": "certificate3"
+      },
+      {
+        "name": "C1 机动车驾驶证",
+        "issuer": "测试地区车辆管理机构",
+        "obtained_month": "2022-08",
+        "id": "certificate4"
+      }
+    ],
+    "intent": {
+      "cities": [
+        "杭州市",
+        "上海市",
+        "南京市"
+      ],
+      "available_date": "2027-07-01",
+      "current_salary": {
+        "amount": 120000,
+        "currency": "人民币",
+        "period": "year",
+        "tax": "unknown",
+        "benefits": "unknown"
+      },
+      "expected_salary": {
+        "amount": 16000,
+        "currency": "人民币",
+        "period": "month",
+        "tax": "before",
+        "benefits": "excluded"
+      }
+    },
+    "supplemental_fields": [
+      {
+        "id": "supp1",
+        "field_key": "basic.ethnicity",
+        "label": "basic.ethnicity",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "汉族"
+      },
+      {
+        "id": "supp2",
+        "field_key": "basic.political_status",
+        "label": "basic.political_status",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "共青团员"
+      },
+      {
+        "id": "supp3",
+        "field_key": "basic.marital_status",
+        "label": "basic.marital_status",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "未婚"
+      },
+      {
+        "id": "supp4",
+        "field_key": "basic.health_status",
+        "label": "basic.health_status",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "良好"
+      },
+      {
+        "id": "supp5",
+        "field_key": "basic.medical_history",
+        "label": "basic.medical_history",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "无（虚构测试设定）"
+      },
+      {
+        "id": "supp6",
+        "field_key": "basic.height_cm",
+        "label": "basic.height_cm",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "165"
+      },
+      {
+        "id": "supp7",
+        "field_key": "basic.weight_kg",
+        "label": "basic.weight_kg",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "52"
+      },
+      {
+        "id": "supp8",
+        "field_key": "basic.residence_province",
+        "label": "basic.residence_province",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "浙江省"
+      },
+      {
+        "id": "supp9",
+        "field_key": "basic.residence_city",
+        "label": "basic.residence_city",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "杭州"
+      },
+      {
+        "id": "supp10",
+        "field_key": "basic.native_province",
+        "label": "basic.native_province",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "浙江省"
+      },
+      {
+        "id": "supp11",
+        "field_key": "basic.native_city",
+        "label": "basic.native_city",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "杭州"
+      },
+      {
+        "id": "supp12",
+        "field_key": "basic.origin_province",
+        "label": "basic.origin_province",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "浙江省"
+      },
+      {
+        "id": "supp13",
+        "field_key": "basic.origin_city",
+        "label": "basic.origin_city",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "杭州"
+      },
+      {
+        "id": "supp14",
+        "field_key": "basic.target_province",
+        "label": "basic.target_province",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "江苏省"
+      },
+      {
+        "id": "supp15",
+        "field_key": "basic.target_city",
+        "label": "basic.target_city",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "南京"
+      },
+      {
+        "id": "supp16",
+        "field_key": "basic.address",
+        "label": "basic.address",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "浙江省杭州市西湖区测试路88号（虚构地址）"
+      },
+      {
+        "id": "supp17",
+        "field_key": "basic.postal_code",
+        "label": "basic.postal_code",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "310000"
+      },
+      {
+        "id": "supp18",
+        "field_key": "basic.nationality",
+        "label": "basic.nationality",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "中国"
+      },
+      {
+        "id": "supp19",
+        "field_key": "basic.phone_country",
+        "label": "basic.phone_country",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "中国大陆（+86）"
+      },
+      {
+        "id": "supp20",
+        "field_key": "basic.identity_type",
+        "label": "basic.identity_type",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "身份证"
+      },
+      {
+        "id": "supp21",
+        "field_key": "basic.identity_number",
+        "label": "basic.identity_number",
+        "description": "程序生成的格式校验测试号码，不代表任何真实证件或实名认证，仅供虚拟简历验收。",
+        "value_type": "text",
+        "value": "110101200105169982"
+      },
+      {
+        "id": "supp22",
+        "field_key": "basic.highest_school",
+        "label": "basic.highest_school",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "浙江大学"
+      },
+      {
+        "id": "supp23",
+        "field_key": "basic.highest_major",
+        "label": "basic.highest_major",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "软件工程"
+      },
+      {
+        "id": "supp24",
+        "field_key": "basic.graduation_date",
+        "label": "basic.graduation_date",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "2027-06-30"
+      },
+      {
+        "id": "supp25",
+        "field_key": "basic.training_mode",
+        "label": "basic.training_mode",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "非定向"
+      },
+      {
+        "id": "supp26",
+        "field_key": "basic.major_rank",
+        "label": "basic.major_rank",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "前5%"
+      },
+      {
+        "id": "supp27",
+        "field_key": "basic.scholarship_status",
+        "label": "basic.scholarship_status",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "校级一等奖学金（虚构测试）"
+      },
+      {
+        "id": "supp28",
+        "field_key": "basic.failed_courses",
+        "label": "basic.failed_courses",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "无"
+      },
+      {
+        "id": "supp29",
+        "field_key": "basic.recruitment_channel",
+        "label": "basic.recruitment_channel",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "学校就业信息网"
+      },
+      {
+        "id": "supp30",
+        "field_key": "basic.veteran_status",
+        "label": "basic.veteran_status",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "否"
+      },
+      {
+        "id": "supp31",
+        "field_key": "basic.applicant_type",
+        "label": "basic.applicant_type",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "2027届应届毕业生"
+      },
+      {
+        "id": "supp32",
+        "field_key": "basic.english_test_type",
+        "label": "basic.english_test_type",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "大学英语6级(CET6)"
+      },
+      {
+        "id": "supp33",
+        "field_key": "basic.english_test_result",
+        "label": "basic.english_test_result",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "通过"
+      },
+      {
+        "id": "supp34",
+        "field_key": "basic.other_language",
+        "label": "basic.other_language",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "日语"
+      },
+      {
+        "id": "supp35",
+        "field_key": "basic.other_language_level",
+        "label": "basic.other_language_level",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "一般"
+      },
+      {
+        "id": "supp36",
+        "field_key": "basic.available_date",
+        "label": "basic.available_date",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "2027-07-01"
+      },
+      {
+        "id": "supp37",
+        "field_key": "basic.cofco_relative_employed",
+        "label": "basic.cofco_relative_employed",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "否"
+      },
+      {
+        "id": "supp38",
+        "field_key": "basic.jiangsu_bank_relative_employed",
+        "label": "basic.jiangsu_bank_relative_employed",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "否"
+      },
+      {
+        "id": "supp39",
+        "field_key": "basic.criminal_record",
+        "label": "basic.criminal_record",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "无"
+      },
+      {
+        "id": "supp40",
+        "field_key": "basic.origin_is_jiangsu",
+        "label": "basic.origin_is_jiangsu",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "否"
+      },
+      {
+        "id": "supp41",
+        "field_key": "basic.residence_is_jiangsu",
+        "label": "basic.residence_is_jiangsu",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "否"
+      },
+      {
+        "id": "supp42",
+        "field_key": "basic.qualification_category",
+        "label": "basic.qualification_category",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "无"
+      },
+      {
+        "id": "supp43",
+        "field_key": "basic.other_certificates",
+        "label": "basic.other_certificates",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "全国计算机等级考试二级 Python（虚构测试）"
+      },
+      {
+        "id": "supp44",
+        "field_key": "basic.written_test_city",
+        "label": "basic.written_test_city",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "南京"
+      },
+      {
+        "id": "supp45",
+        "field_key": "basic.expected_monthly_salary_band",
+        "label": "basic.expected_monthly_salary_band",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "15000-19999"
+      },
+      {
+        "id": "supp46",
+        "field_key": "basic.recruitment_channel_job51",
+        "label": "basic.recruitment_channel_job51",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "51job"
+      },
+      {
+        "id": "supp47",
+        "field_key": "basic.cofco_other_language_level",
+        "label": "basic.cofco_other_language_level",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "简单使用"
+      },
+      {
+        "id": "supp48",
+        "field_key": "basic.primary_it_category",
+        "label": "basic.primary_it_category",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "办公应用软件"
+      },
+      {
+        "id": "supp49",
+        "field_key": "basic.primary_it_name",
+        "label": "basic.primary_it_name",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "MS Excel"
+      },
+      {
+        "id": "supp50",
+        "field_key": "basic.career_plan",
+        "label": "basic.career_plan",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "【虚构测试规划】入职初期希望熟悉岗位流程、业务要求与质量规范，在团队指导下完成具体项目；中期提升数据分析、自动化测试和跨团队协作能力，形成可复用的工具与文档；长期希望成长为能够连接业务需求与技术实施的专业人员。"
+      },
+      {
+        "id": "supp51",
+        "field_key": "basic.cofco_understanding",
+        "label": "basic.cofco_understanding",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "【纯虚构测试回答，不代表真实求职意向】我希望通过岗位介绍进一步理解中粮的业务流程、组织协作与人才培养要求。我重视规范执行、质量改进和持续学习，希望将软件工程与数据分析方面的训练用于具体工作，从基础任务做起，在实践中了解业务并逐步承担更完整的项目责任。"
+      },
+      {
+        "id": "supp71",
+        "field_key": "education.edu2.start_date",
+        "label": "education.edu2.start_date",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "2019-09-01"
+      },
+      {
+        "id": "supp72",
+        "field_key": "education.edu2.end_date",
+        "label": "education.edu2.end_date",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "2023-06-30"
+      },
+      {
+        "id": "supp73",
+        "field_key": "education.edu2.enrollment_mode",
+        "label": "education.edu2.enrollment_mode",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "统招"
+      },
+      {
+        "id": "supp74",
+        "field_key": "education.edu2.enrolled_unified",
+        "label": "education.edu2.enrolled_unified",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "是"
+      },
+      {
+        "id": "supp75",
+        "field_key": "education.edu2.upgraded_bachelor",
+        "label": "education.edu2.upgraded_bachelor",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "否"
+      },
+      {
+        "id": "supp76",
+        "field_key": "education.edu2.overseas",
+        "label": "education.edu2.overseas",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "否"
+      },
+      {
+        "id": "supp77",
+        "field_key": "education.edu2.research_direction",
+        "label": "education.edu2.research_direction",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "软件质量与数据治理（虚构测试）"
+      },
+      {
+        "id": "supp78",
+        "field_key": "education.edu2.full_time",
+        "label": "education.edu2.full_time",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "是"
+      },
+      {
+        "id": "supp79",
+        "field_key": "education.edu2.city_province",
+        "label": "education.edu2.city_province",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "浙江省"
+      },
+      {
+        "id": "supp80",
+        "field_key": "education.edu2.city",
+        "label": "education.edu2.city",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "杭州"
+      },
+      {
+        "id": "supp81",
+        "field_key": "education.edu2.major_rank",
+        "label": "education.edu2.major_rank",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "前5%"
+      },
+      {
+        "id": "supp82",
+        "field_key": "education.edu2.courses",
+        "label": "education.edu2.courses",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "软件工程、数据库、统计学（虚构测试）"
+      },
+      {
+        "id": "supp83",
+        "field_key": "education.edu2.campus_role",
+        "label": "education.edu2.campus_role",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "学习委员（虚构）"
+      },
+      {
+        "id": "supp84",
+        "field_key": "education.edu2.school_system",
+        "label": "education.edu2.school_system",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "4年"
+      },
+      {
+        "id": "supp85",
+        "field_key": "education.edu2.has_degree",
+        "label": "education.edu2.has_degree",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "有学位证"
+      },
+      {
+        "id": "supp86",
+        "field_key": "education.edu2.has_overseas",
+        "label": "education.edu2.has_overseas",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "无海外留学经历"
+      },
+      {
+        "id": "supp87",
+        "field_key": "education.edu2.major_category",
+        "label": "education.edu2.major_category",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "计算机类(普本)"
+      },
+      {
+        "id": "supp88",
+        "field_key": "education.edu2.edu_cert_no",
+        "label": "education.edu2.edu_cert_no",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "TEST-EDU-edu2"
+      },
+      {
+        "id": "supp89",
+        "field_key": "education.edu2.degree_cert_no",
+        "label": "education.edu2.degree_cert_no",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "TEST-DEGREE-edu2"
+      },
+      {
+        "id": "supp90",
+        "field_key": "education.edu3.start_date",
+        "label": "education.edu3.start_date",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "2023-09-01"
+      },
+      {
+        "id": "supp91",
+        "field_key": "education.edu3.end_date",
+        "label": "education.edu3.end_date",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "2027-06-30"
+      },
+      {
+        "id": "supp92",
+        "field_key": "education.edu3.enrollment_mode",
+        "label": "education.edu3.enrollment_mode",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "统招"
+      },
+      {
+        "id": "supp93",
+        "field_key": "education.edu3.enrolled_unified",
+        "label": "education.edu3.enrolled_unified",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "是"
+      },
+      {
+        "id": "supp94",
+        "field_key": "education.edu3.upgraded_bachelor",
+        "label": "education.edu3.upgraded_bachelor",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "否"
+      },
+      {
+        "id": "supp95",
+        "field_key": "education.edu3.overseas",
+        "label": "education.edu3.overseas",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "否"
+      },
+      {
+        "id": "supp96",
+        "field_key": "education.edu3.research_direction",
+        "label": "education.edu3.research_direction",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "软件质量与数据治理（虚构测试）"
+      },
+      {
+        "id": "supp97",
+        "field_key": "education.edu3.full_time",
+        "label": "education.edu3.full_time",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "是"
+      },
+      {
+        "id": "supp98",
+        "field_key": "education.edu3.city_province",
+        "label": "education.edu3.city_province",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "浙江省"
+      },
+      {
+        "id": "supp99",
+        "field_key": "education.edu3.city",
+        "label": "education.edu3.city",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "杭州"
+      },
+      {
+        "id": "supp100",
+        "field_key": "education.edu3.major_rank",
+        "label": "education.edu3.major_rank",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "前5%"
+      },
+      {
+        "id": "supp101",
+        "field_key": "education.edu3.courses",
+        "label": "education.edu3.courses",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "软件工程、数据库、统计学（虚构测试）"
+      },
+      {
+        "id": "supp102",
+        "field_key": "education.edu3.campus_role",
+        "label": "education.edu3.campus_role",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "学习委员（虚构）"
+      },
+      {
+        "id": "supp103",
+        "field_key": "education.edu3.school_system",
+        "label": "education.edu3.school_system",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "4年"
+      },
+      {
+        "id": "supp104",
+        "field_key": "education.edu3.has_degree",
+        "label": "education.edu3.has_degree",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "无学位证"
+      },
+      {
+        "id": "supp105",
+        "field_key": "education.edu3.has_overseas",
+        "label": "education.edu3.has_overseas",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "无海外留学经历"
+      },
+      {
+        "id": "supp106",
+        "field_key": "education.edu3.major_category",
+        "label": "education.edu3.major_category",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "计算机类(普本)"
+      },
+      {
+        "id": "supp107",
+        "field_key": "education.edu3.edu_cert_no",
+        "label": "education.edu3.edu_cert_no",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": null
+      },
+      {
+        "id": "supp108",
+        "field_key": "education.edu3.degree_cert_no",
+        "label": "education.edu3.degree_cert_no",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": null
+      },
+      {
+        "id": "supp109",
+        "field_key": "internships.exp1.start_date",
+        "label": "internships.exp1.start_date",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "2022-07-01"
+      },
+      {
+        "id": "supp110",
+        "field_key": "internships.exp1.end_date",
+        "label": "internships.exp1.end_date",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "2022-10-28"
+      },
+      {
+        "id": "supp111",
+        "field_key": "internships.exp1.role_category",
+        "label": "internships.exp1.role_category",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "测试"
+      },
+      {
+        "id": "supp112",
+        "field_key": "internships.exp1.company_type",
+        "label": "internships.exp1.company_type",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "民营企业"
+      },
+      {
+        "id": "supp113",
+        "field_key": "internships.exp1.company_size",
+        "label": "internships.exp1.company_size",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "100-499人"
+      },
+      {
+        "id": "supp114",
+        "field_key": "internships.exp1.industry",
+        "label": "internships.exp1.industry",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "企业软件服务"
+      },
+      {
+        "id": "supp115",
+        "field_key": "internships.exp1.department",
+        "label": "internships.exp1.department",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "质量平台部"
+      },
+      {
+        "id": "supp116",
+        "field_key": "internships.exp1.leaving_reason",
+        "label": "internships.exp1.leaving_reason",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "实习期结束，返校继续学习。"
+      },
+      {
+        "id": "supp117",
+        "field_key": "internships.exp2.start_date",
+        "label": "internships.exp2.start_date",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "2024-03-01"
+      },
+      {
+        "id": "supp118",
+        "field_key": "internships.exp2.end_date",
+        "label": "internships.exp2.end_date",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "2024-08-28"
+      },
+      {
+        "id": "supp119",
+        "field_key": "internships.exp2.role_category",
+        "label": "internships.exp2.role_category",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "数据分析"
+      },
+      {
+        "id": "supp120",
+        "field_key": "internships.exp2.company_type",
+        "label": "internships.exp2.company_type",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "国有企业"
+      },
+      {
+        "id": "supp121",
+        "field_key": "internships.exp2.company_size",
+        "label": "internships.exp2.company_size",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "100-499人"
+      },
+      {
+        "id": "supp122",
+        "field_key": "internships.exp2.industry",
+        "label": "internships.exp2.industry",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "金融科技"
+      },
+      {
+        "id": "supp123",
+        "field_key": "internships.exp2.department",
+        "label": "internships.exp2.department",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "数据产品部"
+      },
+      {
+        "id": "supp124",
+        "field_key": "internships.exp2.leaving_reason",
+        "label": "internships.exp2.leaving_reason",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "实习项目按期结束。"
+      },
+      {
+        "id": "supp125",
+        "field_key": "work.exp3.start_date",
+        "label": "work.exp3.start_date",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "2024-09-01"
+      },
+      {
+        "id": "supp126",
+        "field_key": "work.exp3.end_date",
+        "label": "work.exp3.end_date",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "2026-05-28"
+      },
+      {
+        "id": "supp127",
+        "field_key": "work.exp3.role_category",
+        "label": "work.exp3.role_category",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "科研"
+      },
+      {
+        "id": "supp128",
+        "field_key": "work.exp3.company_type",
+        "label": "work.exp3.company_type",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "高等院校"
+      },
+      {
+        "id": "supp129",
+        "field_key": "work.exp3.company_size",
+        "label": "work.exp3.company_size",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "100-499人"
+      },
+      {
+        "id": "supp130",
+        "field_key": "work.exp3.industry",
+        "label": "work.exp3.industry",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "教育/科研"
+      },
+      {
+        "id": "supp131",
+        "field_key": "work.exp3.department",
+        "label": "work.exp3.department",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "金融数据质量课题组"
+      },
+      {
+        "id": "supp132",
+        "field_key": "work.exp3.leaving_reason",
+        "label": "work.exp3.leaving_reason",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "阶段研究助理工作结束，继续在读研究。"
+      },
+      {
+        "id": "supp133",
+        "field_key": "projects.project1.start_date",
+        "label": "projects.project1.start_date",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "2024-09-01"
+      },
+      {
+        "id": "supp134",
+        "field_key": "projects.project1.end_date",
+        "label": "projects.project1.end_date",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "2025-03-28"
+      },
+      {
+        "id": "supp135",
+        "field_key": "projects.project1.organization",
+        "label": "projects.project1.organization",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "虚拟项目实验室"
+      },
+      {
+        "id": "supp136",
+        "field_key": "projects.project1.participation",
+        "label": "projects.project1.participation",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "负责人"
+      },
+      {
+        "id": "supp137",
+        "field_key": "projects.project2.start_date",
+        "label": "projects.project2.start_date",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "2023-11-01"
+      },
+      {
+        "id": "supp138",
+        "field_key": "projects.project2.end_date",
+        "label": "projects.project2.end_date",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "2024-05-28"
+      },
+      {
+        "id": "supp139",
+        "field_key": "projects.project2.organization",
+        "label": "projects.project2.organization",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "虚拟项目实验室"
+      },
+      {
+        "id": "supp140",
+        "field_key": "projects.project2.participation",
+        "label": "projects.project2.participation",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "负责人"
+      },
+      {
+        "id": "supp141",
+        "field_key": "projects.project3.start_date",
+        "label": "projects.project3.start_date",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "2021-10-01"
+      },
+      {
+        "id": "supp142",
+        "field_key": "projects.project3.end_date",
+        "label": "projects.project3.end_date",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "2022-04-28"
+      },
+      {
+        "id": "supp143",
+        "field_key": "projects.project3.organization",
+        "label": "projects.project3.organization",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "虚拟项目实验室"
+      },
+      {
+        "id": "supp144",
+        "field_key": "projects.project3.participation",
+        "label": "projects.project3.participation",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "负责人"
+      },
+      {
+        "id": "supp145",
+        "field_key": "awards.award1.level",
+        "label": "awards.award1.level",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "学校级"
+      },
+      {
+        "id": "supp146",
+        "field_key": "awards.award1.grade",
+        "label": "awards.award1.grade",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "学校级一等奖"
+      },
+      {
+        "id": "supp147",
+        "field_key": "awards.award2.level",
+        "label": "awards.award2.level",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "省市级"
+      },
+      {
+        "id": "supp148",
+        "field_key": "awards.award2.grade",
+        "label": "awards.award2.grade",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "省市级二等奖"
+      },
+      {
+        "id": "supp149",
+        "field_key": "awards.award3.level",
+        "label": "awards.award3.level",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "学校级"
+      },
+      {
+        "id": "supp150",
+        "field_key": "awards.award3.grade",
+        "label": "awards.award3.grade",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "学校级一等奖"
+      },
+      {
+        "id": "supp151",
+        "field_key": "awards.award4.level",
+        "label": "awards.award4.level",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "学校级"
+      },
+      {
+        "id": "supp152",
+        "field_key": "awards.award4.grade",
+        "label": "awards.award4.grade",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "学校级一等奖"
+      },
+      {
+        "id": "supp153",
+        "field_key": "languages.language2.score",
+        "label": "languages.language2.score",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "520"
+      },
+      {
+        "id": "supp154",
+        "field_key": "languages.language2.exam_id",
+        "label": "languages.language2.exam_id",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "TEST-CET6-202112-0520"
+      },
+      {
+        "id": "supp155",
+        "field_key": "languages.language2.exam_month",
+        "label": "languages.language2.exam_month",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "2021-12"
+      },
+      {
+        "id": "supp156",
+        "field_key": "languages.language2.report_number",
+        "label": "languages.language2.report_number",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "TEST-CET6-REPORT-001"
+      },
+      {
+        "id": "supp157",
+        "field_key": "campus.campus1.start_date",
+        "label": "campus.campus1.start_date",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "2020-10-01"
+      },
+      {
+        "id": "supp158",
+        "field_key": "campus.campus1.end_date",
+        "label": "campus.campus1.end_date",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "2022-06-30"
+      },
+      {
+        "id": "supp159",
+        "field_key": "campus.campus1.cadre_level",
+        "label": "campus.campus1.cadre_level",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "校级"
+      },
+      {
+        "id": "supp160",
+        "field_key": "campus.campus1.student_cadre",
+        "label": "campus.campus1.student_cadre",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "是"
+      },
+      {
+        "id": "supp161",
+        "field_key": "competitions.competition1.award_level",
+        "label": "competitions.competition1.award_level",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "一等奖（虚构测试）"
+      },
+      {
+        "id": "supp162",
+        "field_key": "competitions.competition1.issuer",
+        "label": "competitions.competition1.issuer",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "星河质量协会（虚构）"
+      },
+      {
+        "id": "supp163",
+        "field_key": "family.father.name",
+        "label": "family.father.name",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "林海川（虚构）"
+      },
+      {
+        "id": "supp164",
+        "field_key": "family.father.relation",
+        "label": "family.father.relation",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "父亲"
+      },
+      {
+        "id": "supp165",
+        "field_key": "family.father.birth_date",
+        "label": "family.father.birth_date",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "1972-03-08"
+      },
+      {
+        "id": "supp166",
+        "field_key": "family.father.organization",
+        "label": "family.father.organization",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "星河城市服务有限公司（虚构）"
+      },
+      {
+        "id": "supp167",
+        "field_key": "family.father.role",
+        "label": "family.father.role",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "行政专员"
+      },
+      {
+        "id": "supp168",
+        "field_key": "family.father.phone",
+        "label": "family.father.phone",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "13200000000"
+      },
+      {
+        "id": "supp169",
+        "field_key": "family.father.political_status",
+        "label": "family.father.political_status",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "群众"
+      },
+      {
+        "id": "supp170",
+        "field_key": "family.father.address",
+        "label": "family.father.address",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "浙江省杭州市测试地址"
+      },
+      {
+        "id": "supp171",
+        "field_key": "family.father.status",
+        "label": "family.father.status",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "在职"
+      },
+      {
+        "id": "supp172",
+        "field_key": "family.mother.name",
+        "label": "family.mother.name",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "周静岚（虚构）"
+      },
+      {
+        "id": "supp173",
+        "field_key": "family.mother.relation",
+        "label": "family.mother.relation",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "母亲"
+      },
+      {
+        "id": "supp174",
+        "field_key": "family.mother.birth_date",
+        "label": "family.mother.birth_date",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "1974-11-22"
+      },
+      {
+        "id": "supp175",
+        "field_key": "family.mother.organization",
+        "label": "family.mother.organization",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "云杉社区服务中心（虚构）"
+      },
+      {
+        "id": "supp176",
+        "field_key": "family.mother.role",
+        "label": "family.mother.role",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "社区工作人员"
+      },
+      {
+        "id": "supp177",
+        "field_key": "family.mother.phone",
+        "label": "family.mother.phone",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "13400000000"
+      },
+      {
+        "id": "supp178",
+        "field_key": "family.mother.political_status",
+        "label": "family.mother.political_status",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "群众"
+      },
+      {
+        "id": "supp179",
+        "field_key": "family.mother.address",
+        "label": "family.mother.address",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "浙江省杭州市测试地址"
+      },
+      {
+        "id": "supp180",
+        "field_key": "family.mother.status",
+        "label": "family.mother.status",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "在职"
+      },
+      {
+        "id": "supp181",
+        "field_key": "research.topic1.name",
+        "label": "research.topic1.name",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "面向动态业务表单的语义测试研究（虚构）"
+      },
+      {
+        "id": "supp182",
+        "field_key": "research.topic1.start",
+        "label": "research.topic1.start",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "2024-09"
+      },
+      {
+        "id": "supp183",
+        "field_key": "research.topic1.end",
+        "label": "research.topic1.end",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "2025-06"
+      },
+      {
+        "id": "supp184",
+        "field_key": "research.topic1.start_date",
+        "label": "research.topic1.start_date",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "2024-09-01"
+      },
+      {
+        "id": "supp185",
+        "field_key": "research.topic1.end_date",
+        "label": "research.topic1.end_date",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "2025-06-30"
+      },
+      {
+        "id": "supp186",
+        "field_key": "research.topic1.participation",
+        "label": "research.topic1.participation",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "负责人"
+      },
+      {
+        "id": "supp187",
+        "field_key": "research.topic1.supervisor",
+        "label": "research.topic1.supervisor",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "顾明远（虚构）"
+      },
+      {
+        "id": "supp188",
+        "field_key": "research.topic1.description",
+        "label": "research.topic1.description",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "纯虚构科研成果，用于验证研究经历与项目经历分开填写。"
+      },
+      {
+        "id": "supp189",
+        "field_key": "it_skills.skill1.name",
+        "label": "it_skills.skill1.name",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "MS WORD"
+      },
+      {
+        "id": "supp190",
+        "field_key": "it_skills.skill1.category",
+        "label": "it_skills.skill1.category",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "办公应用软件"
+      },
+      {
+        "id": "supp191",
+        "field_key": "it_skills.skill1.overall",
+        "label": "it_skills.skill1.overall",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "熟练"
+      },
+      {
+        "id": "supp192",
+        "field_key": "it_skills.skill2.name",
+        "label": "it_skills.skill2.name",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "MS Excel"
+      },
+      {
+        "id": "supp193",
+        "field_key": "it_skills.skill2.category",
+        "label": "it_skills.skill2.category",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "办公应用软件"
+      },
+      {
+        "id": "supp194",
+        "field_key": "it_skills.skill2.overall",
+        "label": "it_skills.skill2.overall",
+        "description": "用户于2026-09-21授权补全的纯虚构测试设定；不属于真实候选人资料。",
+        "value_type": "text",
+        "value": "熟练"
+      },
+      {
+        "id": "bank-edu2-job51_school_region",
+        "field_key": "education.edu2.job51_school_region",
+        "label": "education.edu2.job51_school_region",
+        "description": "纯虚构测试设定；银行模板的词库分类，不替代真实候选人的学校或专业。",
+        "value_type": "text",
+        "value": "其他院校"
+      },
+      {
+        "id": "bank-edu2-job51_major_category",
+        "field_key": "education.edu2.job51_major_category",
+        "label": "education.edu2.job51_major_category",
+        "description": "纯虚构测试设定；银行模板的词库分类，不替代真实候选人的学校或专业。",
+        "value_type": "text",
+        "value": "其他专业类型"
+      },
+      {
+        "id": "bank-edu2-class_rank",
+        "field_key": "education.edu2.class_rank",
+        "label": "education.edu2.class_rank",
+        "description": "纯虚构测试设定；银行模板的词库分类，不替代真实候选人的学校或专业。",
+        "value_type": "text",
+        "value": "前5%"
+      },
+      {
+        "id": "bank-edu3-job51_school_region",
+        "field_key": "education.edu3.job51_school_region",
+        "label": "education.edu3.job51_school_region",
+        "description": "纯虚构测试设定；银行模板的词库分类，不替代真实候选人的学校或专业。",
+        "value_type": "text",
+        "value": "其他院校"
+      },
+      {
+        "id": "bank-edu3-job51_major_category",
+        "field_key": "education.edu3.job51_major_category",
+        "label": "education.edu3.job51_major_category",
+        "description": "纯虚构测试设定；银行模板的词库分类，不替代真实候选人的学校或专业。",
+        "value_type": "text",
+        "value": "其他专业类型"
+      },
+      {
+        "id": "bank-edu3-class_rank",
+        "field_key": "education.edu3.class_rank",
+        "label": "education.edu3.class_rank",
+        "description": "纯虚构测试设定；银行模板的词库分类，不替代真实候选人的学校或专业。",
+        "value_type": "text",
+        "value": "前5%"
+      },
+      {
+        "id": "bank-edu2-job51_school_option",
+        "field_key": "education.edu2.job51_school_option",
+        "label": "education.edu2.job51_school_option",
+        "description": "纯虚构测试设定；银行模板显示的其他选项，真实学校和专业名称填写到对应补充框。",
+        "value_type": "text",
+        "value": "其他院校"
+      },
+      {
+        "id": "bank-edu2-job51_major_option",
+        "field_key": "education.edu2.job51_major_option",
+        "label": "education.edu2.job51_major_option",
+        "description": "纯虚构测试设定；银行模板显示的其他选项，真实学校和专业名称填写到对应补充框。",
+        "value_type": "text",
+        "value": "其他专业"
+      },
+      {
+        "id": "bank-edu3-job51_school_option",
+        "field_key": "education.edu3.job51_school_option",
+        "label": "education.edu3.job51_school_option",
+        "description": "纯虚构测试设定；银行模板显示的其他选项，真实学校和专业名称填写到对应补充框。",
+        "value_type": "text",
+        "value": "其他院校"
+      },
+      {
+        "id": "bank-edu3-job51_major_option",
+        "field_key": "education.edu3.job51_major_option",
+        "label": "education.edu3.job51_major_option",
+        "description": "纯虚构测试设定；银行模板显示的其他选项，真实学校和专业名称填写到对应补充框。",
+        "value_type": "text",
+        "value": "其他专业"
+      },
+      {
+        "id": "guopin-project1-results",
+        "field_key": "projects.project1.results",
+        "label": "项目成果",
+        "description": "纯虚拟项目成果，用于国聘必填项验收",
+        "value_type": "multiline",
+        "value": "虚拟项目1完成原型交付、使用说明与测试用例，验证核心流程可复现；全部为合成测试经历。"
+      },
+      {
+        "id": "guopin-project2-results",
+        "field_key": "projects.project2.results",
+        "label": "项目成果",
+        "description": "纯虚拟项目成果，用于国聘必填项验收",
+        "value_type": "multiline",
+        "value": "虚拟项目2完成原型交付、使用说明与测试用例，验证核心流程可复现；全部为合成测试经历。"
+      },
+      {
+        "id": "guopin-project3-results",
+        "field_key": "projects.project3.results",
+        "label": "项目成果",
+        "description": "纯虚拟项目成果，用于国聘必填项验收",
+        "value_type": "multiline",
+        "value": "虚拟项目3完成原型交付、使用说明与测试用例，验证核心流程可复现；全部为合成测试经历。"
+      },
+      {
+        "id": "faw-highest-study-mode",
+        "field_key": "basic.highest_study_mode",
+        "label": "最高学历学习方式",
+        "description": "虚拟测试硕士为全日制；用于一汽名为培养方式的全日制/非全日制选项，与非定向培养分别存储。",
+        "value_type": "text",
+        "value": "全日制"
+      },
+      {
+        "id": "languages-language2-exam_date",
+        "field_key": "languages.language2.exam_date",
+        "label": "英语考试完整日期",
+        "description": "合成测试事实，供完整日期和成绩分档验收。",
+        "value_type": "text",
+        "value": "2021-12-18"
+      },
+      {
+        "id": "languages-language2-exam_type",
+        "field_key": "languages.language2.exam_type",
+        "label": "英语考试种类",
+        "description": "合成测试事实，供完整日期和成绩分档验收。",
+        "value_type": "text",
+        "value": "CET6"
+      },
+      {
+        "id": "basic-highest_major_option",
+        "field_key": "basic.highest_major_option",
+        "label": "专业词库完整分类",
+        "description": "纯虚拟测试教育设定；一汽专业词库可见选项，保留完整分类以消除同名歧义。",
+        "value_type": "text",
+        "value": "软件工程(软件工程)(研究生)(中国大陆)"
+      },
+      {
+        "id": "education-edu3-major_option",
+        "field_key": "education.edu3.major_option",
+        "label": "专业词库完整分类",
+        "description": "纯虚拟测试教育设定；一汽专业词库可见选项，保留完整分类以消除同名歧义。",
+        "value_type": "text",
+        "value": "软件工程(软件工程)(研究生)(中国大陆)"
+      },
+      {
+        "id": "education-edu2-major_option",
+        "field_key": "education.edu2.major_option",
+        "label": "专业词库完整分类",
+        "description": "纯虚拟测试教育设定；一汽专业词库可见选项，保留完整分类以消除同名歧义。",
+        "value_type": "text",
+        "value": "软件工程(计算机类)(普通本科)(中国大陆)"
+      },
+      {
+        "id": "languages-language3-conversation",
+        "field_key": "languages.language3.conversation",
+        "label": "日语会话水平",
+        "description": "纯虚构测试设定：可以进行简单日语会话，不等于流利或母语。",
+        "value_type": "text",
+        "value": "简单会话"
+      },
+      {
+        "id": "internships-exp1-monthly_salary",
+        "field_key": "internships.exp1.monthly_salary_yuan",
+        "label": "monthly_salary",
+        "description": "国聘适配所需的纯虚构测试补充；月薪单位为人民币元。",
+        "value_type": "text",
+        "value": "4000"
+      },
+      {
+        "id": "internships-exp1-employment_type",
+        "field_key": "internships.exp1.employment_type",
+        "label": "employment_type",
+        "description": "国聘适配所需的纯虚构测试补充；月薪单位为人民币元。",
+        "value_type": "text",
+        "value": "实习"
+      },
+      {
+        "id": "internships-exp1-reports_to",
+        "field_key": "internships.exp1.reports_to",
+        "label": "reports_to",
+        "description": "国聘适配所需的纯虚构测试补充；月薪单位为人民币元。",
+        "value_type": "text",
+        "value": "测试项目负责人（虚构）"
+      },
+      {
+        "id": "internships-exp1-subordinates",
+        "field_key": "internships.exp1.subordinates",
+        "label": "subordinates",
+        "description": "国聘适配所需的纯虚构测试补充；月薪单位为人民币元。",
+        "value_type": "text",
+        "value": "0"
+      },
+      {
+        "id": "internships-exp1-overseas",
+        "field_key": "internships.exp1.overseas",
+        "label": "overseas",
+        "description": "国聘适配所需的纯虚构测试补充；月薪单位为人民币元。",
+        "value_type": "text",
+        "value": "否"
+      },
+      {
+        "id": "internships-exp2-monthly_salary",
+        "field_key": "internships.exp2.monthly_salary_yuan",
+        "label": "monthly_salary",
+        "description": "国聘适配所需的纯虚构测试补充；月薪单位为人民币元。",
+        "value_type": "text",
+        "value": "5000"
+      },
+      {
+        "id": "internships-exp2-employment_type",
+        "field_key": "internships.exp2.employment_type",
+        "label": "employment_type",
+        "description": "国聘适配所需的纯虚构测试补充；月薪单位为人民币元。",
+        "value_type": "text",
+        "value": "实习"
+      },
+      {
+        "id": "internships-exp2-reports_to",
+        "field_key": "internships.exp2.reports_to",
+        "label": "reports_to",
+        "description": "国聘适配所需的纯虚构测试补充；月薪单位为人民币元。",
+        "value_type": "text",
+        "value": "测试项目负责人（虚构）"
+      },
+      {
+        "id": "internships-exp2-subordinates",
+        "field_key": "internships.exp2.subordinates",
+        "label": "subordinates",
+        "description": "国聘适配所需的纯虚构测试补充；月薪单位为人民币元。",
+        "value_type": "text",
+        "value": "0"
+      },
+      {
+        "id": "internships-exp2-overseas",
+        "field_key": "internships.exp2.overseas",
+        "label": "overseas",
+        "description": "国聘适配所需的纯虚构测试补充；月薪单位为人民币元。",
+        "value_type": "text",
+        "value": "否"
+      },
+      {
+        "id": "work-exp3-monthly_salary",
+        "field_key": "work.exp3.monthly_salary_yuan",
+        "label": "monthly_salary",
+        "description": "国聘适配所需的纯虚构测试补充；月薪单位为人民币元。",
+        "value_type": "text",
+        "value": "10000"
+      },
+      {
+        "id": "work-exp3-employment_type",
+        "field_key": "work.exp3.employment_type",
+        "label": "employment_type",
+        "description": "国聘适配所需的纯虚构测试补充；月薪单位为人民币元。",
+        "value_type": "text",
+        "value": "兼职"
+      },
+      {
+        "id": "work-exp3-reports_to",
+        "field_key": "work.exp3.reports_to",
+        "label": "reports_to",
+        "description": "国聘适配所需的纯虚构测试补充；月薪单位为人民币元。",
+        "value_type": "text",
+        "value": "测试项目负责人（虚构）"
+      },
+      {
+        "id": "work-exp3-subordinates",
+        "field_key": "work.exp3.subordinates",
+        "label": "subordinates",
+        "description": "国聘适配所需的纯虚构测试补充；月薪单位为人民币元。",
+        "value_type": "text",
+        "value": "0"
+      },
+      {
+        "id": "work-exp3-overseas",
+        "field_key": "work.exp3.overseas",
+        "label": "overseas",
+        "description": "国聘适配所需的纯虚构测试补充；月薪单位为人民币元。",
+        "value_type": "text",
+        "value": "否"
+      },
+      {
+        "id": "internships-exp1-company_headcount",
+        "field_key": "internships.exp1.company_headcount",
+        "label": "company_headcount",
+        "description": "纯虚构测试补充；企业规模确切200人，行业与所在地为明确测试设定。",
+        "value_type": "text",
+        "value": "200"
+      },
+      {
+        "id": "internships-exp1-location_path",
+        "field_key": "internships.exp1.location_path",
+        "label": "location_path",
+        "description": "纯虚构测试补充；企业规模确切200人，行业与所在地为明确测试设定。",
+        "value_type": "text",
+        "value": "[\"中国\", \"浙江\", \"杭州\", \"西湖区\"]"
+      },
+      {
+        "id": "internships-exp1-industry_path",
+        "field_key": "internships.exp1.industry_path",
+        "label": "industry_path",
+        "description": "纯虚构测试补充；企业规模确切200人，行业与所在地为明确测试设定。",
+        "value_type": "text",
+        "value": "[\"互联网/IT/电子/通信\", \"计算机软件\"]"
+      },
+      {
+        "id": "internships-exp2-company_headcount",
+        "field_key": "internships.exp2.company_headcount",
+        "label": "company_headcount",
+        "description": "纯虚构测试补充；企业规模确切200人，行业与所在地为明确测试设定。",
+        "value_type": "text",
+        "value": "200"
+      },
+      {
+        "id": "internships-exp2-location_path",
+        "field_key": "internships.exp2.location_path",
+        "label": "location_path",
+        "description": "纯虚构测试补充；企业规模确切200人，行业与所在地为明确测试设定。",
+        "value_type": "text",
+        "value": "[\"中国\", \"上海\", \"上海\", \"浦东\"]"
+      },
+      {
+        "id": "internships-exp2-industry_path",
+        "field_key": "internships.exp2.industry_path",
+        "label": "industry_path",
+        "description": "纯虚构测试补充；企业规模确切200人，行业与所在地为明确测试设定。",
+        "value_type": "text",
+        "value": "[\"互联网/IT/电子/通信\", \"计算机软件\"]"
+      },
+      {
+        "id": "work-exp3-company_headcount",
+        "field_key": "work.exp3.company_headcount",
+        "label": "company_headcount",
+        "description": "纯虚构测试补充；企业规模确切200人，行业与所在地为明确测试设定。",
+        "value_type": "text",
+        "value": "200"
+      },
+      {
+        "id": "work-exp3-location_path",
+        "field_key": "work.exp3.location_path",
+        "label": "location_path",
+        "description": "纯虚构测试补充；企业规模确切200人，行业与所在地为明确测试设定。",
+        "value_type": "text",
+        "value": "[\"中国\", \"浙江\", \"杭州\", \"西湖区\"]"
+      },
+      {
+        "id": "work-exp3-industry_path",
+        "field_key": "work.exp3.industry_path",
+        "label": "industry_path",
+        "description": "纯虚构测试补充；企业规模确切200人，行业与所在地为明确测试设定。",
+        "value_type": "text",
+        "value": "[\"教育培训\", \"学术/科研\"]"
+      },
+      {
+        "id": "intent-position_path",
+        "field_key": "intent.position_path",
+        "label": "国聘求职意向 position_path",
+        "description": "本次国聘纯虚构测试明确求职软件测试岗位，首选杭州、软件行业，月薪16000至18000元。",
+        "value_type": "text",
+        "value": "[\"运维/测试\", \"测试工程师\", \"软件测试\"]"
+      },
+      {
+        "id": "intent-location_path",
+        "field_key": "intent.location_path",
+        "label": "国聘求职意向 location_path",
+        "description": "本次国聘纯虚构测试明确求职软件测试岗位，首选杭州、软件行业，月薪16000至18000元。",
+        "value_type": "text",
+        "value": "[\"中国\", \"浙江\", \"杭州\"]"
+      },
+      {
+        "id": "intent-industry_path",
+        "field_key": "intent.industry_path",
+        "label": "国聘求职意向 industry_path",
+        "description": "本次国聘纯虚构测试明确求职软件测试岗位，首选杭州、软件行业，月薪16000至18000元。",
+        "value_type": "text",
+        "value": "[\"互联网/IT/电子/通信\", \"计算机软件\"]"
+      },
+      {
+        "id": "intent-salary_min",
+        "field_key": "intent.salary_min",
+        "label": "国聘求职意向 salary_min",
+        "description": "本次国聘纯虚构测试明确求职软件测试岗位，首选杭州、软件行业，月薪16000至18000元。",
+        "value_type": "text",
+        "value": "16000"
+      },
+      {
+        "id": "intent-salary_max",
+        "field_key": "intent.salary_max",
+        "label": "国聘求职意向 salary_max",
+        "description": "本次国聘纯虚构测试明确求职软件测试岗位，首选杭州、软件行业，月薪16000至18000元。",
+        "value_type": "text",
+        "value": "18000"
+      },
+      {
+        "id": "guopin-education-edu2-degree_path",
+        "field_key": "education.edu2.degree_path",
+        "label": "education.edu2.degree_path",
+        "description": "虚拟本科记录的国聘明确分类；从公开候选词库确认，不推断真实用户选择。",
+        "value_type": "text",
+        "value": "[\"学士学位\", \"学术型\", \"工学学士\"]"
+      },
+      {
+        "id": "guopin-education-edu2-guopin_major_category",
+        "field_key": "education.edu2.guopin_major_category",
+        "label": "education.edu2.guopin_major_category",
+        "description": "虚拟本科记录的国聘明确分类；从公开候选词库确认，不推断真实用户选择。",
+        "value_type": "text",
+        "value": "本科（普通教育） / 工学 / 计算机类"
+      },
+      {
+        "id": "guopin-edu3-major-category",
+        "field_key": "education.edu3.guopin_major_category",
+        "label": "education.edu3.guopin_major_category",
+        "description": "虚拟硕士记录的国聘明确分类，从公开候选词库确认。",
+        "value_type": "text",
+        "value": "学术型硕士 / 工学 / 软件工程"
+      },
+      {
+        "id": "supp-guopin-certificates",
+        "field_key": "basic.guopin_certificate_paths",
+        "label": "国聘证书分类路径",
+        "description": "仅用于虚拟测试；依据国聘公开可见分类，计算机二级选项不细分 Python，原证书名称保留。",
+        "value_type": "text",
+        "value": "[\"英语类 / 全国性英语等级考试 / 大学英语六级CET6\", \"IT类 / 计算机等级考试 / 计算机二级\", \"汉语类 / 普通话水平测试 / 普通话二级甲等\", \"驾驶类 / 机动车驾驶证 / 驾驶证C1\"]"
+      }
+    ],
+    "skills": [
+      "TypeScript",
+      "Playwright",
+      "Node.js",
+      "SQLite",
+      "GitHub Actions",
+      "Python",
+      "Pandas",
+      "LightGBM",
+      "SQL",
+      "Tableau",
+      "FastAPI",
+      "PostgreSQL",
+      "Docker",
+      "Pytest",
+      "MS WORD",
+      "MS Excel"
+    ],
+    "campus": [
+      {
+        "id": "campus1",
+        "organization": "软件质量协会（虚构）",
+        "role": "测试组负责人",
+        "start_month": "2020-10",
+        "end_month": "2022-06",
+        "is_current": false,
+        "description": "全部为虚构测试数据。组织8次自动化测试工作坊，维护活动文档和验收用例。"
+      }
+    ],
+    "competitions": [
+      {
+        "id": "competition1",
+        "name": "星河软件质量竞赛（虚构）",
+        "obtained_month": "2025-05",
+        "description": "虚构测试赛一等奖，负责自动化测试与报告。"
+      }
+    ]
+  },
+  "source_markdown": "# 完整虚拟简历 · 2027 校招与多平台适配测试\n\n> 主测试范围：教育经历仅保留本科和硕士；企业明确要求高中信息时，另建企业专用测试数据，不在普通网申自动新增高中记录。\n\n> 词库验收补充说明：虚拟人物的学校设置为词库可检索的真实院校名称，但全部教育与求职经历仍为合成测试数据；硕士专业设定为软件工程。证件号码为程序生成的格式校验测试值，不作实名认证。\n\n> 本文件中的人物及其教育、工作、项目、奖项、联系方式和家庭关系均为合成测试数据，仅用于 Resume Companion、本地招聘表单和自动化回归测试。\n>\n> 不得用于真实求职、身份认证、背景调查或对外联络。照片上传、验证码、声明同意、电子签名和最终提交始终由测试人员手动完成。\n\n> 测试端统一使用本文件。补充字段和当前结构化记录全部收录在下文；原 1.0 基线单独保存在 complete-virtual-resume-v1.md，不用于本次原站验收。\n\n## 测试资料元信息\n\n- 资料名称：完整虚拟简历 2027 校招适配验收（纯测试）\n- 资料版本：2.0（2026-09-21，统一补充版）\n- 适用场景：校园招聘、银行网申、复杂表单、重复经历、下拉框、级联地区、日期和长文本测试\n- 虚构标识：本文所有人物与经历均为虚构；单位及学校以“（虚构）”或正文声明标记\n- 照片：test-blank-photo.jpg，110×150 浅灰空白 JPEG；仅已授权用于中粮和江苏农商银行测试，不是候选人证件照。其他网站上传另行确认。\n\n## 个人基本信息\n\n- 中文姓名：林星遥\n- 曾用名：无\n- 英文姓名：Xingyao Lin\n- 性别：女\n- 出生日期：2001-05-16\n- 年龄：25\n- 国籍：中国\n- 民族：汉族\n- 政治面貌：共青团员\n- 婚姻状况：未婚\n- 健康状况：良好\n- 身高：165 厘米\n- 体重：52 千克\n- 血型：A 型\n- 生源类型：应届生\n- 生源地：浙江省 / 杭州市 / 西湖区\n- 籍贯：浙江省 / 杭州市 / 西湖区\n- 户口所在地：浙江省 / 杭州市 / 西湖区\n- 现居住地：浙江省 / 杭州市 / 西湖区\n- 通讯地址：浙江省杭州市西湖区测试路88号（虚构地址）\n- 邮政编码：310000\n- 手机号：13000000000\n- 备用手机号：13100000000\n- 邮箱：lin.xingyao@example.test\n- 微信号：test_xingyao_2026\n- 紧急联系人：林海川（虚构）\n- 与本人关系：父女\n- 紧急联系电话：13200000000\n- 居民身份证号：110101200105169982（程序生成的格式校验测试号码；仅作合成数据，不用于实名验证）\n- 护照号码：TEST-PASSPORT-E00000000（仅为占位符）\n- 证件有效期：不适用；严格证件校验应使用目标测试环境提供的测试账号数据\n- 驾照类型：C1\n- 驾照取得时间：2022-08\n\n## 求职意向\n\n- 申请类型：校园招聘\n- 第一志愿职位：金融科技培训生\n- 第二志愿职位：数据分析岗\n- 第三志愿职位：软件质量工程师\n- 第一志愿工作地点：杭州\n- 第二志愿工作地点：上海\n- 第三志愿工作地点：南京\n- 是否接受岗位调剂：是\n- 是否接受异地工作：是\n- 是否接受短期出差：是\n- 是否接受轮岗：是\n- 是否接受基层锻炼：是\n- 最早到岗日期：2027-07-01\n- 当前薪资（年薪）：12 万元人民币\n- 期望薪资（年薪，税前含福利）：20 万元人民币\n- 期望月薪：16000 元人民币\n- 招聘信息来源：学校就业信息网\n- 申请渠道：交通银行官方网站\n- 是否需要工作许可或签证支持：否\n\n## 教育经历\n\n### 教育经历 1：本科\n\n- 学校：浙江工业大学（虚拟人物的测试教育设定，非真实经历）\n- 学院：计算机科学与工程学院\n- 专业：软件工程\n- 学历：本科\n- 学位：工学学士\n- 学习形式：全日制\n- 入学时间：2019-09\n- 毕业时间：2023-06\n- 是否毕业：是\n- GPA：3.72 / 4.00\n- 平均成绩：88.6 / 100\n- 专业排名：前5%（虚构测试设定）\n- 班级排名：前5%（虚构测试设定）\n- 主修课程：软件工程、数据库、统计学（虚构测试）\n- 毕业论文：面向动态招聘表单的自动化测试与失败恢复研究\n- 论文成绩：优秀\n- 校内职务：学习委员、软件质量协会测试组负责人\n- 导师：顾明远副教授（虚构）\n\n### 教育经历 2：硕士研究生\n\n- 学校：浙江大学（虚拟人物的测试教育设定，非真实经历）\n- 学院：金融科技学院\n- 专业：软件工程（数据科学方向，虚构测试设定）\n- 研究方向：软件质量与数据治理（虚构测试）\n- 学历：硕士研究生\n- 学位：工学硕士（预计）\n- 学习形式：全日制\n- 入学时间：2023-09\n- 预计毕业时间：2027-06\n- 是否在读：是\n- 是否应届：是\n- GPA：3.81 / 4.00\n- 平均成绩：90.2 / 100\n- 专业排名：前5%（虚构测试设定）\n- 主修课程：软件工程、数据库、统计学（虚构测试）\n- 研究课题：复杂业务表单的语义识别、自动填写与可验证恢复\n- 导师：沈清和教授（虚构）\n\n## 工作与实习经历\n\n### 经历 1：质量工程实习生\n\n- 单位：云帆科技有限公司（虚构）\n- 单位性质：民营科技企业\n- 所属行业：企业软件服务\n- 部门：质量平台部\n- 职位：质量工程实习生\n- 工作类型：实习\n- 工作地点：浙江省杭州市\n- 开始时间：2022-07\n- 结束时间：2022-10\n- 每周工作时间：40 小时\n- 汇报对象：测试经理陈舟（虚构）\n- 工作内容：\n  - 使用 TypeScript、Playwright 和 GitLab CI 维护端到端测试。\n  - 为注册、登录、订单和审批表单设计 120 余条回归用例。\n  - 建立失败截图、控制台日志和网络请求的统一归档规范。\n  - 参与缺陷评审，协助开发定位异步下拉框和日期组件问题。\n- 主要成果：\n  - 将核心流程自动化覆盖率从 48% 提升至 76%。\n  - 将每日回归耗时从约 3 小时缩短至 55 分钟。\n- 离职原因：实习期结束，返校继续学习。\n\n### 经历 2：数据分析实习生\n\n- 单位：星海科技有限公司（虚构）\n- 单位性质：国有企业控股科技公司（虚构设定）\n- 所属行业：金融科技\n- 部门：数据产品部\n- 职位：数据分析实习生\n- 工作类型：实习\n- 工作地点：上海市浦东新区\n- 开始时间：2024-03\n- 结束时间：2024-08\n- 每周工作时间：40 小时\n- 汇报对象：数据产品负责人李澄（虚构）\n- 工作内容：\n  - 使用 SQL 和 Python 清洗客户服务及渠道运营数据。\n  - 维护 15 张业务指标宽表和 6 个可视化看板。\n  - 编写数据质量规则，覆盖空值、重复值、跨表一致性和时间窗口异常。\n  - 与业务人员确认指标口径，并整理数据字典和验收记录。\n- 主要成果：\n  - 将月度报表人工整理时间由 2 天降低至 3 小时。\n  - 识别并推动修复 4 类历史口径不一致问题。\n- 离职原因：实习项目按期结束。\n\n### 经历 3：研究助理\n\n- 单位：海岬财经大学金融科技实验室（虚构）\n- 部门：金融数据质量课题组\n- 职位：研究助理\n- 工作类型：兼职\n- 工作地点：浙江省杭州市\n- 开始时间：2024-09\n- 结束时间：2026-05\n- 是否仍在职：否\n- 工作内容：\n  - 整理金融业务流程的测试场景和标注规范。\n  - 使用 Python 构建表单字段映射、数据脱敏和结果校验工具。\n  - 协助维护实验数据、研究文档和复现实验脚本。\n- 离职原因：阶段研究助理工作结束，继续在读研究。\n\n## 项目经历\n\n### 项目 1：招聘表单质量平台\n\n- 项目角色：测试负责人\n- 开始时间：2024-09\n- 结束时间：2025-03\n- 项目类型：校企联合课程项目\n- 项目描述：为多步骤招聘表单设计自动化验收平台，覆盖动态字段、异步搜索、级联选择、草稿保存和失败恢复。\n- 使用技术：TypeScript、Playwright、Node.js、SQLite、GitHub Actions\n- 个人职责：\n  - 设计页面观察、字段定位、操作事务和结果验证流程。\n  - 建立 80 个核心测试场景和 26 个异常恢复场景。\n  - 负责流水线、缺陷模板、回归报告和版本发布检查。\n- 项目成果：\n  - 关键流程回归时间由 90 分钟缩短至 18 分钟。\n  - 项目在校级创新实践展示中获得一等奖。\n\n### 项目 2：银行网点客流预测与排班建议\n\n- 项目角色：数据分析负责人\n- 开始时间：2023-11\n- 结束时间：2024-05\n- 项目类型：研究生课程项目\n- 项目描述：根据历史客流、节假日和天气特征预测网点分时客流，并生成排班建议。\n- 使用技术：Python、Pandas、LightGBM、SQL、Tableau\n- 个人职责：\n  - 完成数据清洗、特征工程、模型训练和误差分析。\n  - 制定时间序列交叉验证方案，比较 5 类基线模型。\n  - 将预测结果整理为可解释的网点运营看板。\n- 项目成果：验证集平均绝对百分比误差为 11.8%，较移动平均基线降低 7.4 个百分点。\n\n### 项目 3：校园二手交易数据治理工具\n\n- 项目角色：后端开发与质量负责人\n- 开始时间：2021-10\n- 结束时间：2022-04\n- 项目类型：本科团队项目\n- 项目描述：实现商品发布、搜索、订单和评价数据的校验与治理。\n- 使用技术：Python、FastAPI、PostgreSQL、Docker、Pytest\n- 个人职责：\n  - 设计 REST API、数据库约束和审计日志。\n  - 编写单元测试、接口测试和数据迁移校验脚本。\n  - 负责敏感字段脱敏及测试数据生成。\n- 项目成果：完成 42 个接口和 310 条自动化测试，核心模块覆盖率达到 89%。\n\n## 校园经历与社会实践\n\n- 2019-09 至 2021-06：浙江工业大学软件工程 1902 班（虚构经历）学习委员，组织课程资料整理和学习互助活动。\n- 2020-10 至 2022-06：软件质量协会测试组负责人，组织 8 次自动化测试工作坊。\n- 2021-07 至 2021-08：参加“数字助老”志愿服务，为社区居民讲解移动支付安全和反诈知识，累计服务 42 小时。\n- 2023-10 至 2024-07：浙江大学研究生会学术部（虚构经历）成员，协助举办 5 场金融科技讲座。\n- 志愿服务总时长：68 小时。\n\n## 获奖情况\n\n### 获奖 1\n\n- 奖项：校级一等奖学金\n- 获奖级别：校级\n- 获奖时间：2021-11\n- 授予单位：浙江工业大学（虚拟人物的测试教育设定，非真实经历）\n- 获奖说明：本科阶段综合成绩与实践表现优秀。\n\n### 获奖 2\n\n- 奖项：全国大学生数学建模竞赛地方赛区二等奖\n- 获奖级别：省级\n- 获奖时间：2022-10\n- 授予单位：虚构竞赛组委会\n- 获奖说明：负责数据清洗、模型验证和论文图表。\n\n### 获奖 3\n\n- 奖项：优秀毕业生评选一等奖（虚构）\n- 获奖说明：虚构校级评选测试奖项。\n- 获奖级别：校级\n- 获奖时间：2023-06\n- 授予单位：浙江工业大学（虚拟人物的测试教育设定，非真实经历）\n\n### 获奖 4\n\n- 奖项：金融科技创新实践一等奖\n- 获奖级别：校级\n- 获奖时间：2025-05\n- 授予单位：浙江大学（虚拟人物的测试教育设定，非真实经历）\n- 获奖说明：项目为“招聘表单质量平台”。\n\n## 语言能力\n\n### 中文\n\n- 语言：普通话\n- 熟练程度：精通（母语）\n- 普通话等级：二级甲等\n\n### 英语\n\n- 语言：英语\n- 听说能力：熟练\n- 读写能力：熟练\n- CET-4：568 分\n- CET-6：520 分\n- 雅思：未参加\n- 托福：未参加\n\n### 其他语言\n\n- 语言：日语\n- 熟练程度：一般\n- 证书：无\n\n## 计算机技能\n\n- 编程语言：Python、TypeScript、JavaScript、SQL、Java\n- 测试工具：Playwright、Pytest、Jest、Postman\n- 数据工具：Pandas、NumPy、Jupyter、Tableau\n- 数据库：PostgreSQL、MySQL、SQLite\n- 工程工具：Git、Docker、GitHub Actions、GitLab CI\n- 办公软件：Microsoft Word、Excel、PowerPoint\n- Excel 能力：熟练使用数据透视表、XLOOKUP、Power Query 和常用统计函数\n- 熟练程度概述：能够独立完成数据清洗、接口测试、端到端测试和持续集成配置。\n\n## 证书与资格\n\n### 证书 1\n\n- 证书名称：全国大学英语六级考试\n- 颁发机构：虚构测试机构\n- 获得时间：2021-12\n- 成绩：520\n- 证书编号：TEST-CET6-202112-0520\n\n### 证书 2\n\n- 证书名称：全国计算机等级考试二级 Python\n- 颁发机构：虚构测试机构\n- 获得时间：2021-09\n- 成绩：优秀\n- 证书编号：TEST-NCRE2-PY-202109\n\n### 证书 3\n\n- 证书名称：普通话水平测试二级甲等\n- 颁发机构：虚构测试机构\n- 获得时间：2022-05\n- 证书编号：TEST-PSC-2A-202205\n\n### 证书 4\n\n- 证书名称：C1 机动车驾驶证\n- 颁发机构：测试地区车辆管理机构\n- 获得时间：2022-08\n- 证书编号：不提供；由测试环境决定是否校验\n\n## 论文、研究与知识产权\n\n- 论文题目：面向动态业务表单的语义测试方法研究\n- 作者顺序：第二作者\n- 发表状态：录用待刊（虚构）\n- 期刊或会议：星海数据质量研讨会论文集（虚构）\n- 录用时间：2025-12\n- 专利：无\n- 软件著作权：招聘表单质量平台 V1.0（虚构测试登记号：TEST-SR-2025-001）\n\n## 家庭关系\n\n> 以下亲属及其单位均为虚构，仅用于重复记录和关系字段测试。\n\n### 家庭成员 1\n\n- 姓名：林海川（虚构）\n- 与本人关系：父亲\n- 出生日期：1972-03-08\n- 政治面貌：群众\n- 工作单位：星河城市服务有限公司（虚构）\n- 职务：行政专员\n- 联系电话：13200000000\n- 是否在交银集团工作：否\n\n### 家庭成员 2\n\n- 姓名：周静岚（虚构）\n- 与本人关系：母亲\n- 出生日期：1974-11-22\n- 政治面貌：群众\n- 工作单位：云杉社区服务中心（虚构）\n- 职务：社区工作人员\n- 联系电话：13400000000\n- 是否在交银集团工作：否\n\n### 家庭成员 3\n\n- 姓名：林星澈\n- 与本人关系：弟弟\n- 出生日期：2005-09-12\n- 政治面貌：共青团员\n- 工作单位或学校：海岬工程学院（虚构）\n- 职务或身份：本科生\n- 联系电话：13500000000\n- 是否在交银集团工作：否\n\n## 交银集团及利益冲突信息\n\n> 企业亲属历史测试答案仅保留作拒绝自动填写的反例；无论资料中是否存在答案，均由测试人员在网页自行处理。\n\n- 是否有近亲属在交银集团工作：否\n- 是否有其他亲属在交银集团工作：否\n- 是否与交银集团客户、供应商存在未披露利益关系：否\n- 是否与现单位签署竞业限制协议：否\n- 是否持有可能影响录用的外部职务：否\n- 亲属声明与承诺：由测试人员在人工边界中确认，不允许 Agent 自动勾选\n\n## 合规与背景信息\n\n- 是否拥有外国国籍：否\n- 是否拥有国（境）外永久居留权或长期居留许可：否\n- 是否有海外连续居住超过 6 个月的经历：否\n- 是否曾受刑事处罚：否\n- 是否曾受行政处罚：否\n- 是否曾受学校处分：否\n- 是否曾被用人单位辞退：否\n- 是否存在重大未结诉讼或仲裁：否\n- 是否存在逾期未偿债务：否\n- 是否同意按招聘职位标准执行：是\n- 是否愿意接受背景调查：是，但相关授权、声明和签名必须由测试人员手动完成\n- 是否有超过 6 个月的学习或就业空档期：否\n\n## 推荐人与证明人\n\n### 推荐人 1\n\n- 姓名：顾明远\n- 与本人关系：本科导师\n- 单位：浙江工业大学（虚拟人物的测试教育设定，非真实经历）\n- 职务：副教授\n- 联系电话：13600000000\n- 邮箱：gu.mingyuan@example.test\n- 是否已获得推荐人同意：是（虚构测试设定）\n\n### 推荐人 2\n\n- 姓名：李澄\n- 与本人关系：实习直属负责人\n- 单位：星海科技有限公司（虚构）\n- 职务：数据产品负责人\n- 联系电话：13700000000\n- 邮箱：li.cheng@example.test\n- 是否已获得推荐人同意：是（虚构测试设定）\n\n## 个人陈述\n\n### 自我评价\n\n我具备软件工程和数据科学的复合背景，能够从业务需求、数据质量和自动化测试三个角度分析问题。学习和实习期间，我持续参与复杂表单、数据治理与质量平台建设，习惯把模糊问题拆分为可观察、可复现和可验证的步骤。我重视事实依据、文档记录和跨团队沟通，能够在保证质量的同时推动任务按期落地。\n\n### 个人优势\n\n1. 具备较扎实的 Python、SQL 和 TypeScript 基础，能够独立完成数据处理及自动化测试。\n2. 熟悉需求分析、测试设计、缺陷定位和持续集成流程。\n3. 对金融科技、数据质量和风险控制有持续兴趣。\n4. 书面表达清晰，能够沉淀测试方案、数据字典和复盘材料。\n\n### 待提升方面\n\n对大型银行核心系统的生产实践经验仍然有限，希望通过培训、轮岗和实际项目进一步理解金融业务流程、监管要求与风险控制体系。\n\n### 申请该岗位的原因\n\n金融科技培训生岗位同时要求技术能力、业务理解和风险意识，与我的软件工程、数据科学和质量保障经历高度契合。我希望在规范的金融业务环境中参与数据治理、系统质量和数字化运营工作，并通过轮岗建立完整的银行业务视角。\n\n### 三年职业规划\n\n第一年重点熟悉组织流程、业务系统和合规要求，能够独立承担明确模块的分析与测试工作；第二年形成数据质量或测试平台方向的专业能力，参与跨团队项目；第三年成长为能够连接业务、数据和工程团队的复合型骨干。\n\n### 五年职业规划\n\n持续深耕金融数据质量和智能测试，能够负责中型平台或重点业务模块，推动质量标准、自动化能力和数据治理机制在团队内落地。\n\n### 最有挑战的经历\n\n在招聘表单质量平台项目中，页面结构经常因动态字段和异步候选项发生变化。初期用例不稳定，我带领团队将流程拆分为观察、操作、验证和恢复四个阶段，并为每次写入增加可追踪的操作编号。经过两轮重构，关键场景的稳定通过率从 71% 提升到 96%。这段经历让我认识到，复杂问题不能依赖重复尝试，而应依赖明确证据和可恢复设计。\n\n### 团队冲突处理示例\n\n一次课程项目中，开发同学希望优先增加功能，测试同学则担心回归风险。我先整理未关闭缺陷、用户影响和预计修复成本，再组织团队按风险分级。最终双方同意冻结高风险模块的新功能两天，先完成核心缺陷修复和冒烟测试，项目仍按期交付。\n\n### 失败或挫折经历\n\n早期一次数据分析项目中，我直接使用随机划分验证时间序列模型，导致离线指标偏高。发现问题后，我重新采用按时间滚动的验证方式，补充数据泄漏检查，并在复盘中形成时间序列项目检查清单。此后团队的模型评估更加稳健。\n\n## 兴趣爱好与特长\n\n- 兴趣爱好：跑步、阅读科技与金融类非虚构作品、城市摄影\n- 体育特长：5 公里慢跑\n- 文艺特长：基础摄影与图片整理\n- 每周运动频率：3 次\n\n## 常见网申补充回答\n\n- 是否参加过本单位往年招聘：否\n- 是否正在申请本集团其他岗位：否\n- 是否已获得其他录用通知：否\n- 是否能够提供完整成绩单：是\n- 是否能够按时取得毕业证和学位证：是\n- 是否服从工作地点分配：是，可优先考虑杭州、上海和南京\n- 是否接受岗位调剂：是，优先考虑金融科技、数据分析和软件质量相关岗位\n- 是否接受加班：可接受合理且符合制度的业务高峰安排\n- 是否接受周末值班：可根据岗位制度轮班\n- 是否愿意签订服务期协议：愿意在充分阅读条款后决定；不得由 Agent 自动承诺\n- 是否愿意参加体检：是，具体授权和预约由测试人员手动完成\n- 是否愿意接受背景调查：是，授权由测试人员手动完成\n- 可联系时间：工作日 09:00—18:00\n- 联系偏好：优先邮件，其次电话\n- 补充说明：全部资料为虚构测试数据，不代表任何真实候选人。\n\n## 自动填写边界\n\n- 可以自动填写：普通文本、长文本、单选、复选、普通下拉、级联地区、完整日期、教育/实习/项目等重复记录。\n- 可以执行：普通记录保存、草稿保存和非最终的下一步。\n- 必须人工执行：登录、密码、短信验证码、身份核验、照片及附件上传、背景调查授权、亲属声明、隐私同意、电子签名和最终提交。\n- 如页面已有非空值：默认保留并报告冲突，不自动覆盖。\n- 如目标网站要求真实身份信息：停止填写，不得把本文件中的占位符用于真实认证。\n\n## 当前自动填写记录与完整补充信息\n\n以下内容与 `comprehensive-virtual-profile.json` 的当前数据逐项同步。字段路径用于精确区分同名经历、家庭成员和企业专属问题；未开放的模块不强行填入网站。\n\n### 个人基本信息（结构化记录）\n\n- `basic.full_name`：林星遥\n- `basic.gender`：女\n- `basic.birth_date`：2001-05-16\n- `basic.phone`：13000000000\n- `basic.email`：lin.xingyao@example.test\n- `basic.city`：浙江省 / 杭州市 / 西湖区\n- `basic.employment_status`：在校生\n- `basic.self_description`：全部资料为虚构测试数据，不代表真实候选人。\n  \n  我具备软件工程和数据科学的复合背景，能够从业务需求、数据质量和自动化测试三个角度分析问题。学习和实习期间，我持续参与复杂表单、数据治理与质量平台建设，习惯把模糊问题拆分为可观察、可复现和可验证的步骤。我重视事实依据、文档记录和跨团队沟通，能够在保证质量的同时推动任务按期落地。\n- `basic.highest_education`：硕士研究生\n\n### 教育经历（结构化记录）\n\n- `education.edu2.school`：浙江工业大学\n- `education.edu2.major`：软件工程\n- `education.edu2.college`：计算机科学与工程学院\n- `education.edu2.education_level`：bachelor\n- `education.edu2.degree`：工学学士\n- `education.edu2.expected_degree`：未提供\n- `education.edu2.completed`：是\n- `education.edu2.study_mode`：full_time\n- `education.edu2.start_month`：2019-09\n- `education.edu2.end_month`：2023-06\n- `education.edu2.is_current`：否\n- `education.edu2.is_expected_end`：否\n- `education.edu2.id`：edu2\n- `education.edu2.description`：虚构本科软件工程学习经历：数据结构、数据库、软件测试与毕业设计，仅用于插件验收。\n- `education.edu3.school`：浙江大学\n- `education.edu3.major`：软件工程\n- `education.edu3.college`：金融科技学院\n- `education.edu3.education_level`：master\n- `education.edu3.degree`：未提供\n- `education.edu3.expected_degree`：工学硕士（预计）\n- `education.edu3.completed`：否\n- `education.edu3.study_mode`：full_time\n- `education.edu3.start_month`：2023-09\n- `education.edu3.end_month`：2027-06\n- `education.edu3.is_current`：是\n- `education.edu3.is_expected_end`：是\n- `education.edu3.id`：edu3\n- `education.edu3.description`：虚构研究生经历，仅用于插件验收；预计 2027 年 6 月毕业。\n\n### 工作与实习经历（结构化记录）\n\n- `experience.exp1.kind`：internship\n- `experience.exp1.organization`：云帆科技有限公司（虚构）\n- `experience.exp1.role`：质量工程实习生\n- `experience.exp1.start_month`：2022-07\n- `experience.exp1.end_month`：2022-10\n- `experience.exp1.is_current`：否\n- `experience.exp1.description`：- 使用 TypeScript、Playwright 和 GitLab CI 维护端到端测试。\n    - 为注册、登录、订单和审批表单设计 120 余条回归用例。\n    - 建立失败截图、控制台日志和网络请求的统一归档规范。\n    - 参与缺陷评审，协助开发定位异步下拉框和日期组件问题。\n  - 将核心流程自动化覆盖率从 48% 提升至 76%。\n    - 将每日回归耗时从约 3 小时缩短至 55 分钟。\n- `experience.exp1.id`：exp1\n- `experience.exp2.kind`：internship\n- `experience.exp2.organization`：星海科技有限公司（虚构）\n- `experience.exp2.role`：数据分析实习生\n- `experience.exp2.start_month`：2024-03\n- `experience.exp2.end_month`：2024-08\n- `experience.exp2.is_current`：否\n- `experience.exp2.description`：- 使用 SQL 和 Python 清洗客户服务及渠道运营数据。\n    - 维护 15 张业务指标宽表和 6 个可视化看板。\n    - 编写数据质量规则，覆盖空值、重复值、跨表一致性和时间窗口异常。\n    - 与业务人员确认指标口径，并整理数据字典和验收记录。\n  - 将月度报表人工整理时间由 2 天降低至 3 小时。\n    - 识别并推动修复 4 类历史口径不一致问题。\n- `experience.exp2.id`：exp2\n- `experience.exp3.kind`：work\n- `experience.exp3.organization`：海岬财经大学金融科技实验室（虚构）\n- `experience.exp3.role`：研究助理\n- `experience.exp3.start_month`：2024-09\n- `experience.exp3.end_month`：2026-05\n- `experience.exp3.is_current`：否\n- `experience.exp3.description`：- 整理金融业务流程的测试场景和标注规范。\n    - 使用 Python 构建表单字段映射、数据脱敏和结果校验工具。\n    - 协助维护实验数据、研究文档和复现实验脚本。\n- `experience.exp3.id`：exp3\n\n### 项目经历（结构化记录）\n\n- `projects.project1.name`：招聘表单质量平台\n- `projects.project1.role`：测试负责人\n- `projects.project1.start_month`：2024-09\n- `projects.project1.end_month`：2025-03\n- `projects.project1.is_current`：否\n- `projects.project1.technologies.1`：TypeScript\n- `projects.project1.technologies.2`：Playwright\n- `projects.project1.technologies.3`：Node.js\n- `projects.project1.technologies.4`：SQLite\n- `projects.project1.technologies.5`：GitHub Actions\n- `projects.project1.description`：为多步骤招聘表单设计自动化验收平台，覆盖动态字段、异步搜索、级联选择、草稿保存和失败恢复。\n- `projects.project1.responsibilities`：- 设计页面观察、字段定位、操作事务和结果验证流程。\n    - 建立 80 个核心测试场景和 26 个异常恢复场景。\n    - 负责流水线、缺陷模板、回归报告和版本发布检查。\n- `projects.project1.id`：project1\n- `projects.project2.name`：银行网点客流预测与排班建议\n- `projects.project2.role`：数据分析负责人\n- `projects.project2.start_month`：2023-11\n- `projects.project2.end_month`：2024-05\n- `projects.project2.is_current`：否\n- `projects.project2.technologies.1`：Python\n- `projects.project2.technologies.2`：Pandas\n- `projects.project2.technologies.3`：LightGBM\n- `projects.project2.technologies.4`：SQL\n- `projects.project2.technologies.5`：Tableau\n- `projects.project2.description`：根据历史客流、节假日和天气特征预测网点分时客流，并生成排班建议。\n- `projects.project2.responsibilities`：- 完成数据清洗、特征工程、模型训练和误差分析。\n    - 制定时间序列交叉验证方案，比较 5 类基线模型。\n    - 将预测结果整理为可解释的网点运营看板。\n- `projects.project2.id`：project2\n- `projects.project3.name`：校园二手交易数据治理工具\n- `projects.project3.role`：后端开发与质量负责人\n- `projects.project3.start_month`：2021-10\n- `projects.project3.end_month`：2022-04\n- `projects.project3.is_current`：否\n- `projects.project3.technologies.1`：Python\n- `projects.project3.technologies.2`：FastAPI\n- `projects.project3.technologies.3`：PostgreSQL\n- `projects.project3.technologies.4`：Docker\n- `projects.project3.technologies.5`：Pytest\n- `projects.project3.description`：实现商品发布、搜索、订单和评价数据的校验与治理。\n- `projects.project3.responsibilities`：- 设计 REST API、数据库约束和审计日志。\n    - 编写单元测试、接口测试和数据迁移校验脚本。\n    - 负责敏感字段脱敏及测试数据生成。\n- `projects.project3.id`：project3\n\n### 获奖情况（结构化记录）\n\n- `awards.award1.name`：校级一等奖学金\n- `awards.award1.obtained_month`：2021-11\n- `awards.award1.description`：本科阶段综合成绩与实践表现优秀。\n- `awards.award1.id`：award1\n- `awards.award2.name`：全国大学生数学建模竞赛地方赛区二等奖\n- `awards.award2.obtained_month`：2022-10\n- `awards.award2.description`：负责数据清洗、模型验证和论文图表。\n- `awards.award2.id`：award2\n- `awards.award3.name`：优秀毕业生评选一等奖（虚构）\n- `awards.award3.obtained_month`：2023-06\n- `awards.award3.description`：虚构校级评选测试奖项。\n- `awards.award3.id`：award3\n- `awards.award4.name`：金融科技创新实践一等奖\n- `awards.award4.obtained_month`：2025-05\n- `awards.award4.description`：项目为“招聘表单质量平台”。\n- `awards.award4.id`：award4\n\n### 语言能力（结构化记录）\n\n- `languages.language1.name`：普通话\n- `languages.language1.overall`：精通\n- `languages.language1.speaking`：未提供\n- `languages.language1.writing`：未提供\n- `languages.language1.id`：language1\n- `languages.language2.name`：英语\n- `languages.language2.overall`：大学英语六级\n- `languages.language2.speaking`：熟练\n- `languages.language2.writing`：熟练\n- `languages.language2.id`：language2\n- `languages.language3.name`：日语\n- `languages.language3.overall`：一般\n- `languages.language3.speaking`：未提供\n- `languages.language3.writing`：未提供\n- `languages.language3.id`：language3\n\n### 证书（结构化记录）\n\n- `certificates.certificate1.name`：全国大学英语六级考试\n- `certificates.certificate1.issuer`：虚构测试机构\n- `certificates.certificate1.obtained_month`：2021-12\n- `certificates.certificate1.id`：certificate1\n- `certificates.certificate2.name`：全国计算机等级考试二级 Python\n- `certificates.certificate2.issuer`：虚构测试机构\n- `certificates.certificate2.obtained_month`：2021-09\n- `certificates.certificate2.id`：certificate2\n- `certificates.certificate3.name`：普通话水平测试二级甲等\n- `certificates.certificate3.issuer`：虚构测试机构\n- `certificates.certificate3.obtained_month`：2022-05\n- `certificates.certificate3.id`：certificate3\n- `certificates.certificate4.name`：C1 机动车驾驶证\n- `certificates.certificate4.issuer`：测试地区车辆管理机构\n- `certificates.certificate4.obtained_month`：2022-08\n- `certificates.certificate4.id`：certificate4\n\n### 求职意向（结构化记录）\n\n- `intent.cities.1`：杭州市\n- `intent.cities.2`：上海市\n- `intent.cities.3`：南京市\n- `intent.available_date`：2027-07-01\n- `intent.current_salary.amount`：120000\n- `intent.current_salary.currency`：人民币\n- `intent.current_salary.period`：year\n- `intent.current_salary.tax`：unknown\n- `intent.current_salary.benefits`：unknown\n- `intent.expected_salary.amount`：16000\n- `intent.expected_salary.currency`：人民币\n- `intent.expected_salary.period`：month\n- `intent.expected_salary.tax`：before\n- `intent.expected_salary.benefits`：excluded\n\n### 技能（结构化记录）\n\n- `skills.1`：TypeScript\n- `skills.2`：Playwright\n- `skills.3`：Node.js\n- `skills.4`：SQLite\n- `skills.5`：GitHub Actions\n- `skills.6`：Python\n- `skills.7`：Pandas\n- `skills.8`：LightGBM\n- `skills.9`：SQL\n- `skills.10`：Tableau\n- `skills.11`：FastAPI\n- `skills.12`：PostgreSQL\n- `skills.13`：Docker\n- `skills.14`：Pytest\n- `skills.15`：MS WORD\n- `skills.16`：MS Excel\n\n### 校园经历（结构化记录）\n\n- `campus.campus1.id`：campus1\n- `campus.campus1.organization`：软件质量协会（虚构）\n- `campus.campus1.role`：测试组负责人\n- `campus.campus1.start_month`：2020-10\n- `campus.campus1.end_month`：2022-06\n- `campus.campus1.is_current`：否\n- `campus.campus1.description`：全部为虚构测试数据。组织8次自动化测试工作坊，维护活动文档和验收用例。\n\n### 竞赛经历（结构化记录）\n\n- `competitions.competition1.id`：competition1\n- `competitions.competition1.name`：星河软件质量竞赛（虚构）\n- `competitions.competition1.obtained_month`：2025-05\n- `competitions.competition1.description`：虚构测试赛一等奖，负责自动化测试与报告。\n\n### 网申补充字段（228 项）\n\n- `basic.ethnicity`：汉族\n- `basic.political_status`：共青团员\n- `basic.marital_status`：未婚\n- `basic.health_status`：良好\n- `basic.medical_history`：无（虚构测试设定）\n- `basic.height_cm`：165\n- `basic.weight_kg`：52\n- `basic.residence_province`：浙江省\n- `basic.residence_city`：杭州\n- `basic.native_province`：浙江省\n- `basic.native_city`：杭州\n- `basic.origin_province`：浙江省\n- `basic.origin_city`：杭州\n- `basic.target_province`：江苏省\n- `basic.target_city`：南京\n- `basic.address`：浙江省杭州市西湖区测试路88号（虚构地址）\n- `basic.postal_code`：310000\n- `basic.nationality`：中国\n- `basic.phone_country`：中国大陆（+86）\n- `basic.identity_type`：身份证\n- `basic.identity_number`：110101200105169982\n- `basic.highest_school`：浙江大学\n- `basic.highest_major`：软件工程\n- `basic.graduation_date`：2027-06-30\n- `basic.training_mode`：非定向\n- `basic.major_rank`：前5%\n- `basic.scholarship_status`：校级一等奖学金（虚构测试）\n- `basic.failed_courses`：无\n- `basic.recruitment_channel`：学校就业信息网\n- `basic.veteran_status`：否\n- `basic.applicant_type`：2027届应届毕业生\n- `basic.english_test_type`：大学英语6级(CET6)\n- `basic.english_test_result`：通过\n- `basic.other_language`：日语\n- `basic.other_language_level`：一般\n- `basic.available_date`：2027-07-01\n- `basic.cofco_relative_employed`：否\n- `basic.jiangsu_bank_relative_employed`：否\n- `basic.criminal_record`：无\n- `basic.origin_is_jiangsu`：否\n- `basic.residence_is_jiangsu`：否\n- `basic.qualification_category`：无\n- `basic.other_certificates`：全国计算机等级考试二级 Python（虚构测试）\n- `basic.written_test_city`：南京\n- `basic.expected_monthly_salary_band`：15000-19999\n- `basic.recruitment_channel_job51`：51job\n- `basic.cofco_other_language_level`：简单使用\n- `basic.primary_it_category`：办公应用软件\n- `basic.primary_it_name`：MS Excel\n- `basic.career_plan`：【虚构测试规划】入职初期希望熟悉岗位流程、业务要求与质量规范，在团队指导下完成具体项目；中期提升数据分析、自动化测试和跨团队协作能力，形成可复用的工具与文档；长期希望成长为能够连接业务需求与技术实施的专业人员。\n- `basic.cofco_understanding`：【纯虚构测试回答，不代表真实求职意向】我希望通过岗位介绍进一步理解中粮的业务流程、组织协作与人才培养要求。我重视规范执行、质量改进和持续学习，希望将软件工程与数据分析方面的训练用于具体工作，从基础任务做起，在实践中了解业务并逐步承担更完整的项目责任。\n- `education.edu2.start_date`：2019-09-01\n- `education.edu2.end_date`：2023-06-30\n- `education.edu2.enrollment_mode`：统招\n- `education.edu2.enrolled_unified`：是\n- `education.edu2.upgraded_bachelor`：否\n- `education.edu2.overseas`：否\n- `education.edu2.research_direction`：软件质量与数据治理（虚构测试）\n- `education.edu2.full_time`：是\n- `education.edu2.city_province`：浙江省\n- `education.edu2.city`：杭州\n- `education.edu2.major_rank`：前5%\n- `education.edu2.courses`：软件工程、数据库、统计学（虚构测试）\n- `education.edu2.campus_role`：学习委员（虚构）\n- `education.edu2.school_system`：4年\n- `education.edu2.has_degree`：有学位证\n- `education.edu2.has_overseas`：无海外留学经历\n- `education.edu2.major_category`：计算机类(普本)\n- `education.edu2.edu_cert_no`：TEST-EDU-edu2\n- `education.edu2.degree_cert_no`：TEST-DEGREE-edu2\n- `education.edu3.start_date`：2023-09-01\n- `education.edu3.end_date`：2027-06-30\n- `education.edu3.enrollment_mode`：统招\n- `education.edu3.enrolled_unified`：是\n- `education.edu3.upgraded_bachelor`：否\n- `education.edu3.overseas`：否\n- `education.edu3.research_direction`：软件质量与数据治理（虚构测试）\n- `education.edu3.full_time`：是\n- `education.edu3.city_province`：浙江省\n- `education.edu3.city`：杭州\n- `education.edu3.major_rank`：前5%\n- `education.edu3.courses`：软件工程、数据库、统计学（虚构测试）\n- `education.edu3.campus_role`：学习委员（虚构）\n- `education.edu3.school_system`：4年\n- `education.edu3.has_degree`：无学位证\n- `education.edu3.has_overseas`：无海外留学经历\n- `education.edu3.major_category`：计算机类(普本)\n- `education.edu3.edu_cert_no`：未提供\n- `education.edu3.degree_cert_no`：未提供\n- `internships.exp1.start_date`：2022-07-01\n- `internships.exp1.end_date`：2022-10-28\n- `internships.exp1.role_category`：测试\n- `internships.exp1.company_type`：民营企业\n- `internships.exp1.company_size`：100-499人\n- `internships.exp1.industry`：企业软件服务\n- `internships.exp1.department`：质量平台部\n- `internships.exp1.leaving_reason`：实习期结束，返校继续学习。\n- `internships.exp2.start_date`：2024-03-01\n- `internships.exp2.end_date`：2024-08-28\n- `internships.exp2.role_category`：数据分析\n- `internships.exp2.company_type`：国有企业\n- `internships.exp2.company_size`：100-499人\n- `internships.exp2.industry`：金融科技\n- `internships.exp2.department`：数据产品部\n- `internships.exp2.leaving_reason`：实习项目按期结束。\n- `work.exp3.start_date`：2024-09-01\n- `work.exp3.end_date`：2026-05-28\n- `work.exp3.role_category`：科研\n- `work.exp3.company_type`：高等院校\n- `work.exp3.company_size`：100-499人\n- `work.exp3.industry`：教育/科研\n- `work.exp3.department`：金融数据质量课题组\n- `work.exp3.leaving_reason`：阶段研究助理工作结束，继续在读研究。\n- `projects.project1.start_date`：2024-09-01\n- `projects.project1.end_date`：2025-03-28\n- `projects.project1.organization`：虚拟项目实验室\n- `projects.project1.participation`：负责人\n- `projects.project2.start_date`：2023-11-01\n- `projects.project2.end_date`：2024-05-28\n- `projects.project2.organization`：虚拟项目实验室\n- `projects.project2.participation`：负责人\n- `projects.project3.start_date`：2021-10-01\n- `projects.project3.end_date`：2022-04-28\n- `projects.project3.organization`：虚拟项目实验室\n- `projects.project3.participation`：负责人\n- `awards.award1.level`：学校级\n- `awards.award1.grade`：学校级一等奖\n- `awards.award2.level`：省市级\n- `awards.award2.grade`：省市级二等奖\n- `awards.award3.level`：学校级\n- `awards.award3.grade`：学校级一等奖\n- `awards.award4.level`：学校级\n- `awards.award4.grade`：学校级一等奖\n- `languages.language2.score`：520\n- `languages.language2.exam_id`：TEST-CET6-202112-0520\n- `languages.language2.exam_month`：2021-12\n- `languages.language2.report_number`：TEST-CET6-REPORT-001\n- `campus.campus1.start_date`：2020-10-01\n- `campus.campus1.end_date`：2022-06-30\n- `campus.campus1.cadre_level`：校级\n- `campus.campus1.student_cadre`：是\n- `competitions.competition1.award_level`：一等奖（虚构测试）\n- `competitions.competition1.issuer`：星河质量协会（虚构）\n- `family.father.name`：林海川（虚构）\n- `family.father.relation`：父亲\n- `family.father.birth_date`：1972-03-08\n- `family.father.organization`：星河城市服务有限公司（虚构）\n- `family.father.role`：行政专员\n- `family.father.phone`：13200000000\n- `family.father.political_status`：群众\n- `family.father.address`：浙江省杭州市测试地址\n- `family.father.status`：在职\n- `family.mother.name`：周静岚（虚构）\n- `family.mother.relation`：母亲\n- `family.mother.birth_date`：1974-11-22\n- `family.mother.organization`：云杉社区服务中心（虚构）\n- `family.mother.role`：社区工作人员\n- `family.mother.phone`：13400000000\n- `family.mother.political_status`：群众\n- `family.mother.address`：浙江省杭州市测试地址\n- `family.mother.status`：在职\n- `research.topic1.name`：面向动态业务表单的语义测试研究（虚构）\n- `research.topic1.start`：2024-09\n- `research.topic1.end`：2025-06\n- `research.topic1.start_date`：2024-09-01\n- `research.topic1.end_date`：2025-06-30\n- `research.topic1.participation`：负责人\n- `research.topic1.supervisor`：顾明远（虚构）\n- `research.topic1.description`：纯虚构科研成果，用于验证研究经历与项目经历分开填写。\n- `it_skills.skill1.name`：MS WORD\n- `it_skills.skill1.category`：办公应用软件\n- `it_skills.skill1.overall`：熟练\n- `it_skills.skill2.name`：MS Excel\n- `it_skills.skill2.category`：办公应用软件\n- `it_skills.skill2.overall`：熟练\n- `education.edu2.job51_school_region`：其他院校\n- `education.edu2.job51_major_category`：其他专业类型\n- `education.edu2.class_rank`：前5%\n- `education.edu3.job51_school_region`：其他院校\n- `education.edu3.job51_major_category`：其他专业类型\n- `education.edu3.class_rank`：前5%\n- `education.edu2.job51_school_option`：其他院校\n- `education.edu2.job51_major_option`：其他专业\n- `education.edu3.job51_school_option`：其他院校\n- `education.edu3.job51_major_option`：其他专业\n- `projects.project1.results`：虚拟项目1完成原型交付、使用说明与测试用例，验证核心流程可复现；全部为合成测试经历。\n- `projects.project2.results`：虚拟项目2完成原型交付、使用说明与测试用例，验证核心流程可复现；全部为合成测试经历。\n- `projects.project3.results`：虚拟项目3完成原型交付、使用说明与测试用例，验证核心流程可复现；全部为合成测试经历。\n- `basic.highest_study_mode`：全日制\n- `languages.language2.exam_date`：2021-12-18\n- `languages.language2.exam_type`：CET6\n- `basic.highest_major_option`：软件工程(软件工程)(研究生)(中国大陆)\n- `education.edu3.major_option`：软件工程(软件工程)(研究生)(中国大陆)\n- `education.edu2.major_option`：软件工程(计算机类)(普通本科)(中国大陆)\n- `languages.language3.conversation`：简单会话\n- `internships.exp1.monthly_salary_yuan`：4000\n- `internships.exp1.employment_type`：实习\n- `internships.exp1.reports_to`：测试项目负责人（虚构）\n- `internships.exp1.subordinates`：0\n- `internships.exp1.overseas`：否\n- `internships.exp2.monthly_salary_yuan`：5000\n- `internships.exp2.employment_type`：实习\n- `internships.exp2.reports_to`：测试项目负责人（虚构）\n- `internships.exp2.subordinates`：0\n- `internships.exp2.overseas`：否\n- `work.exp3.monthly_salary_yuan`：10000\n- `work.exp3.employment_type`：兼职\n- `work.exp3.reports_to`：测试项目负责人（虚构）\n- `work.exp3.subordinates`：0\n- `work.exp3.overseas`：否\n- `internships.exp1.company_headcount`：200\n- `internships.exp1.location_path`：[\"中国\", \"浙江\", \"杭州\", \"西湖区\"]\n- `internships.exp1.industry_path`：[\"互联网/IT/电子/通信\", \"计算机软件\"]\n- `internships.exp2.company_headcount`：200\n- `internships.exp2.location_path`：[\"中国\", \"上海\", \"上海\", \"浦东\"]\n- `internships.exp2.industry_path`：[\"互联网/IT/电子/通信\", \"计算机软件\"]\n- `work.exp3.company_headcount`：200\n- `work.exp3.location_path`：[\"中国\", \"浙江\", \"杭州\", \"西湖区\"]\n- `work.exp3.industry_path`：[\"教育培训\", \"学术/科研\"]\n- `intent.position_path`：[\"运维/测试\", \"测试工程师\", \"软件测试\"]\n- `intent.location_path`：[\"中国\", \"浙江\", \"杭州\"]\n- `intent.industry_path`：[\"互联网/IT/电子/通信\", \"计算机软件\"]\n- `intent.salary_min`：16000\n- `intent.salary_max`：18000\n- `education.edu2.degree_path`：[\"学士学位\", \"学术型\", \"工学学士\"]\n- `education.edu2.guopin_major_category`：本科（普通教育） / 工学 / 计算机类\n- `education.edu3.guopin_major_category`：学术型硕士 / 工学 / 软件工程\n- `basic.guopin_certificate_paths`：[\"英语类 / 全国性英语等级考试 / 大学英语六级CET6\", \"IT类 / 计算机等级考试 / 计算机二级\", \"汉语类 / 普通话水平测试 / 普通话二级甲等\", \"驾驶类 / 机动车驾驶证 / 驾驶证C1\"]\n"
+}

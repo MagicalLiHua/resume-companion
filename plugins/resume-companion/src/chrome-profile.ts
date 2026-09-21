@@ -88,7 +88,7 @@ export class ChromeProfileLock {
         if (code !== 'EEXIST') throw error;
         const existing = await this.readExisting();
         if (!existing || processExists(existing.pid)) {
-          throw new Error('profile_in_use: Resume Companion 专用 Chrome 正由另一个任务使用；请关闭那个任务后重试');
+          throw new Error('profile_in_use: ApplyMCP 专用 Chrome 正由另一个任务使用；请关闭那个任务后重试');
         }
         if (await chromeProfileIsBusy(this.profileDir)) {
           throw new Error('profile_in_use: 上一个 MCP 进程已退出，但专用 Chrome 仍在使用 Profile；请先关闭该 Chrome 窗口');
@@ -96,7 +96,7 @@ export class ChromeProfileLock {
         await unlink(this.lockPath).catch(() => undefined);
       }
     }
-    throw new Error('profile_in_use: 无法安全取得 Resume Companion 专用 Chrome 的实例锁');
+    throw new Error('profile_in_use: 无法安全取得 ApplyMCP 专用 Chrome 的实例锁');
   }
 
   async release(): Promise<void> {

@@ -34,4 +34,20 @@ describe('shared browser supervisor lease', () => {
     expect(supervisorStartupLockPath(profile)).not.toBe(supervisorSocketPath(profile));
     expect(supervisorStartupLockPath(profile)).toMatch(/\.start\.lock$/);
   });
+
+  test('different task temporary directories share discovery and the startup lock', () => {
+    const original = process.env.TMPDIR;
+    try {
+      process.env.TMPDIR = '/tmp/task-one';
+      const endpoint = supervisorSocketPath('/tmp/shared-profile');
+      const lock = supervisorStartupLockPath('/tmp/shared-profile');
+      process.env.TMPDIR = '/tmp/task-two';
+      expect(supervisorSocketPath('/tmp/shared-profile')).toBe(endpoint);
+      expect(supervisorStartupLockPath('/tmp/shared-profile')).toBe(lock);
+      expect(supervisorSocketPath('/tmp/other-profile')).not.toBe(endpoint);
+    } finally {
+      if (original === undefined) delete process.env.TMPDIR;
+      else process.env.TMPDIR = original;
+    }
+  });
 });

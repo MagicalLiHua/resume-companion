@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "resume_companion": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["${CURSOR_PLUGIN_ROOT}/server.bundle.mjs"],
+      "cwd": "${CURSOR_PLUGIN_ROOT}"
+    },
+    "resume_browser": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["${CURSOR_PLUGIN_ROOT}/chrome-launcher.bundle.mjs"],
+      "cwd": "${CURSOR_PLUGIN_ROOT}"
+    }
+  }
+}

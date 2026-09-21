@@ -1,8 +1,8 @@
 import { chmod, unlink } from 'node:fs/promises';
 import { createServer, type Server, type Socket } from 'node:net';
-import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { profileHash } from '../chrome-profile.js';
+import { ensureSupervisorRuntimeDir, supervisorRuntimeDir } from './supervisor-protocol.js';
 
 type JsonRecord = Record<string, unknown>;
 
@@ -10,7 +10,7 @@ export function debugSocketPath(profileDir: string): string {
   const id = profileHash(profileDir);
   return process.platform === 'win32'
     ? `\\\\.\\pipe\\resume-companion-debug-${id}`
-    : join(tmpdir(), `rc-debug-${id}.sock`);
+    : join(supervisorRuntimeDir(), `${id}.debug.sock`);
 }
 
 export class BrowserDebugBridge {
@@ -23,6 +23,7 @@ export class BrowserDebugBridge {
 
   async start(): Promise<void> {
     if (this.server) return;
+    await ensureSupervisorRuntimeDir();
     if (process.platform !== 'win32') await unlink(this.endpoint).catch(() => undefined);
     const server = createServer(socket => this.accept(socket));
     this.server = server;

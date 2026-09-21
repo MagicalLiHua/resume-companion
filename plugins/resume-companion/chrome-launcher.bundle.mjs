@@ -3,10 +3,11 @@ import { createRequire } from 'node:module'; const require = createRequire(impor
 
 // src/chrome-launcher.ts
 import { randomUUID as randomUUID2 } from "node:crypto";
-import { spawn } from "node:child_process";
+import { execFile, spawn } from "node:child_process";
 import { existsSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { createConnection } from "node:net";
-import { dirname as dirname3, resolve as resolve3 } from "node:path";
+import { dirname as dirname3, join as join3, resolve as resolve3 } from "node:path";
 import { fileURLToPath as fileURLToPath2 } from "node:url";
 
 // src/chrome-profile.ts
@@ -30,7 +31,7 @@ function profileHash(profileDir2) {
 import { readFileSync } from "node:fs";
 import { dirname as dirname2, resolve as resolve2 } from "node:path";
 import { fileURLToPath } from "node:url";
-var PLUGIN_VERSION = "0.16.1";
+var PLUGIN_VERSION = "0.24.0";
 var BROWSER_SUPERVISOR_PROTOCOL = 1;
 function resolveRuntimePluginVersion(moduleUrl) {
   const directory = dirname2(fileURLToPath(moduleUrl));
@@ -49,11 +50,14 @@ function resolveRuntimePluginVersion(moduleUrl) {
 var RUNTIME_PLUGIN_VERSION = resolveRuntimePluginVersion(import.meta.url);
 
 // src/browser/supervisor-protocol.ts
-import { tmpdir } from "node:os";
+import { homedir as homedir2 } from "node:os";
 import { join as join2 } from "node:path";
 function supervisorSocketPath(profileDir2) {
   const id = profileHash(profileDir2);
-  return process.platform === "win32" ? `\\\\.\\pipe\\resume-companion-browser-${id}` : join2(tmpdir(), `rc-browser-${id}.sock`);
+  return process.platform === "win32" ? `\\\\.\\pipe\\resume-companion-browser-${id}` : join2(supervisorRuntimeDir(), `${id}.sock`);
+}
+function supervisorRuntimeDir() {
+  return process.platform === "win32" ? join2(process.env.LOCALAPPDATA || join2(homedir2(), "AppData", "Local"), "Resume Companion", "runtime") : `/tmp/resume-companion-${process.getuid()}`;
 }
 
 // src/chrome-launcher.ts
@@ -65,14 +69,16 @@ var supervisorEntry = [
 var profileDir = resolveChromeProfileDir();
 var endpoint = supervisorSocketPath(profileDir);
 var sessionId = randomUUID2();
-async function open(kind) {
+async function open(kind, address = endpoint) {
   return await new Promise((resolveConnection, reject) => {
-    const socket = createConnection(endpoint);
+    const socket = createConnection(address);
     let buffer = "";
     const fail = (error) => {
+      clearTimeout(timer);
       socket.destroy();
       reject(error);
     };
+    const timer = setTimeout(() => fail(new Error("browser_supervisor_handshake_timeout")), 2500);
     socket.setEncoding("utf8");
     socket.once("error", fail);
     socket.once("connect", () => {
@@ -89,6 +95,7 @@ async function open(kind) {
       buffer += chunk;
       const newline = buffer.indexOf("\n");
       if (newline === -1) return;
+      clearTimeout(timer);
       socket.off("error", fail);
       socket.removeAllListeners("data");
       try {
@@ -99,6 +106,16 @@ async function open(kind) {
       }
     });
   });
+}
+async function legacyEndpoints() {
+  if (process.platform === "win32") return [];
+  const directories = [tmpdir(), "/tmp"];
+  if (process.platform === "darwin") {
+    const directory = await new Promise((resolveDirectory) => execFile("/usr/bin/getconf", ["DARWIN_USER_TEMP_DIR"], { timeout: 1500 }, (error, stdout) => resolveDirectory(error ? "" : stdout.trim())));
+    if (directory) directories.push(directory);
+  }
+  const maximum = process.platform === "darwin" ? 103 : 107;
+  return [...new Set(directories.map((directory) => join3(directory, `rc-browser-${profileHash(profileDir)}.sock`)))].filter((path) => Buffer.byteLength(path) <= maximum);
 }
 function startSupervisor() {
   const child = spawn(process.execPath, [supervisorEntry], {
@@ -115,21 +132,34 @@ function startSupervisor() {
 async function connectWithRetry() {
   let started = false;
   let lastError;
+  const addresses = [endpoint, ...await legacyEndpoints()];
   for (let attempt = 0; attempt < 150; attempt++) {
-    try {
-      const connection = await open("connect");
+    let connection;
+    let address = endpoint;
+    for (const candidate of addresses) {
+      try {
+        connection = await open("connect", candidate);
+        address = candidate;
+        break;
+      } catch (error) {
+        lastError = error;
+        const code = error.code;
+        if (code !== "ENOENT" && code !== "ECONNREFUSED") throw error;
+      }
+    }
+    if (connection) {
       if (connection.reply.status === "ready") return connection.socket;
       connection.socket.destroy();
       if (connection.reply.status === "upgrade_required") {
-        const upgrade = await open("upgrade");
+        if (process.env.RESUME_COMPANION_ALLOW_BROWSER_RESTART !== "1")
+          throw new Error(`browser_upgrade_pending: dedicated browser version ${connection.reply.supervisor_version} is preserved. Review unsaved work before explicitly authorizing a restart; an authorized launcher can set RESUME_COMPANION_ALLOW_BROWSER_RESTART=1.`);
+        const upgrade = await open("upgrade", address);
         upgrade.socket.destroy();
         if (upgrade.reply.status !== "shutting_down") throw new Error(upgrade.reply.message ?? "supervisor upgrade was rejected");
         started = false;
       } else {
         throw new Error(connection.reply.message ?? `browser supervisor returned ${connection.reply.status}`);
       }
-    } catch (error) {
-      lastError = error;
     }
     if (!started) {
       startSupervisor();

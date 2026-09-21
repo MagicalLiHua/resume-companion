@@ -1,6 +1,6 @@
 # Contributing
 
-The 0.15 architecture keeps Resume Companion focused: a versioned local profile MCP, a TypeScript Resume Browser MCP built on the pinned Chrome DevTools foundation, and an Agent skill that composes both. Browser automation changes should use semantic form primitives and general component behavior instead of recruitment-site selectors or replaying private APIs.
+The current architecture keeps ApplyMCP focused: a versioned local profile MCP, a TypeScript ApplyMCP Browser built on the pinned Chrome DevTools foundation, and an Agent skill that composes both. Browser automation changes should use semantic form primitives and general component behavior instead of recruitment-site selectors or replaying private APIs.
 
 Before a pull request:
 

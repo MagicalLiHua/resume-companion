@@ -1,0 +1,20 @@
+{
+  "name": "ApplyMCP Browser",
+  "name_zh": "ApplyMCP 专用浏览器",
+  "name_en": "ApplyMCP Browser",
+  "description": "Scan and fill supported recruitment forms in a dedicated local Chrome profile.",
+  "description_zh": "在本地专用 Chrome 中扫描并填写已支持的招聘表单。",
+  "description_en": "Scan and fill supported recruitment forms in a dedicated local Chrome profile.",
+  "source": "applymcp-browser",
+  "type": "mcp",
+  "version": "0.24.0",
+  "minWorkbuddyVersion": "5.0.0",
+  "examples_zh": [
+    "扫描专用浏览器中当前打开的网申页面",
+    "用校招版资料填写普通字段并把最终提交留给我"
+  ],
+  "examples_en": [
+    "Scan the recruitment form open in the dedicated browser",
+    "Fill ordinary fields from my campus profile and leave final submission to me"
+  ]
+}

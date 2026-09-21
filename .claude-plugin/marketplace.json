@@ -1,0 +1,21 @@
+{
+  "name": "applymcp",
+  "owner": {
+    "name": "ApplyMCP",
+    "url": "https://github.com/MagicalLiHua"
+  },
+  "description": "ApplyMCP plugins for Claude Code",
+  "plugins": [
+    {
+      "name": "applymcp",
+      "source": "./plugins/resume-companion",
+      "description": "Local resume profiles and supervised recruitment-form autofill.",
+      "version": "0.24.0",
+      "homepage": "https://github.com/MagicalLiHua/resume-companion",
+      "repository": "https://github.com/MagicalLiHua/resume-companion",
+      "license": "MIT",
+      "category": "productivity",
+      "tags": ["resume", "recruitment", "mcp"]
+    }
+  ]
+}

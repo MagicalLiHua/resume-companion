@@ -20,18 +20,35 @@ jobs:
           cache-dependency-path: |
             package-lock.json
             plugins/resume-companion/package-lock.json
+            tests/real-controls/package-lock.json
       - run: npm ci
       - run: npm ci
         working-directory: plugins/resume-companion
+      - run: npm ci --prefix tests/real-controls
+      - run: npm run test:controls:build
       - run: npm run typecheck
       - run: npm run build
+      - run: npm run test:clients
       - run: npm test
       - run: npm run test:e2e
+      - run: npm run test:controls
+      - run: npm run test:controls:contracts
+      - run: npm run test:ud-contracts
+      - run: npm run test:feishu:optimization
+      - run: npm run test:overwrite
+      - run: npm run test:existing-date
+      - run: npm run test:form-run
+      - run: npm run test:form-prepare
+      - run: npm run test:form-run:lifecycle
+      - run: npm run test:form-run:whole
+      - run: npm run test:moka
+      - run: npm run test:beisen
+      - run: npm run test:supervisor:migration
       - run: npm run test:core
       - run: npm run package
       - uses: actions/upload-artifact@v4
         with:
-          name: resume-companion-preview
+          name: applymcp-preview
           path: |
-            artifacts/resume-companion-*.zip
-            artifacts/resume-companion-*.zip.sha256
+            artifacts/applymcp-*.zip
+            artifacts/applymcp-*.zip.sha256

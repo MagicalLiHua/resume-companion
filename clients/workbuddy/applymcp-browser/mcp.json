@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "resume_browser": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["./chrome-launcher.bundle.mjs"],
+      "cwd": ".",
+      "runtime": {
+        "type": "node",
+        "version": "24"
+      },
+      "disabledTools": ["upload_file", "lighthouse_audit"]
+    }
+  }
+}

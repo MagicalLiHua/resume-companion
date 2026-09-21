@@ -22,6 +22,7 @@ await client.connect(transport);
 try {
   const listed = (await client.listTools()).tools.map(tool => tool.name).sort();
   assert.deepEqual(listed, [
+    'resume_prepare', 'resume_prepare_apply',
     'resume_profile_list', 'resume_profile_read', 'resume_profile_save', 'resume_status',
   ].sort());
 
@@ -82,8 +83,21 @@ try {
   });
   assert.equal(staleRead.isError, true);
   assert.equal(staleRead.structuredContent.error.code, 'profile_changed');
+  const prepared = (await call('resume_prepare', {profile_id:profile.id,expected_revision:2})).structuredContent;
+  assert(prepared.markdown.includes('待补充信息'));
+  assert(!prepared.items.some(q=>q.key==='email'));
+  const phone = prepared.items.find(q=>q.key==='phone');
+  assert.equal(phone.entry,'ordinary');
+  const request = {profile_id:profile.id,expected_revision:2,catalog_version:prepared.catalog_version,questionnaire_id:prepared.questionnaire_id,
+    answers:[{question_id:phone.id,action:'set',value:'13800000000'}]};
+  const merged=await call('resume_prepare_apply',request);
+  assert.equal(merged.isError,undefined);assert.equal(merged.structuredContent.profile.revision,3);
+  const repeated=await call('resume_prepare_apply',request);
+  assert.equal(repeated.structuredContent.error.code,'profile_changed');
+  const after=(await call('resume_prepare',{profile_id:profile.id,expected_revision:3})).structuredContent;
+  assert(!after.items.some(q=>q.key==='phone'));assert(!JSON.stringify(after).includes('13800000000'));
 } finally {
   await client.close();
   await rm(dataDir, { recursive: true, force: true });
 }
-console.log('Four-tool MCP catalog, local storage, source resolution and read/write revision conflicts: OK');
+console.log('Six-tool MCP catalog, local storage, source resolution, personalized preparation, answer merge and revision conflicts: OK');

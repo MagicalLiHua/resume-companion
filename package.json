@@ -1,6 +1,6 @@
 {
-  "name": "resume-companion",
-  "version": "0.16.1",
+  "name": "applymcp",
+  "version": "0.24.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -14,9 +14,32 @@
     "test:core": "npm run test:core --prefix plugins/resume-companion",
     "test:devtools": "npm run test:devtools --prefix plugins/resume-companion",
     "check": "npm run check --prefix plugins/resume-companion",
+    "test:clients": "npm run test:clients --prefix plugins/resume-companion",
+    "config:agent": "node plugins/resume-companion/scripts/print-agent-config.mjs",
     "lab": "node scripts/lab-server.mjs",
+    "lab:ats": "node scripts/build-ats-offline.mjs && node scripts/ats-offline-server.mjs",
+    "test:ats": "node scripts/build-ats-offline.mjs && node tests/ats-offline/run.mjs",
     "debug:browser": "node plugins/resume-companion/scripts/browser-debug-client.mjs",
     "reload:codex-mcp": "node plugins/resume-companion/scripts/reload-codex-mcp.mjs",
-    "package": "node scripts/package.mjs"
+    "package": "node scripts/package.mjs",
+    "test:controls": "node tests/real-controls/run.mjs",
+    "test:controls:build": "npm run build --prefix tests/real-controls",
+    "test:controls:baseline": "node tests/real-controls/run.mjs --baseline",
+    "test:controls:contracts": "node tests/real-controls/contracts.mjs",
+    "test:controls:benchmark": "node tests/real-controls/benchmark.mjs",
+    "test:feishu": "node scripts/build-ats-offline.mjs && node tests/ats-offline/feishu-education.mjs",
+    "test:ud-contracts": "node tests/real-controls/ud-contracts.mjs",
+    "test:feishu:optimization": "node tests/real-controls/feishu-optimization.mjs",
+    "test:overwrite": "node tests/real-controls/overwrite-contracts.mjs",
+    "test:existing-date": "node tests/real-controls/existing-date-contracts.mjs",
+    "test:form-run": "node tests/real-controls/form-run-contracts.mjs",
+    "test:form-run:lifecycle": "node tests/real-controls/form-run-lifecycle.mjs",
+    "test:form-run:whole": "node tests/real-controls/whole-resume-contracts.mjs",
+    "test:moka": "node tests/real-controls/sd-resume-contracts.mjs",
+    "test:supervisor:migration": "node tests/real-controls/supervisor-migration.mjs",
+    "test:beisen": "node tests/real-controls/phoenix-resume-contracts.mjs",
+    "test:form-prepare": "node tests/real-controls/form-prepare-contracts.mjs",
+    "test:dayee": "node tests/real-controls/dayee-contracts.mjs",
+    "test:51job": "node tests/real-controls/job51-journey.mjs"
   }
 }

@@ -1,0 +1,31 @@
+{
+  "name": "applymcp",
+  "version": "0.24.0",
+  "description": "Local resume profiles and supervised recruitment-form autofill.",
+  "author": "ApplyMCP",
+  "homepage": "https://github.com/MagicalLiHua/resume-companion",
+  "license": "MIT",
+  "keywords": ["resume", "recruitment", "mcp", "autofill"],
+  "skills": "./plugins/resume-companion/skills/",
+  "mcpServers": {
+    "resume_companion": {
+      "command": "node",
+      "args": ["./plugins/resume-companion/server.bundle.mjs"],
+      "cwd": "./",
+      "startupTimeoutMs": 30000,
+      "toolTimeoutMs": 60000
+    },
+    "resume_browser": {
+      "command": "node",
+      "args": ["./plugins/resume-companion/chrome-launcher.bundle.mjs"],
+      "cwd": "./",
+      "startupTimeoutMs": 30000,
+      "toolTimeoutMs": 120000,
+      "disabledTools": ["upload_file", "lighthouse_audit"]
+    }
+  },
+  "interface": {
+    "displayName": "ApplyMCP",
+    "shortDescription": "Use local resume facts to fill recruitment forms"
+  }
+}

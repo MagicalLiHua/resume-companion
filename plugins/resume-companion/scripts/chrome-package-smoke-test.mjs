@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { access, mkdtemp, rm } from 'node:fs/promises';
+import { access, mkdir, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
@@ -17,12 +17,12 @@ function textOf(result) {
     : '';
 }
 
-function createClient(name) {
+function createClient(name, temporaryDirectory) {
   const transport = new StdioClientTransport({
     command: process.execPath,
     args: [entry],
     cwd: dirname(entry),
-    env: { ...environment, RESUME_COMPANION_CHROME_DATA_DIR: profileDir, RESUME_COMPANION_CHROME_HEADLESS: '1', RESUME_COMPANION_SUPERVISOR_EPHEMERAL: '1' },
+    env: { ...environment, TMPDIR: temporaryDirectory, TMP: temporaryDirectory, TEMP: temporaryDirectory, RESUME_COMPANION_CHROME_DATA_DIR: profileDir, RESUME_COMPANION_CHROME_HEADLESS: '1', RESUME_COMPANION_SUPERVISOR_EPHEMERAL: '1', RESUME_COMPANION_TEST_DIAGNOSTICS: '1' },
     stderr: 'pipe',
   });
   let diagnostic = '';
@@ -43,8 +43,10 @@ async function waitForUnlocked() {
   throw new Error('Chrome profile lock was not released');
 }
 
-const first = createClient('resume-companion-chrome-package-smoke-first');
-const second = createClient('resume-companion-chrome-package-smoke-second');
+const tempOne = join(profileRoot, 'task-one'), tempTwo = join(profileRoot, 'task-two');
+await Promise.all([mkdir(tempOne), mkdir(tempTwo)]);
+const first = createClient('resume-companion-chrome-package-smoke-first', tempOne);
+const second = createClient('resume-companion-chrome-package-smoke-second', tempTwo);
 let firstClosed = false;
 
 try {
@@ -54,7 +56,7 @@ try {
   ]);
   const firstNames = (await first.client.listTools()).tools.map(tool => tool.name);
   const secondNames = (await second.client.listTools()).tools.map(tool => tool.name);
-  for (const required of ['list_pages', 'browser_takeover', 'form_observe', 'form_fill_fields', 'form_select_option', 'form_select_path', 'form_set_date', 'form_activate', 'take_snapshot', 'fill_form', 'list_network_requests', 'evaluate_script']) {
+  for (const required of ['list_pages', 'browser_takeover', 'form_prepare', 'form_run', 'form_observe', 'form_fill_fields', 'form_select_option', 'form_select_path', 'form_set_date', 'form_activate', 'take_snapshot', 'fill_form', 'list_network_requests', 'evaluate_script']) {
     assert(firstNames.includes(required), `First client missing ${required}`);
     assert(secondNames.includes(required), `Second client missing ${required}`);
   }
@@ -64,8 +66,15 @@ try {
   const firstPages = await first.client.callTool({ name: 'list_pages', arguments: {} });
   assert(!firstPages.isError, `First real browser tool call must start Chrome: ${textOf(firstPages)}\n${first.diagnostic()}`);
   assert.equal(await lockExists(), true, 'First browser call must reserve the profile');
+  const opened = await first.client.callTool({name:'new_page',arguments:{url:'data:text/html,<title>Unsaved fixture</title><input aria-label=Draft>'}});
+  assert(!opened.isError, textOf(opened));
+  const edited = await first.client.callTool({name:'evaluate_script',arguments:{pageId:2,function:'() => { document.querySelector("input").value = "unsaved fixture"; return true; }'}});
+  assert(!edited.isError, textOf(edited));
   const secondPages = await second.client.callTool({ name: 'list_pages', arguments: {} });
   assert(!secondPages.isError, `Second client must take over the running browser: ${textOf(secondPages)}\n${second.diagnostic()}`);
+  assert(textOf(secondPages).includes('data:text/html'), 'Existing tab must survive another TMPDIR client');
+  const draft = await second.client.callTool({name:'evaluate_script',arguments:{pageId:2,function:'() => document.querySelector("input").value'}});
+  assert(textOf(draft).includes('unsaved fixture'), 'Unsaved field state must survive takeover');
   const firstRevoked = await first.client.callTool({ name: 'list_pages', arguments: {} });
   assert(firstRevoked.isError && textOf(firstRevoked).includes('browser_lease_revoked'), `Old client must remain open but lose browser control:\n${textOf(firstRevoked)}`);
   const reclaimed = await first.client.callTool({ name: 'browser_takeover', arguments: {} });

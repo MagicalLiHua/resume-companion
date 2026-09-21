@@ -4,6 +4,8 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { ProfileReadSchema, ProfileSaveSchema, ProfileStore } from './profile-store.js';
 import { RUNTIME_PLUGIN_VERSION } from './version.js';
+import {ProfilePreparation,PreparationReadSchema,PreparationApplySchema} from './profile-requirements.js';
+import {requirementsCatalog} from './browser/planning/requirements.js';
 
 type ToolData = Record<string, unknown>;
 type ToolResult = {
@@ -14,6 +16,7 @@ type ToolResult = {
 
 const store = new ProfileStore();
 await store.initialize();
+const preparation=new ProfilePreparation(store,requirementsCatalog());
 
 function toolResult(data: unknown): ToolResult {
   const structuredContent = isRecord(data) ? data : { value: data };
@@ -41,8 +44,8 @@ async function runLocal(job: () => Promise<unknown>): Promise<ToolResult> {
 const server = new McpServer({ name: 'resume-companion', version: RUNTIME_PLUGIN_VERSION });
 
 server.registerTool('resume_status', {
-  title: '检查简历随行资料库状态',
-  description: '返回本地资料库目录、格式版本和资料数量。浏览器由独立的 Resume Browser MCP 提供，因此本工具不会启动或检查 Chrome。',
+  title: '检查 ApplyMCP 资料库状态',
+  description: '返回本地资料库目录、格式版本和资料数量。浏览器由独立的 ApplyMCP Browser 提供，因此本工具不会启动或检查 Chrome。',
   annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
 }, async () => runLocal(async () => ({
   storage: await store.status(),
@@ -68,6 +71,18 @@ server.registerTool('resume_profile_save', {
   inputSchema: ProfileSaveSchema,
   annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
 }, async input => runLocal(() => store.save(ProfileSaveSchema.parse(input))));
+
+server.registerTool('resume_prepare',{
+  title:'生成一次性简历资料补充表',
+  description:'从固定资料 revision 和已验证企业需求并集生成缺项 Markdown，不返回已有答案。默认 all_supported；仅运行前差异检查使用 selected_modules。没有的经历不展开，身份证号等证件号码标记为本地录入，手机号/邮箱已有则不再问。分页未结束时需继续读取并合并清单。',
+  inputSchema:PreparationReadSchema,annotations:{readOnlyHint:true,destructiveHint:false,idempotentHint:true},
+},async input=>runLocal(()=>preparation.read(input)));
+
+server.registerTool('resume_prepare_apply',{
+  title:'合并用户明确补充的资料',
+  description:'按 question ID、资料 revision、目录版本和 questionnaire_id 合并用户答案，保留其他记录，不覆盖已有事实。none 仅用于无记录栏目；not_applicable/withheld/deferred 不会变成网站上的否。证件号码不能通过此工具录入。有新经历时先通过资料保存工具建立记录，再重新生成补充表。',
+  inputSchema:PreparationApplySchema,annotations:{readOnlyHint:false,destructiveHint:false,idempotentHint:false},
+},async input=>runLocal(()=>preparation.apply(input)));
 
 const transport = new StdioServerTransport();
 await server.connect(transport);

@@ -40,7 +40,12 @@ research/third-party/
 !/docs/mcp-tools.md
 !/docs/development.md
 !/docs/validation.md
+!/docs/agent-clients.md
+!/docs/51job与大易适配开发记录-2026-09-21.md
+!/docs/51job与大易适配调研-2026-09-21.md
 !/docs/images/
+!/docs/assets/
+!/docs/assets/**
 /plugins/resume-companion/scripts/debug-client.mjs
 /plugins/resume-companion/scripts/model-eval-client.mjs
 /plugins/resume-companion/runtime/

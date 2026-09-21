@@ -1,0 +1,25 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>Custom Select regression fixture</title>
+<style>
+body{font:16px system-ui;padding:20px}.ant-form-item{margin:12px 0}input,button{padding:8px}.ant-select{position:relative;width:300px}.ant-select-selector{border:1px solid #888;padding:10px;height:24px}.ant-select-selection-search-input{position:absolute;inset:0;width:100%;opacity:0}.ant-select-dropdown{background:white;border:1px solid #888;padding:8px}.ant-select-item-option,li{padding:8px;cursor:pointer;list-style:none}ul{padding:0;margin:0}.ant-cascader-menus{display:flex}.ant-select-dropdown-hidden{display:none}.componentTitle{font-weight:bold;margin-top:20px}nav{position:fixed;right:20px;top:20px}
+</style>
+<nav role="navigation"><ul role="menu"><li role="menuitem"><a href="#basic">基本信息</a> <a href="#education">教育信息</a> <a href="#other">其他信息</a></li></ul></nav>
+<div id="basic"><div class="componentTitle"><span>基本信息</span></div><form onsubmit="return false"></form><button id="save-basic">保 存</button></div>
+<div id="education"><div class="componentTitle"><span>教育信息</span></div><h3>虚拟大学记录卡</h3><button>编辑</button></div>
+<div id="other"><div class="componentTitle"><span>其他信息</span></div><button id="save-other">保 存</button></div>
+<div><button id="duplicate-a">重复动作</button><button id="duplicate-b">重复动作</button></div>
+<div id="status" role="status"></div>
+<script>
+window.events={basic:0,other:0,duplicateA:0,duplicateB:0,opens:{}};
+for(const [id,key] of [['save-basic','basic'],['save-other','other'],['duplicate-a','duplicateA'],['duplicate-b','duplicateB']])document.getElementById(id).onclick=()=>window.events[key]++;
+function make(label,id,kind,initial=''){
+ const row=document.createElement('div');row.className='ant-form-item';row.innerHTML=`<label for="${id}">${label}</label><div class="ant-select ${kind==='path'?'ant-cascader':''}"><div class="ant-select-selector"><input id="${id}" role="combobox" aria-controls="${id}_list" aria-expanded="false" readonly><span class="ant-select-selection-item"></span></div></div>`;
+ document.querySelector('#basic form').append(row);const input=row.querySelector('input'),component=row.querySelector('.ant-select'),display=row.querySelector('.ant-select-selection-item');display.textContent=initial;
+ input.onclick=()=>{const old=component.querySelector('.ant-select-dropdown');if(old&&!old.classList.contains('ant-select-dropdown-hidden')){old.classList.add('ant-select-dropdown-hidden');input.setAttribute('aria-expanded','false');return}if(old)old.remove();window.events.opens[id]=(window.events.opens[id]||0)+1;input.setAttribute('aria-expanded','true');const popup=document.createElement('div');popup.className='ant-select-dropdown';component.append(popup);
+ const choose=value=>{display.textContent=value;popup.classList.add('ant-select-dropdown-hidden');input.setAttribute('aria-expanded','false')};
+ if(kind==='path'){const menus=document.createElement('div');menus.className='ant-cascader-menus';menus.id=id+'_list';popup.append(menus);const path=[];function layer(level,values){while(menus.children.length>level)menus.lastChild.remove();const column=document.createElement('ul');column.className='ant-cascader-menu';column.role='menu';menus.append(column);for(const name of values){const option=document.createElement('li');option.role='menuitemcheckbox';option.setAttribute('aria-checked','false');option.innerHTML=`<div class="ant-cascader-menu-item-content">${name}</div><span role="img" aria-label="right">›</span>`;column.append(option);option.onclick=()=>{for(const sibling of column.children)sibling.setAttribute('aria-checked','false');option.setAttribute('aria-checked','true');path[level]=name;path.length=level+1;if(level===0)layer(1,name==='上海市'?['浦东新区']:['市辖区']);else if(name==='市辖区')layer(2,['海淀区']);else choose(path.join(' / '))}}}layer(0,['上海市','北京市']);
+ }else if(kind==='static'){popup.id=id+'_list';popup.role='listbox';for(const name of ['汉族','壮族']){const option=document.createElement('div');option.innerHTML=`<span>${name}</span>`;option.onclick=()=>choose(name);popup.append(option)}}
+ else{popup.innerHTML=`<div role="listbox" id="${id}_list" style="width:0;height:0;overflow:hidden"><div role="option">男</div><div role="option">女</div></div>`;for(const name of ['男','女']){const option=document.createElement('div');option.className='ant-select-item ant-select-item-option';option.innerHTML=`<div class="ant-select-item-option-content">${name}</div>`;option.onclick=()=>choose(name);popup.append(option)}}
+ };
+}
+make('性别','gender','select');make('民族','ethnicity','static');make('籍贯','origin','path');make('现居住地','residence','path');make('预填性别','prefilled','select','女');
+</script></html>

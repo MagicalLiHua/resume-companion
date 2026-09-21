@@ -3,6 +3,7 @@ import { chmod, copyFile, mkdir, open, readFile, readdir, rename, stat, writeFil
 import { homedir } from 'node:os';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { z } from 'zod';
+import {presenceSchema,presenceKeys,basicExtras,educationExtras,experienceExtras,projectExtras,certificateExtras,intentSchema,languageShape,awardShape,campusShape,competitionShape} from './profile-fields.js';
 
 const ID_PATTERN = /^[A-Za-z0-9_-]{1,100}$/;
 const id = z.string().regex(ID_PATTERN);
@@ -13,9 +14,10 @@ const month = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/).nullable();
 const factInput = z.object({ id: optionalId, text }).strict();
 const fact = z.object({ id, text }).strict();
 const educationShape = {
+  ...educationExtras,
   school: nullableText,
   major: nullableText,
-  education_level: z.enum(['associate', 'bachelor', 'master', 'doctor', 'other']).nullable(),
+  education_level: z.enum(['high_school', 'associate', 'bachelor', 'master', 'doctor', 'other']).nullable(),
   degree: nullableText,
   expected_degree: nullableText,
   completed: z.boolean().nullable(),
@@ -26,6 +28,7 @@ const educationShape = {
   is_expected_end: z.boolean().nullable(),
 };
 const experienceShape = {
+  ...experienceExtras,
   kind: z.enum(['internship', 'work']).nullable(),
   organization: nullableText,
   role: nullableText,
@@ -34,13 +37,14 @@ const experienceShape = {
   is_current: z.boolean().nullable(),
 };
 const projectShape = {
+  ...projectExtras,
   name: nullableText,
   role: nullableText,
   start_month: month,
   end_month: month,
   is_current: z.boolean().nullable(),
 };
-const certificateShape = { name: nullableText, issuer: nullableText, obtained_month: month };
+const certificateShape = { ...certificateExtras, name: nullableText, issuer: nullableText, obtained_month: month };
 const answerShape = { title: z.string().max(120), text };
 const supplementalShape = {
   field_key: z.string().max(160),
@@ -63,6 +67,7 @@ const answer = z.object({ id, ...answerShape }).strict();
 const supplementalInput = z.object({ id: optionalId, ...supplementalShape }).strict();
 const supplemental = z.object({ id, ...supplementalShape }).strict();
 const basic = z.object({
+  ...basicExtras,
   full_name: nullableText,
   email: z.string().max(254).email().nullable(),
   phone: z.string().max(80).nullable(),
@@ -70,8 +75,15 @@ const basic = z.object({
   job_intention: nullableText,
 }).strict();
 
+const extraShapes={languages:languageShape,awards:awardShape,campus:campusShape,competitions:competitionShape};
+const extraSchemas=Object.fromEntries(Object.entries(extraShapes).map(([k,v])=>[k,z.array(z.object({id,...v}).strict()).max(50).default([])]));
+const extraInputs=Object.fromEntries(Object.entries(extraShapes).map(([k,v])=>[k,z.array(z.object({id:optionalId,...v}).strict()).max(50).optional()]));
+
 export const ProfileSchema = z.object({
-  schema_version: z.literal('1.1'),
+  schema_version: z.enum(['1.1','1.2']).transform(()=>'1.2' as const),
+  languages:extraSchemas.languages!,awards:extraSchemas.awards!,campus:extraSchemas.campus!,competitions:extraSchemas.competitions!,
+  section_status:presenceSchema.default({}),
+  intent:intentSchema.default({}),
   profile_id: id,
   revision: z.number().int().nonnegative(),
   basic,
@@ -81,11 +93,12 @@ export const ProfileSchema = z.object({
   skills: z.array(z.string().max(120)).max(100),
   certificates: z.array(certificate).max(50),
   custom_answers: z.array(answer).max(50),
-  supplemental_fields: z.array(supplemental).max(100),
+  supplemental_fields: z.array(supplemental).max(500),
 }).strict().superRefine((profile, context) => {
   const ids = new Set<string>([profile.profile_id]);
   const fieldKeys = new Set<string>();
   const collections = Object.entries({
+    languages:profile.languages,awards:profile.awards,campus:profile.campus,competitions:profile.competitions,
     education: profile.education,
     experience: profile.experience,
     projects: profile.projects,
@@ -105,6 +118,11 @@ export const ProfileSchema = z.object({
       }
     });
   }
+  for(const key of presenceKeys){
+    const rows=key==='work'||key==='internships'?profile.experience.filter(r=>r.kind===(key==='work'?'work':'internship')):profile[key];
+    if(profile.section_status[key]==='none' && rows.length)context.addIssue({code:z.ZodIssueCode.custom,path:['section_status',key],message:'明确没有与已有记录冲突'});
+    if(profile.section_status[key]==='provided' && !rows.length)context.addIssue({code:z.ZodIssueCode.custom,path:['section_status',key],message:'已提供栏目需要至少一条记录'});
+  }
   profile.supplemental_fields.forEach((field, index) => {
     if (!field.field_key.trim() || !field.label.trim() || fieldKeys.has(field.field_key)) {
       context.addIssue({ code: z.ZodIssueCode.custom, path: ['supplemental_fields', index], message: '补充资料需要名称和唯一字段标识' });
@@ -114,6 +132,9 @@ export const ProfileSchema = z.object({
 });
 
 export const ProfileChangesSchema = z.object({
+  languages:extraInputs.languages!,awards:extraInputs.awards!,campus:extraInputs.campus!,competitions:extraInputs.competitions!,
+  section_status:presenceSchema.partial().optional(),
+  intent:intentSchema.partial().optional(),
   basic: basic.partial().optional(),
   education: z.array(educationInput).max(30).optional(),
   experience: z.array(experienceInput).max(50).optional(),
@@ -121,7 +142,7 @@ export const ProfileChangesSchema = z.object({
   skills: z.array(z.string().max(120)).max(100).optional(),
   certificates: z.array(certificateInput).max(50).optional(),
   custom_answers: z.array(answerInput).max(50).optional(),
-  supplemental_fields: z.array(supplementalInput).max(100).optional(),
+  supplemental_fields: z.array(supplementalInput).max(500).optional(),
 }).strict();
 
 export const ProfileSaveSchema = z.object({
@@ -169,10 +190,10 @@ export type ProfileSave = z.infer<typeof ProfileSaveSchema>;
 type StoredProfile = z.infer<typeof StoredProfileSchema>;
 type IndexEntry = z.infer<typeof IndexEntrySchema>;
 type Index = z.infer<typeof IndexSchema>;
-type ReadSection = keyof Pick<Profile, 'basic' | 'education' | 'experience' | 'projects' | 'skills' | 'certificates' | 'custom_answers' | 'supplemental_fields'>;
+type ReadSection = keyof Pick<Profile, 'basic' | 'education' | 'experience' | 'projects' | 'skills' | 'certificates' | 'custom_answers' | 'supplemental_fields' | 'languages' | 'awards' | 'campus' | 'competitions' | 'intent' | 'section_status'>;
 
-const emptyProfile = (profileId: string, revision: number): Profile => ({
-  schema_version: '1.1',
+const emptyProfile = (profileId: string, revision: number): Profile => ProfileSchema.parse({
+  schema_version: '1.2',
   profile_id: profileId,
   revision,
   basic: { full_name: null, email: null, phone: null, city: null, job_intention: null },
@@ -188,6 +209,13 @@ const emptyProfile = (profileId: string, revision: number): Profile => ({
 const ensureId = (value: string | undefined): string => value ?? randomUUID();
 function mergeChanges(profile: Profile, changes: ProfileChanges, revision: number): Profile {
   const next = structuredClone(profile);
+  next.schema_version='1.2';
+  if(changes.section_status)next.section_status=presenceSchema.parse({...next.section_status,...changes.section_status});
+  if(changes.intent)next.intent=intentSchema.parse({...next.intent,...changes.intent});
+  for(const key of ['languages','awards','campus','competitions'] as const){
+    const rows=changes[key];
+    if(rows)next[key]=extraSchemas[key]!.parse(rows.map(row=>({...row,id:ensureId(row.id)})));
+  }
   if (changes.basic) next.basic = basic.parse({ ...next.basic, ...changes.basic });
   if (changes.education) next.education = z.array(education).parse(changes.education.map(record => ({ ...record, id: ensureId(record.id) })));
   if (changes.experience) next.experience = z.array(experience).parse(changes.experience.map(record => ({ ...record, id: ensureId(record.id), facts: record.facts.map(item => ({ ...item, id: ensureId(item.id) })) })));
@@ -255,7 +283,7 @@ function entryFor(stored: StoredProfile): IndexEntry {
 }
 
 const displayEnums: Record<string, string> = {
-  associate: '大专', bachelor: '本科', master: '硕士研究生', doctor: '博士研究生',
+  high_school:'高中', associate: '大专', bachelor: '本科', master: '硕士研究生', doctor: '博士研究生',
   full_time: '全日制', part_time: '非全日制', other: '其他', internship: '实习', work: '工作',
 };
 type ScalarSource = string | boolean | null | undefined;
@@ -268,9 +296,13 @@ function scalarSource(profile: Profile, sourceRef: string): ScalarSource {
   if (section === 'basic' && parts.length === 2 && recordId && Object.hasOwn(profile.basic, recordId)) {
     return profile.basic[recordId as keyof typeof profile.basic];
   }
+  if ((section==='intent'||section==='section_status') && parts.length===2 && recordId) {
+    const value=(profile[section] as Record<string,unknown>)[recordId];
+    return Array.isArray(value)?value.join('、'):typeof value==='string'||typeof value==='boolean'||value===null?value:undefined;
+  }
   if (section === 'custom_answers' && parts.length === 2) return profile.custom_answers.find(item => item.id === recordId)?.text;
   if (section === 'supplemental_fields' && parts.length === 2) return profile.supplemental_fields.find(item => item.id === recordId)?.value;
-  if (section && recordId && field && ['education', 'experience', 'projects', 'certificates'].includes(section) && parts.length === 3) {
+  if (section && recordId && field && ['education', 'experience', 'projects', 'certificates', 'languages', 'awards', 'competitions', 'campus'].includes(section) && parts.length === 3) {
     const collection = (profile as unknown as Record<string, Array<Record<string, unknown> & { id: string }>>)[section];
     const record = collection?.find(item => item.id === recordId);
     if (!record || !Object.hasOwn(record, field)) return undefined;
@@ -285,7 +317,7 @@ function scalarSource(profile: Profile, sourceRef: string): ScalarSource {
 export const ProfileReadSchema = z.object({
   profile_id: id,
   expected_revision: z.number().int().positive().optional().describe('首次目录读取后，后续读取填写该次返回的 profile_revision'),
-  section: z.enum(['basic', 'education', 'experience', 'projects', 'skills', 'certificates', 'custom_answers', 'supplemental_fields']).optional(),
+  section: z.enum(['basic', 'education', 'experience', 'projects', 'skills', 'certificates', 'custom_answers', 'supplemental_fields', 'languages', 'awards', 'campus', 'competitions', 'intent', 'section_status']).optional(),
   record_id: id.optional(),
   source_refs: z.array(z.string().min(1).max(240)).max(100).optional(),
   offset: z.number().int().nonnegative().optional(),
@@ -375,6 +407,13 @@ export class ProfileStore {
     return this.readStored(id.parse(profileId));
   }
 
+  // Planning reads exactly one selected profile without creating an index or files.
+  async readForPlanning(profileId:string,revision:number):Promise<Profile>{
+    const stored=await this.readStored(id.parse(profileId));
+    if(stored.revision!==revision)throw storageError('profile_changed','资料版本已变化，请重新准备');
+    return stored.profile;
+  }
+
   async save(rawInput: unknown) {
     const input = ProfileSaveSchema.parse(rawInput);
     return this.exclusive(async () => {
@@ -440,7 +479,7 @@ export class ProfileStore {
       return { ...base, directory: false, entries };
     }
     if (!params.section) {
-      const sectionNames: ReadSection[] = ['basic', 'education', 'experience', 'projects', 'skills', 'certificates', 'custom_answers', 'supplemental_fields'];
+      const sectionNames: ReadSection[] = ['basic', 'education', 'experience', 'projects', 'skills', 'certificates', 'custom_answers', 'supplemental_fields', 'languages', 'awards', 'campus', 'competitions', 'intent', 'section_status'];
       const sections = Object.fromEntries(sectionNames.map(section => {
         const value = stored.profile[section];
         return [section, { records: Array.isArray(value) ? value.length : 1 }];

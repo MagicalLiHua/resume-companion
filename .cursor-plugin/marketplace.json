@@ -1,0 +1,23 @@
+{
+  "name": "applymcp",
+  "owner": {
+    "name": "ApplyMCP"
+  },
+  "metadata": {
+    "description": "ApplyMCP plugins for Cursor",
+    "version": "0.24.0"
+  },
+  "plugins": [
+    {
+      "name": "applymcp",
+      "source": "plugins/resume-companion",
+      "description": "Local resume profiles and supervised recruitment-form autofill.",
+      "version": "0.24.0",
+      "homepage": "https://github.com/MagicalLiHua/resume-companion",
+      "repository": "https://github.com/MagicalLiHua/resume-companion",
+      "license": "MIT",
+      "category": "Productivity",
+      "tags": ["resume", "recruitment", "mcp"]
+    }
+  ]
+}

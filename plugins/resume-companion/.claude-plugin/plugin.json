@@ -1,0 +1,14 @@
+{
+  "name": "applymcp",
+  "version": "0.24.0",
+  "description": "Local resume profiles and supervised recruitment-form autofill.",
+  "author": {
+    "name": "ApplyMCP"
+  },
+  "homepage": "https://github.com/MagicalLiHua/resume-companion",
+  "repository": "https://github.com/MagicalLiHua/resume-companion",
+  "license": "MIT",
+  "keywords": ["resume", "recruitment", "mcp", "autofill"],
+  "skills": "./skills/",
+  "mcpServers": "./client-configs/claude-code.mcp.json"
+}

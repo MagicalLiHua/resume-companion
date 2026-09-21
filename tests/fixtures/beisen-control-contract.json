@@ -1,0 +1,9 @@
+{
+  "purpose": "Synthetic control-only acceptance on a separate unsaved Beisen tab; these are not candidate resume facts and must not be substituted into complete-virtual-resume.md.",
+  "save_or_submit": false,
+  "cases": [
+    {"scope": "教育经历 / 第1条", "field": "学校名称", "value": "浙江大学"},
+    {"scope": "求职意向", "field": "期望从事行业", "values": ["银行"]},
+    {"scope": "求职意向", "field": "期望从事职业", "value": "培训生类"}
+  ]
+}

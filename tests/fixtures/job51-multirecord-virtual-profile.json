@@ -1,0 +1,209 @@
+{
+  "name": "51job J10058 虚拟多记录验收",
+  "changes": {
+    "basic": {
+      "full_name": "林星遥",
+      "gender": "女",
+      "birth_date": "2001-05-16",
+      "phone": "13000000000",
+      "email": "lin.xingyao@example.test",
+      "self_description": "全部资料均为虚构测试数据，用于验证普通分页填写，不代表真实求职者。"
+    },
+    "education": [
+      {
+        "id": "education_virtual",
+        "school": "测试大学（虚拟）",
+        "major": "软件工程",
+        "education_level": "bachelor",
+        "degree": null,
+        "expected_degree": null,
+        "completed": true,
+        "study_mode": "full_time",
+        "is_expected_end": false,
+        "start_month": "2020-09",
+        "end_month": "2024-06",
+        "is_current": false
+      }
+    ],
+    "supplemental_fields": [
+      {
+        "field_key": "education.education_virtual.end_date",
+        "label": "education.education_virtual.end_date",
+        "description": "独立虚拟验收案例的明确事实，不补造原完整简历的日期或能力。",
+        "value_type": "text",
+        "value": "2024-06-30"
+      },
+      {
+        "field_key": "basic.political_status",
+        "label": "basic.political_status",
+        "description": "独立虚拟验收案例的明确事实，不补造原完整简历的日期或能力。",
+        "value_type": "text",
+        "value": "共青团员"
+      },
+      {
+        "field_key": "basic.residence_province",
+        "label": "basic.residence_province",
+        "description": "独立虚拟验收案例的明确事实，不补造原完整简历的日期或能力。",
+        "value_type": "text",
+        "value": "浙江省"
+      },
+      {
+        "field_key": "basic.residence_city",
+        "label": "basic.residence_city",
+        "description": "独立虚拟验收案例的明确事实，不补造原完整简历的日期或能力。",
+        "value_type": "text",
+        "value": "杭州"
+      },
+      {
+        "field_key": "it_skills.skill1.category",
+        "label": "it_skills.skill1.category",
+        "description": "独立虚拟多记录验收资料",
+        "value_type": "text",
+        "value": "办公应用软件"
+      },
+      {
+        "field_key": "it_skills.skill1.name",
+        "label": "it_skills.skill1.name",
+        "description": "独立虚拟多记录验收资料",
+        "value_type": "text",
+        "value": "OutLook Express"
+      },
+      {
+        "field_key": "it_skills.skill1.overall",
+        "label": "it_skills.skill1.overall",
+        "description": "独立虚拟多记录验收资料",
+        "value_type": "text",
+        "value": "熟练"
+      },
+      {
+        "field_key": "it_skills.skill2.category",
+        "label": "it_skills.skill2.category",
+        "description": "独立虚拟多记录验收资料",
+        "value_type": "text",
+        "value": "办公应用软件"
+      },
+      {
+        "field_key": "it_skills.skill2.name",
+        "label": "it_skills.skill2.name",
+        "description": "独立虚拟多记录验收资料",
+        "value_type": "text",
+        "value": "MS WORD"
+      },
+      {
+        "field_key": "it_skills.skill2.overall",
+        "label": "it_skills.skill2.overall",
+        "description": "独立虚拟多记录验收资料",
+        "value_type": "text",
+        "value": "熟练"
+      },
+      {
+        "field_key": "it_skills.skill3.category",
+        "label": "it_skills.skill3.category",
+        "description": "独立虚拟多记录验收资料",
+        "value_type": "text",
+        "value": "办公应用软件"
+      },
+      {
+        "field_key": "it_skills.skill3.name",
+        "label": "it_skills.skill3.name",
+        "description": "独立虚拟多记录验收资料",
+        "value_type": "text",
+        "value": "MS Excel"
+      },
+      {
+        "field_key": "it_skills.skill3.overall",
+        "label": "it_skills.skill3.overall",
+        "description": "独立虚拟多记录验收资料",
+        "value_type": "text",
+        "value": "熟练"
+      },
+      {
+        "field_key": "it_skills.skill4.category",
+        "label": "it_skills.skill4.category",
+        "description": "独立虚拟多记录验收资料",
+        "value_type": "text",
+        "value": "办公应用软件"
+      },
+      {
+        "field_key": "it_skills.skill4.name",
+        "label": "it_skills.skill4.name",
+        "description": "独立虚拟多记录验收资料",
+        "value_type": "text",
+        "value": "MS Powerpoint"
+      },
+      {
+        "field_key": "it_skills.skill4.overall",
+        "label": "it_skills.skill4.overall",
+        "description": "独立虚拟多记录验收资料",
+        "value_type": "text",
+        "value": "熟练"
+      },
+      {
+        "field_key": "internships.virtual_intern1.role_category",
+        "label": "internships.virtual_intern1.role_category",
+        "description": "独立虚拟多记录验收资料",
+        "value_type": "text",
+        "value": "测试"
+      },
+      {
+        "field_key": "internships.virtual_intern1.start_date",
+        "label": "internships.virtual_intern1.start_date",
+        "description": "独立虚拟多记录验收资料",
+        "value_type": "text",
+        "value": "2021-07-01"
+      },
+      {
+        "field_key": "internships.virtual_intern1.end_date",
+        "label": "internships.virtual_intern1.end_date",
+        "description": "独立虚拟多记录验收资料",
+        "value_type": "text",
+        "value": "2021-09-15"
+      },
+      {
+        "field_key": "internships.virtual_intern2.role_category",
+        "label": "internships.virtual_intern2.role_category",
+        "description": "独立虚拟多记录验收资料",
+        "value_type": "text",
+        "value": "测试"
+      },
+      {
+        "field_key": "internships.virtual_intern2.start_date",
+        "label": "internships.virtual_intern2.start_date",
+        "description": "独立虚拟多记录验收资料",
+        "value_type": "text",
+        "value": "2022-07-01"
+      },
+      {
+        "field_key": "internships.virtual_intern2.end_date",
+        "label": "internships.virtual_intern2.end_date",
+        "description": "独立虚拟多记录验收资料",
+        "value_type": "text",
+        "value": "2022-09-15"
+      }
+    ],
+    "experience": [
+      {
+        "id": "virtual_intern1",
+        "kind": "internship",
+        "organization": "虚拟测试企业1（测试数据）",
+        "role": "标准化工程师",
+        "start_month": "2021-07",
+        "end_month": "2021-09",
+        "is_current": false,
+        "facts": [],
+        "description": "虚构经历，仅用于验证网申多记录、长文本与日期联动。虚构经历，仅用于验证网申多记录、长文本与日期联动。虚构经历，仅用于验证网申多记录、长文本与日期联动。虚构经历，仅用于验证网申多记录、长文本与日期联动。虚构经历，仅用于验证网申多记录、长文本与日期联动。虚构经历，仅用于验证网申多记录、长文本与日期联动。虚构经历，仅用于验证网申多记录、长文本与日期联动。虚构经历，仅用于验证网申多记录、长文本与日期联动。虚构经历，仅用于验证网申多记录、长文本与日期联动。虚构经历，仅用于验证网申多记录、长文本与日期联动。"
+      },
+      {
+        "id": "virtual_intern2",
+        "kind": "internship",
+        "organization": "虚拟测试企业2（测试数据）",
+        "role": "软件测试",
+        "start_month": "2022-07",
+        "end_month": "2022-09",
+        "is_current": false,
+        "facts": [],
+        "description": "虚构经历，仅用于验证网申多记录、长文本与日期联动。虚构经历，仅用于验证网申多记录、长文本与日期联动。虚构经历，仅用于验证网申多记录、长文本与日期联动。虚构经历，仅用于验证网申多记录、长文本与日期联动。虚构经历，仅用于验证网申多记录、长文本与日期联动。虚构经历，仅用于验证网申多记录、长文本与日期联动。虚构经历，仅用于验证网申多记录、长文本与日期联动。虚构经历，仅用于验证网申多记录、长文本与日期联动。虚构经历，仅用于验证网申多记录、长文本与日期联动。虚构经历，仅用于验证网申多记录、长文本与日期联动。"
+      }
+    ]
+  }
+}

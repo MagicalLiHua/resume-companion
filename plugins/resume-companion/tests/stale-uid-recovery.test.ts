@@ -21,6 +21,17 @@ function pathFor(root: AccessibilityNodeLike, id: string) {
 }
 
 describe('stale UID semantic recovery', () => {
+  test('never searches unnamed replacements when upstream wrapped a context timeout as a stale UID', async () => {
+    let snapshots = 0;
+    class BrokenPage {
+      textSnapshot = {root:{id:'root',children:[{id:'old',role:'textbox',name:''}]},idToNode:new Map()};
+      pptrPage = {accessibility:{snapshot:async()=>{snapshots++;return {role:'RootWebArea',children:[{role:'textbox',name:''},{role:'textbox',name:''}]};}}};
+      async getElementByUid(_uid:string):Promise<unknown> {throw new Error('Element uid old no longer exists on the page.',{cause:new Error('Timed out after waiting 5000ms')});}
+    }
+    installStaleUidRecovery(BrokenPage);
+    await expect(new BrokenPage().getElementByUid('old')).rejects.toThrow('page_context_unavailable');
+    expect(snapshots).toBe(0);
+  });
   test('resolves a unique replacement while allowing its value to change', () => {
     const oldRoot = { role: 'RootWebArea', children: [{ id: 'old', role: 'textbox', name: '姓名', value: '' }] };
     const newNode = { role: 'textbox', name: '姓名', value: '部分写入' };

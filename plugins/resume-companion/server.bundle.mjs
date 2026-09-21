@@ -1136,12 +1136,12 @@ var require_util = __commonJS({
       return str.replace(/~1/g, "/").replace(/~0/g, "~");
     }
     exports.unescapeJsonPointer = unescapeJsonPointer;
-    function eachItem(xs, f) {
+    function eachItem(xs, f2) {
       if (Array.isArray(xs)) {
         for (const x of xs)
-          f(x);
+          f2(x);
       } else {
-        f(xs);
+        f2(xs);
       }
     }
     exports.eachItem = eachItem;
@@ -1188,10 +1188,10 @@ var require_util = __commonJS({
     }
     exports.setEvaluated = setEvaluated;
     var snippets = {};
-    function useFunc(gen, f) {
+    function useFunc(gen, f2) {
       return gen.scopeValue("func", {
-        ref: f,
-        code: snippets[f.code] || (snippets[f.code] = new code_1._Code(f.code))
+        ref: f2,
+        code: snippets[f2.code] || (snippets[f2.code] = new code_1._Code(f2.code))
       });
     }
     exports.useFunc = useFunc;
@@ -3192,8 +3192,8 @@ var require_utils = __commonJS({
       }
       if (bestLength < 2) return hextets.join(":");
       const head = hextets.slice(0, bestStart).join(":");
-      const tail = hextets.slice(bestStart + bestLength).join(":");
-      return head + "::" + tail;
+      const tail2 = hextets.slice(bestStart + bestLength).join(":");
+      return head + "::" + tail2;
     }
     function normalizeIPv6Address(input) {
       const compression = input.indexOf("::");
@@ -4625,7 +4625,7 @@ var require_core = __commonJS({
       errorsText(errors = this.errors, { separator = ", ", dataVar = "data" } = {}) {
         if (!errors || errors.length === 0)
           return "No errors";
-        return errors.map((e) => `${dataVar}${e.instancePath} ${e.message}`).reduce((text2, msg) => text2 + separator + msg);
+        return errors.map((e) => `${dataVar}${e.instancePath} ${e.message}`).reduce((text3, msg) => text3 + separator + msg);
       }
       $dataMetaSchema(metaSchema, keywordsJsonPointers) {
         const rules = this.RULES.all;
@@ -6893,7 +6893,7 @@ var require_formats = __commonJS({
     }
     exports.fullFormats = {
       // date: http://tools.ietf.org/html/rfc3339#section-5.6
-      date: fmtDef(date3, compareDate),
+      date: fmtDef(date4, compareDate),
       // date-time: http://tools.ietf.org/html/rfc3339#section-5.6
       time: fmtDef(getTime(true), compareTime),
       "date-time": fmtDef(getDateTime(true), compareDateTime),
@@ -6959,14 +6959,14 @@ var require_formats = __commonJS({
     }
     var DATE = /^(\d\d\d\d)-(\d\d)-(\d\d)$/;
     var DAYS = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-    function date3(str) {
+    function date4(str) {
       const matches = DATE.exec(str);
       if (!matches)
         return false;
       const year = +matches[1];
-      const month2 = +matches[2];
+      const month3 = +matches[2];
       const day = +matches[3];
-      return month2 >= 1 && month2 <= 12 && day >= 1 && day <= (month2 === 2 && isLeapYear(year) ? 29 : DAYS[month2]);
+      return month3 >= 1 && month3 <= 12 && day >= 1 && day <= (month3 === 2 && isLeapYear(year) ? 29 : DAYS[month3]);
     }
     function compareDate(d1, d2) {
       if (!(d1 && d2))
@@ -7028,7 +7028,7 @@ var require_formats = __commonJS({
       const time3 = getTime(strictTimeZone);
       return function date_time(str) {
         const dateTime = str.split(DATE_TIME_SEPARATOR);
-        return dateTime.length === 2 && date3(dateTime[0]) && time3(dateTime[1]);
+        return dateTime.length === 2 && date4(dateTime[0]) && time3(dateTime[1]);
       };
     }
     function compareDateTime(dt1, dt2) {
@@ -7181,17 +7181,17 @@ var require_dist = __commonJS({
     };
     formatsPlugin.get = (name, mode = "full") => {
       const formats = mode === "fast" ? formats_1.fastFormats : formats_1.fullFormats;
-      const f = formats[name];
-      if (!f)
+      const f2 = formats[name];
+      if (!f2)
         throw new Error(`Unknown format "${name}"`);
-      return f;
+      return f2;
     };
     function addFormats(ajv, list, fs, exportName) {
       var _a;
       var _b;
       (_a = (_b = ajv.opts.code).formats) !== null && _a !== void 0 ? _a : _b.formats = (0, codegen_1._)`require("ajv-formats/dist/formats").${exportName}`;
-      for (const f of list)
-        ajv.addFormat(f, fs[f]);
+      for (const f2 of list)
+        ajv.addFormat(f2, fs[f2]);
     }
     module.exports = exports = formatsPlugin;
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -21438,44 +21438,72 @@ import { randomUUID } from "node:crypto";
 import { chmod, copyFile, mkdir, open, readFile, readdir, rename, stat, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, isAbsolute, join, resolve } from "node:path";
+
+// src/profile-fields.ts
+var text = external_exports.string().max(6e3).nullable();
+var date3 = external_exports.string().regex(/^\d{4}-(0[1-9]|1[0-2])(?:-(0[1-9]|[12]\d|3[01]))?$/).refine((value) => {
+  const [y, m, d] = value.split("-").map(Number);
+  return !!y && (!d || d <= new Date(Date.UTC(y, m, 0)).getUTCDate());
+}, "\u65E0\u6548\u65E5\u671F").nullable();
+var month = external_exports.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/).nullable();
+var optional2 = (schema) => schema.default(null);
+var presenceKeys = ["education", "work", "internships", "projects", "languages", "awards", "certificates", "competitions", "campus"];
+var presenceShape = Object.fromEntries(presenceKeys.map((key) => [key, external_exports.enum(["unknown", "none", "provided"]).default("unknown")]));
+var presenceSchema = external_exports.object(presenceShape).strict();
+var basicExtras = { gender: optional2(text), birth_date: date3.default(null), employment_status: optional2(text), highest_education: optional2(text), recent_company: optional2(text), self_description: optional2(text), portfolio_url: optional2(text) };
+var educationExtras = { college: optional2(text), description: optional2(text), gpa: optional2(text) };
+var experienceExtras = { description: optional2(text) };
+var projectExtras = { description: optional2(text), responsibilities: optional2(text), url: optional2(text) };
+var certificateExtras = { description: optional2(text) };
+var salary = external_exports.object({ amount: external_exports.number().nonnegative(), currency: external_exports.string().max(16), period: external_exports.enum(["month", "year"]), tax: external_exports.enum(["before", "after", "unknown"]), benefits: external_exports.enum(["included", "excluded", "unknown"]) }).strict().nullable();
+var intentSchema = external_exports.object({ cities: external_exports.array(external_exports.string().max(160)).max(20).default([]), current_salary: salary.default(null), expected_salary: salary.default(null), available_date: date3.default(null), industry: optional2(text), occupation: optional2(text) }).strict();
+var languageShape = { name: text, overall: optional2(text), speaking: optional2(text), writing: optional2(text) };
+var awardShape = { name: text, obtained_month: month, description: optional2(text) };
+var campusShape = { organization: text, role: text, start_month: month, end_month: month, is_current: external_exports.boolean().nullable(), description: optional2(text) };
+var competitionShape = { name: text, description: optional2(text), obtained_month: month.default(null) };
+
+// src/profile-store.ts
 var ID_PATTERN = /^[A-Za-z0-9_-]{1,100}$/;
 var id = external_exports.string().regex(ID_PATTERN);
 var optionalId = id.optional();
-var text = external_exports.string().max(6e3);
-var nullableText = text.nullable();
-var month = external_exports.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/).nullable();
-var factInput = external_exports.object({ id: optionalId, text }).strict();
-var fact = external_exports.object({ id, text }).strict();
+var text2 = external_exports.string().max(6e3);
+var nullableText = text2.nullable();
+var month2 = external_exports.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/).nullable();
+var factInput = external_exports.object({ id: optionalId, text: text2 }).strict();
+var fact = external_exports.object({ id, text: text2 }).strict();
 var educationShape = {
+  ...educationExtras,
   school: nullableText,
   major: nullableText,
-  education_level: external_exports.enum(["associate", "bachelor", "master", "doctor", "other"]).nullable(),
+  education_level: external_exports.enum(["high_school", "associate", "bachelor", "master", "doctor", "other"]).nullable(),
   degree: nullableText,
   expected_degree: nullableText,
   completed: external_exports.boolean().nullable(),
   study_mode: external_exports.enum(["full_time", "part_time", "other"]).nullable(),
-  start_month: month,
-  end_month: month,
+  start_month: month2,
+  end_month: month2,
   is_current: external_exports.boolean().nullable(),
   is_expected_end: external_exports.boolean().nullable()
 };
 var experienceShape = {
+  ...experienceExtras,
   kind: external_exports.enum(["internship", "work"]).nullable(),
   organization: nullableText,
   role: nullableText,
-  start_month: month,
-  end_month: month,
+  start_month: month2,
+  end_month: month2,
   is_current: external_exports.boolean().nullable()
 };
 var projectShape = {
+  ...projectExtras,
   name: nullableText,
   role: nullableText,
-  start_month: month,
-  end_month: month,
+  start_month: month2,
+  end_month: month2,
   is_current: external_exports.boolean().nullable()
 };
-var certificateShape = { name: nullableText, issuer: nullableText, obtained_month: month };
-var answerShape = { title: external_exports.string().max(120), text };
+var certificateShape = { ...certificateExtras, name: nullableText, issuer: nullableText, obtained_month: month2 };
+var answerShape = { title: external_exports.string().max(120), text: text2 };
 var supplementalShape = {
   field_key: external_exports.string().max(160),
   label: external_exports.string().max(80),
@@ -21496,14 +21524,24 @@ var answer = external_exports.object({ id, ...answerShape }).strict();
 var supplementalInput = external_exports.object({ id: optionalId, ...supplementalShape }).strict();
 var supplemental = external_exports.object({ id, ...supplementalShape }).strict();
 var basic = external_exports.object({
+  ...basicExtras,
   full_name: nullableText,
   email: external_exports.string().max(254).email().nullable(),
   phone: external_exports.string().max(80).nullable(),
   city: nullableText,
   job_intention: nullableText
 }).strict();
+var extraShapes = { languages: languageShape, awards: awardShape, campus: campusShape, competitions: competitionShape };
+var extraSchemas = Object.fromEntries(Object.entries(extraShapes).map(([k, v]) => [k, external_exports.array(external_exports.object({ id, ...v }).strict()).max(50).default([])]));
+var extraInputs = Object.fromEntries(Object.entries(extraShapes).map(([k, v]) => [k, external_exports.array(external_exports.object({ id: optionalId, ...v }).strict()).max(50).optional()]));
 var ProfileSchema = external_exports.object({
-  schema_version: external_exports.literal("1.1"),
+  schema_version: external_exports.enum(["1.1", "1.2"]).transform(() => "1.2"),
+  languages: extraSchemas.languages,
+  awards: extraSchemas.awards,
+  campus: extraSchemas.campus,
+  competitions: extraSchemas.competitions,
+  section_status: presenceSchema.default({}),
+  intent: intentSchema.default({}),
   profile_id: id,
   revision: external_exports.number().int().nonnegative(),
   basic,
@@ -21513,11 +21551,15 @@ var ProfileSchema = external_exports.object({
   skills: external_exports.array(external_exports.string().max(120)).max(100),
   certificates: external_exports.array(certificate).max(50),
   custom_answers: external_exports.array(answer).max(50),
-  supplemental_fields: external_exports.array(supplemental).max(100)
+  supplemental_fields: external_exports.array(supplemental).max(500)
 }).strict().superRefine((profile, context) => {
   const ids = /* @__PURE__ */ new Set([profile.profile_id]);
   const fieldKeys = /* @__PURE__ */ new Set();
   const collections = Object.entries({
+    languages: profile.languages,
+    awards: profile.awards,
+    campus: profile.campus,
+    competitions: profile.competitions,
     education: profile.education,
     experience: profile.experience,
     projects: profile.projects,
@@ -21537,6 +21579,11 @@ var ProfileSchema = external_exports.object({
       }
     });
   }
+  for (const key of presenceKeys) {
+    const rows = key === "work" || key === "internships" ? profile.experience.filter((r) => r.kind === (key === "work" ? "work" : "internship")) : profile[key];
+    if (profile.section_status[key] === "none" && rows.length) context.addIssue({ code: external_exports.ZodIssueCode.custom, path: ["section_status", key], message: "\u660E\u786E\u6CA1\u6709\u4E0E\u5DF2\u6709\u8BB0\u5F55\u51B2\u7A81" });
+    if (profile.section_status[key] === "provided" && !rows.length) context.addIssue({ code: external_exports.ZodIssueCode.custom, path: ["section_status", key], message: "\u5DF2\u63D0\u4F9B\u680F\u76EE\u9700\u8981\u81F3\u5C11\u4E00\u6761\u8BB0\u5F55" });
+  }
   profile.supplemental_fields.forEach((field, index) => {
     if (!field.field_key.trim() || !field.label.trim() || fieldKeys.has(field.field_key)) {
       context.addIssue({ code: external_exports.ZodIssueCode.custom, path: ["supplemental_fields", index], message: "\u8865\u5145\u8D44\u6599\u9700\u8981\u540D\u79F0\u548C\u552F\u4E00\u5B57\u6BB5\u6807\u8BC6" });
@@ -21545,6 +21592,12 @@ var ProfileSchema = external_exports.object({
   });
 });
 var ProfileChangesSchema = external_exports.object({
+  languages: extraInputs.languages,
+  awards: extraInputs.awards,
+  campus: extraInputs.campus,
+  competitions: extraInputs.competitions,
+  section_status: presenceSchema.partial().optional(),
+  intent: intentSchema.partial().optional(),
   basic: basic.partial().optional(),
   education: external_exports.array(educationInput).max(30).optional(),
   experience: external_exports.array(experienceInput).max(50).optional(),
@@ -21552,7 +21605,7 @@ var ProfileChangesSchema = external_exports.object({
   skills: external_exports.array(external_exports.string().max(120)).max(100).optional(),
   certificates: external_exports.array(certificateInput).max(50).optional(),
   custom_answers: external_exports.array(answerInput).max(50).optional(),
-  supplemental_fields: external_exports.array(supplementalInput).max(100).optional()
+  supplemental_fields: external_exports.array(supplementalInput).max(500).optional()
 }).strict();
 var ProfileSaveSchema = external_exports.object({
   profile_id: id.optional().describe("\u66F4\u65B0\u65F6\u586B\u5199 resume_profile_list \u8FD4\u56DE\u7684 ID\uFF1B\u521B\u5EFA\u65F6\u7701\u7565"),
@@ -21590,8 +21643,8 @@ var IndexSchema = external_exports.object({
   storage_version: external_exports.literal(1),
   profiles: external_exports.array(IndexEntrySchema).max(100)
 }).strict();
-var emptyProfile = (profileId, revision) => ({
-  schema_version: "1.1",
+var emptyProfile = (profileId, revision) => ProfileSchema.parse({
+  schema_version: "1.2",
   profile_id: profileId,
   revision,
   basic: { full_name: null, email: null, phone: null, city: null, job_intention: null },
@@ -21606,6 +21659,13 @@ var emptyProfile = (profileId, revision) => ({
 var ensureId = (value) => value ?? randomUUID();
 function mergeChanges(profile, changes, revision) {
   const next = structuredClone(profile);
+  next.schema_version = "1.2";
+  if (changes.section_status) next.section_status = presenceSchema.parse({ ...next.section_status, ...changes.section_status });
+  if (changes.intent) next.intent = intentSchema.parse({ ...next.intent, ...changes.intent });
+  for (const key of ["languages", "awards", "campus", "competitions"]) {
+    const rows = changes[key];
+    if (rows) next[key] = extraSchemas[key].parse(rows.map((row) => ({ ...row, id: ensureId(row.id) })));
+  }
   if (changes.basic) next.basic = basic.parse({ ...next.basic, ...changes.basic });
   if (changes.education) next.education = external_exports.array(education).parse(changes.education.map((record2) => ({ ...record2, id: ensureId(record2.id) })));
   if (changes.experience) next.experience = external_exports.array(experience).parse(changes.experience.map((record2) => ({ ...record2, id: ensureId(record2.id), facts: record2.facts.map((item) => ({ ...item, id: ensureId(item.id) })) })));
@@ -21666,6 +21726,7 @@ function entryFor(stored) {
   };
 }
 var displayEnums = {
+  high_school: "\u9AD8\u4E2D",
   associate: "\u5927\u4E13",
   bachelor: "\u672C\u79D1",
   master: "\u7855\u58EB\u7814\u7A76\u751F",
@@ -21685,9 +21746,13 @@ function scalarSource(profile, sourceRef) {
   if (section === "basic" && parts.length === 2 && recordId && Object.hasOwn(profile.basic, recordId)) {
     return profile.basic[recordId];
   }
+  if ((section === "intent" || section === "section_status") && parts.length === 2 && recordId) {
+    const value = profile[section][recordId];
+    return Array.isArray(value) ? value.join("\u3001") : typeof value === "string" || typeof value === "boolean" || value === null ? value : void 0;
+  }
   if (section === "custom_answers" && parts.length === 2) return profile.custom_answers.find((item) => item.id === recordId)?.text;
   if (section === "supplemental_fields" && parts.length === 2) return profile.supplemental_fields.find((item) => item.id === recordId)?.value;
-  if (section && recordId && field && ["education", "experience", "projects", "certificates"].includes(section) && parts.length === 3) {
+  if (section && recordId && field && ["education", "experience", "projects", "certificates", "languages", "awards", "competitions", "campus"].includes(section) && parts.length === 3) {
     const collection = profile[section];
     const record2 = collection?.find((item) => item.id === recordId);
     if (!record2 || !Object.hasOwn(record2, field)) return void 0;
@@ -21701,7 +21766,7 @@ function scalarSource(profile, sourceRef) {
 var ProfileReadSchema = external_exports.object({
   profile_id: id,
   expected_revision: external_exports.number().int().positive().optional().describe("\u9996\u6B21\u76EE\u5F55\u8BFB\u53D6\u540E\uFF0C\u540E\u7EED\u8BFB\u53D6\u586B\u5199\u8BE5\u6B21\u8FD4\u56DE\u7684 profile_revision"),
-  section: external_exports.enum(["basic", "education", "experience", "projects", "skills", "certificates", "custom_answers", "supplemental_fields"]).optional(),
+  section: external_exports.enum(["basic", "education", "experience", "projects", "skills", "certificates", "custom_answers", "supplemental_fields", "languages", "awards", "campus", "competitions", "intent", "section_status"]).optional(),
   record_id: id.optional(),
   source_refs: external_exports.array(external_exports.string().min(1).max(240)).max(100).optional(),
   offset: external_exports.number().int().nonnegative().optional(),
@@ -21781,6 +21846,12 @@ var ProfileStore = class {
     await this.initialize();
     return this.readStored(id.parse(profileId));
   }
+  // Planning reads exactly one selected profile without creating an index or files.
+  async readForPlanning(profileId, revision) {
+    const stored = await this.readStored(id.parse(profileId));
+    if (stored.revision !== revision) throw storageError("profile_changed", "\u8D44\u6599\u7248\u672C\u5DF2\u53D8\u5316\uFF0C\u8BF7\u91CD\u65B0\u51C6\u5907");
+    return stored.profile;
+  }
   async save(rawInput) {
     const input = ProfileSaveSchema.parse(rawInput);
     return this.exclusive(async () => {
@@ -21850,7 +21921,7 @@ var ProfileStore = class {
       return { ...base, directory: false, entries };
     }
     if (!params.section) {
-      const sectionNames = ["basic", "education", "experience", "projects", "skills", "certificates", "custom_answers", "supplemental_fields"];
+      const sectionNames = ["basic", "education", "experience", "projects", "skills", "certificates", "custom_answers", "supplemental_fields", "languages", "awards", "campus", "competitions", "intent", "section_status"];
       const sections = Object.fromEntries(sectionNames.map((section) => {
         const value2 = stored.profile[section];
         return [section, { records: Array.isArray(value2) ? value2.length : 1 }];
@@ -21912,7 +21983,7 @@ var ProfileStore = class {
 import { readFileSync } from "node:fs";
 import { dirname as dirname2, resolve as resolve2 } from "node:path";
 import { fileURLToPath } from "node:url";
-var PLUGIN_VERSION = "0.16.1";
+var PLUGIN_VERSION = "0.24.0";
 function resolveRuntimePluginVersion(moduleUrl) {
   const directory = dirname2(fileURLToPath(moduleUrl));
   for (const manifest of [
@@ -21929,9 +22000,745 @@ function resolveRuntimePluginVersion(moduleUrl) {
 }
 var RUNTIME_PLUGIN_VERSION = resolveRuntimePluginVersion(import.meta.url);
 
+// src/profile-requirements.ts
+import { createHash as createHash2 } from "node:crypto";
+
+// src/profile-facts.ts
+import { createHash } from "node:crypto";
+function preparationQuestionId(section, record2, key) {
+  return `q_${createHash("sha256").update(JSON.stringify([section, record2, key])).digest("hex").slice(0, 24)}`;
+}
+var degreeNames = { high_school: "\u9AD8\u4E2D", associate: "\u5927\u4E13", bachelor: "\u672C\u79D1", master: "\u7855\u58EB\u7814\u7A76\u751F", doctor: "\u535A\u58EB\u7814\u7A76\u751F" };
+function normalizeProfile(profile) {
+  const supplementalValues = /* @__PURE__ */ new Map();
+  for (const field of profile.supplemental_fields) {
+    if (field.value === null || field.value === "") continue;
+    const prior = supplementalValues.get(field.field_key);
+    if (prior !== void 0 && prior !== field.value) throw new Error("supplemental_source_conflict");
+    supplementalValues.set(field.field_key, field.value);
+  }
+  const result = {};
+  const prefix = `profile:${profile.profile_id}@${profile.revision}/`;
+  function record2(section, id2, raw, paths, anchors) {
+    const facts = {};
+    for (const [key, value] of Object.entries(raw)) {
+      if (value === null || value === void 0 || value === "" || Array.isArray(value) && !value.length) continue;
+      facts[key] = { value, source: prefix + (paths[key] ?? `${section}/${id2}/${key}`) };
+    }
+    (result[section] ??= { presence: "unknown", records: [] }).records.push({ id: id2, section, facts, anchors });
+  }
+  record2("basic", "basic", profile.basic, Object.fromEntries(Object.keys(profile.basic).map((k) => [k, `basic/${k}`])), []);
+  const salary2 = (s) => s ? `${s.amount} ${s.currency}/${s.period === "month" ? "\u6708" : "\u5E74"}${s.tax === "before" ? "\uFF08\u7A0E\u524D\uFF09" : s.tax === "after" ? "\uFF08\u7A0E\u540E\uFF09" : ""}${s.benefits === "included" ? "\uFF08\u542B\u798F\u5229\uFF09" : s.benefits === "excluded" ? "\uFF08\u4E0D\u542B\u798F\u5229\uFF09" : ""}` : null;
+  record2("intent", "intent", { cities: profile.intent.cities, current_salary: salary2(profile.intent.current_salary), expected_salary: salary2(profile.intent.expected_salary), available_date: profile.intent.available_date, industry: profile.intent.industry, occupation: profile.intent.occupation }, Object.fromEntries(Object.keys(profile.intent).map((k) => [k, `intent/${k}`])), []);
+  function dates(row) {
+    return { start: row.start_month, end: row.end_month, current: row.end_month ? false : row.is_current, range: row.start_month && (row.end_month || row.is_current === true) ? { start: row.start_month, ...row.end_month ? { end: row.end_month } : { current: true } } : null };
+  }
+  for (const row of profile.education) record2("education", row.id, { school: row.school, major: row.major, college: row.college, level: row.education_level ? degreeNames[row.education_level] : null, degree: row.degree, study_mode: row.study_mode === "full_time" ? "\u5168\u65E5\u5236" : row.study_mode === "part_time" ? "\u975E\u5168\u65E5\u5236" : null, description: row.description, ...dates(row) }, { range: `education/${row.id}/start_month+end_month+is_current`, level: `education/${row.id}/education_level`, start: `education/${row.id}/start_month`, end: `education/${row.id}/end_month`, current: `education/${row.id}/end_month+is_current` }, ["school", "start", "end"]);
+  for (const row of profile.experience) {
+    const kind = row.kind === "internship" ? "internships" : row.kind === "work" ? "work" : "unclassified_experience";
+    record2(kind, row.id, { organization: row.organization, role: row.role, description: row.description ?? (row.facts.length ? row.facts.map((f2) => f2.text).join("\n") : null), ...dates(row) }, Object.fromEntries(["organization", "role", "description", "range", "start", "end", "current"].map((k) => [k, `experience/${row.id}/${k === "description" ? "description+facts" : k === "range" ? "start_month+end_month+is_current" : k === "start" ? "start_month" : k === "end" ? "end_month" : k === "current" ? "end_month+is_current" : k}`])), ["organization", "role", "start", "end"]);
+  }
+  for (const row of profile.projects) record2("projects", row.id, { name: row.name, role: row.role, description: row.description, responsibilities: row.responsibilities ?? (row.facts.length ? row.facts.map((f2) => f2.text).join("\n") : null), url: row.url, ...dates(row) }, { range: `projects/${row.id}/start_month+end_month+is_current`, responsibilities: `projects/${row.id}/responsibilities+facts`, start: `projects/${row.id}/start_month`, end: `projects/${row.id}/end_month`, current: `projects/${row.id}/end_month+is_current` }, ["name", "start", "end"]);
+  for (const key of ["languages", "awards", "certificates", "competitions", "campus"]) for (const row of profile[key]) {
+    const { id: recordId, ...data } = { ...row, ...key === "campus" ? dates(row) : {} };
+    record2(key, row.id, data, {}, key === "languages" ? ["name"] : key === "campus" ? ["organization", "role", "start", "end"] : ["name", "obtained_month"]);
+  }
+  for (const row of profile.custom_answers) record2("custom_answers", row.id, { text: row.text }, { text: `custom_answers/${row.id}` }, []);
+  for (const row of profile.supplemental_fields) record2("supplemental_fields", row.id, { value: row.value }, { value: `supplemental_fields/${row.id}` }, []);
+  if (profile.skills.length) record2("skills", "skills", { text: profile.skills.join("\u3001") }, { text: "skills" }, []);
+  const extensions = /* @__PURE__ */ new Map();
+  for (const field of profile.supplemental_fields) {
+    const match = /^(family|research|it_skills)\.([A-Za-z0-9_-]+)\.([a-z_]+)$/.exec(field.field_key);
+    if (!match || !field.value) continue;
+    const section = match[1], recordId = match[2], key = match[3];
+    const bucket = `${section}.${recordId}`;
+    const group = extensions.get(bucket) ?? { section, id: recordId, values: {}, paths: {} };
+    group.values[key] = field.value;
+    group.paths[key] = `supplemental_fields/${field.id}`;
+    extensions.set(bucket, group);
+  }
+  for (const group of extensions.values()) record2(group.section, group.id, group.values, group.paths, group.section === "family" ? ["name", "relation"] : group.section === "research" ? ["name", "start", "end"] : ["name"]);
+  for (const section of ["family", "research", "it_skills"]) {
+    const source = result[section] ??= { presence: "unknown", records: [] };
+    if (!source.records.length && profile.supplemental_fields.some((f2) => f2.field_key === `section_status.${section}` && f2.value === "none")) source.presence = "none";
+  }
+  for (const key of Object.keys(profile.section_status)) {
+    const k = key;
+    const section = result[key] ??= { presence: "unknown", records: [] };
+    section.presence = section.records.length ? "provided" : profile.section_status[k];
+  }
+  for (const section of Object.values(result)) if (section.records.some((r) => Object.keys(r.facts).length)) section.presence = "provided";
+  return result;
+}
+function resolveFact(profile, sources, row, rule) {
+  if (rule.key === "cities" && !row.facts.cities) return sources.intent?.records[0]?.facts.cities;
+  if (row.facts[rule.key]) return row.facts[rule.key];
+  if (row.section === "education" && ["school_other", "major_other"].includes(rule.key)) {
+    const school = rule.key === "school_other", category = resolveFact(profile, sources, row, { key: school ? "job51_school_region" : "job51_major_category" });
+    if (category?.value === (school ? "\u5176\u4ED6\u9662\u6821" : "\u5176\u4ED6\u4E13\u4E1A\u7C7B\u578B")) return row.facts[school ? "school" : "major"];
+  }
+  if (row.section === "basic" && rule.key === "self_career_description") {
+    const self = row.facts.self_description, career = resolveFact(profile, sources, row, { key: "career_plan" });
+    return self && career ? { value: `${self.value}
+
+${career.value}`, source: `${self.source}+${career.source}` } : void 0;
+  }
+  const parent = /^(father|mother)_(name|organization_role)$/.exec(rule.key);
+  if (row.section === "basic" && parent) {
+    const relation = parent[1] === "father" ? "\u7236\u4EB2" : "\u6BCD\u4EB2";
+    const relatives = (sources.family?.records ?? []).filter((r) => r.facts.relation?.value === relation);
+    if (relatives.length !== 1) return void 0;
+    const facts = relatives[0].facts;
+    if (parent[2] === "name") return facts.name;
+    if (facts.organization && facts.role) return { value: `${facts.organization.value} / ${facts.role.value}`, source: `${facts.organization.source}+${facts.role.source}` };
+    return void 0;
+  }
+  if (row.section === "basic" && rule.key === "skills_text" && sources.skills?.records[0]?.facts.text) return sources.skills.records[0].facts.text;
+  if (row.section === "basic" && rule.key === "certificate_names") {
+    const names = (sources.certificates?.records ?? []).map((r) => r.facts.name).filter((f2) => Boolean(f2));
+    if (names.length) return { value: names.map((f2) => f2.value).join("\u3001"), source: `profile:${profile.profile_id}@${profile.revision}/certificates/names` };
+  }
+  const source = row.section ?? Object.entries(sources).find(([, s]) => s.records.some((r) => r.id === row.id))?.[0];
+  const path = source === "basic" || source === "intent" ? `${source}.${rule.key}` : `${source}.${row.id}.${rule.key}`;
+  const supplemental2 = profile.supplemental_fields.find((f2) => f2.field_key === path);
+  if (!supplemental2?.value && rule.key === "full_time" && ["\u5168\u65E5\u5236", "\u975E\u5168\u65E5\u5236"].includes(String(row.facts.study_mode?.value))) {
+    return { ...row.facts.study_mode, value: row.facts.study_mode.value === "\u5168\u65E5\u5236" ? "\u662F" : "\u5426" };
+  }
+  if (supplemental2?.value) return { value: supplemental2.value, source: `profile:${profile.profile_id}@${profile.revision}/supplemental_fields/${supplemental2.id}` };
+  if (rule.emptyBranch) {
+    const parent2 = resolveFact(profile, sources, row, { key: rule.emptyBranch.key });
+    if (parent2?.value === rule.emptyBranch.value) return parent2;
+  }
+  return void 0;
+}
+
+// src/profile-requirements.ts
+var sectionLabels = { basic: "\u4E2A\u4EBA\u4FE1\u606F", intent: "\u6C42\u804C\u610F\u5411", education: "\u6559\u80B2\u7ECF\u5386", work: "\u5DE5\u4F5C\u7ECF\u5386", internships: "\u5B9E\u4E60\u7ECF\u5386", projects: "\u9879\u76EE\u7ECF\u5386", languages: "\u8BED\u8A00\u80FD\u529B", awards: "\u83B7\u5956\u7ECF\u5386", certificates: "\u8BC1\u4E66", competitions: "\u7ADE\u8D5B", campus: "\u6821\u56ED\u7ECF\u5386", family: "\u5BB6\u5EAD\u6210\u5458", it_skills: "IT \u6280\u80FD", research: "\u79D1\u7814\u7ECF\u5386", unclassified_experience: "\u5F85\u5206\u7C7B\u7ECF\u5386" };
+var digest = (value) => createHash2("sha256").update(JSON.stringify(value)).digest("hex").slice(0, 24);
+var markerPrefix = "preparation.status.";
+var privateKey = /(?:^|_)(?:identity_number|passport|exam_id|report_number|edu_cert_no|degree_cert_no)(?:$|_)/;
+var markedStates = ["not_applicable", "withheld", "deferred"];
+var PreparationReadSchema = {
+  profile_id: external_exports.string().regex(/^[A-Za-z0-9_-]{1,100}$/),
+  expected_revision: external_exports.number().int().positive(),
+  scope: external_exports.enum(["all_supported", "selected_modules"]).default("all_supported"),
+  targets: external_exports.array(external_exports.object({ template_id: external_exports.string().max(120), modules: external_exports.array(external_exports.string().max(120)).max(40) }).strict()).max(12).optional(),
+  include_marked: external_exports.boolean().default(false),
+  offset: external_exports.number().int().nonnegative().default(0),
+  limit: external_exports.number().int().min(1).max(100).default(100),
+  expected_questionnaire_id: external_exports.string().max(64).optional()
+};
+var readSchema = external_exports.object(PreparationReadSchema).strict();
+var valueSchema = external_exports.union([external_exports.string().max(6e3), external_exports.boolean(), external_exports.array(external_exports.string().max(160)).max(20), intentSchema.shape.current_salary.removeDefault().unwrap()]);
+var PreparationApplySchema = {
+  profile_id: PreparationReadSchema.profile_id,
+  expected_revision: PreparationReadSchema.expected_revision,
+  catalog_version: external_exports.string().max(80),
+  questionnaire_id: external_exports.string().max(64),
+  scope: PreparationReadSchema.scope,
+  targets: PreparationReadSchema.targets,
+  answers: external_exports.array(external_exports.object({
+    question_id: external_exports.string().max(64),
+    action: external_exports.enum(["set", "none", ...markedStates, "reopen"]),
+    value: valueSchema.optional()
+  }).strict()).min(1).max(200)
+};
+var applySchema = external_exports.object(PreparationApplySchema).strict();
+function fail(code, message) {
+  throw new Error(`${code}: ${message}`);
+}
+var canonical = (section, record2, key) => ["basic", "intent"].includes(section) ? `${section}.${key}` : `${section}.${record2}.${key}`;
+var storedSection = (section) => ["work", "internships", "unclassified_experience"].includes(section) ? "experience" : section;
+var storedKey = (key) => ({ start: "start_month", end: "end_month", current: "is_current", level: "education_level" })[key] ?? key;
+function storedRecord(profile, section, id2) {
+  const value = profile[storedSection(section)];
+  return ["basic", "intent"].includes(section) ? value : Array.isArray(value) ? value.find((r) => r.id === id2) : void 0;
+}
+var questionId = preparationQuestionId;
+var hasValue = (value) => value !== void 0 && value !== null && (typeof value !== "string" || value.trim().length > 0) && (!Array.isArray(value) || value.length > 0);
+var escape2 = (s) => s.replace(/[\r\n]+/g, " ").replace(/[\\`*_[\]<>|]/g, "\\$&");
+var ProfilePreparation = class {
+  constructor(store2, catalog) {
+    this.store = store2;
+    this.catalog = catalog;
+  }
+  store;
+  catalog;
+  questions(profile, input) {
+    if (input.scope === "all_supported" && input.targets?.length) fail("invalid_scope", "\u9996\u6B21\u901A\u7528\u51C6\u5907\u4E0D\u63A5\u53D7\u4F01\u4E1A\u6A21\u5757\u8FC7\u6EE4");
+    if (input.scope === "selected_modules" && !input.targets?.length) fail("invalid_scope", "\u5F53\u524D\u9875\u9762\u68C0\u67E5\u9700\u8981\u4F01\u4E1A\u53CA\u5F00\u653E\u6A21\u5757");
+    for (const target of input.targets ?? []) if (!this.catalog.template_ids.includes(target.template_id)) fail("unsupported_template", "\u8BE5\u6A21\u677F\u4E0D\u5728\u5DF2\u9A8C\u8BC1\u51C6\u5907\u76EE\u5F55\u4E2D");
+    for (const target of input.targets ?? []) if (target.modules.some((m) => !this.catalog.templates.find((t) => t.id === target.template_id)?.modules.includes(m))) fail("unsupported_module", "\u6A21\u5757\u4E0D\u5728\u8BE5\u4F01\u4E1A\u5DF2\u9A8C\u8BC1\u76EE\u5F55\u4E2D");
+    const sources = normalizeProfile(profile), result = [];
+    const markers = new Map(profile.supplemental_fields.filter((f2) => f2.field_key.startsWith(markerPrefix)).map((f2) => [f2.field_key.slice(markerPrefix.length), f2.value]));
+    const requirements = this.catalog.requirements.map((r) => ({ ...r, uses: r.uses.filter((use) => input.scope === "all_supported" || input.targets?.some((t) => t.template_id === use.template_id && t.modules.includes(use.module))) })).filter((r) => r.uses.length);
+    const grouped = /* @__PURE__ */ new Map();
+    for (const r of requirements) {
+      const group = grouped.get(r.section) ?? [];
+      group.push(r);
+      grouped.set(r.section, group);
+    }
+    const push = (r, row, index, kind = "field") => {
+      const record2 = row?.id ?? r.section, key = kind === "presence" ? "presence" : r.key;
+      const id2 = questionId(r.section, record2, key), mark = markers.get(id2);
+      const state = markedStates.includes(mark) ? mark : "missing";
+      const name = row?.facts.school?.value ?? row?.facts.organization?.value ?? row?.facts.name?.value;
+      const recordLabel = `${sectionLabels[r.section] ?? r.section}${["basic", "intent"].includes(r.section) || kind === "presence" ? "" : ` #${index + 1}${typeof name === "string" ? ` \xB7 ${name.slice(0, 80)}` : ""}${row?.facts.start ? `\uFF08${row.facts.start.value}\uFF09` : ""}`}`;
+      const format = kind === "presence" ? "\u6CA1\u6709 / \u63D0\u4F9B\u7ECF\u5386\u8BB0\u5F55" : key === "cities" ? "\u57CE\u5E02\u5B57\u7B26\u4E32\u6570\u7EC4" : ["current_salary", "expected_salary"].includes(key) ? "\u85AA\u8D44\u5BF9\u8C61\uFF1Aamount\u3001currency\u3001period(month/year)\u3001tax(before/after/unknown)\u3001benefits(included/excluded/unknown)" : key === "level" ? "\u9AD8\u4E2D/\u5927\u4E13/\u672C\u79D1/\u7855\u58EB/\u535A\u58EB/\u5176\u4ED6\uFF08\u6216\u5BF9\u5E94\u82F1\u6587\u679A\u4E3E\uFF09" : key === "study_mode" ? "\u5168\u65E5\u5236/\u975E\u5168\u65E5\u5236/\u5176\u4ED6" : key === "kind" ? "work / internship" : ["current", "completed"].includes(key) ? "\u662F/\u5426\uFF08\u6216\u5E03\u5C14\u503C\uFF09" : ["start", "end", "obtained_month"].includes(key) ? "YYYY-MM" : "\u6587\u672C";
+      result.push({
+        id: id2,
+        section: r.section,
+        record_id: record2,
+        record_label: recordLabel,
+        key,
+        label: kind === "presence" ? `\u662F\u5426\u6709${sectionLabels[r.section] ?? r.section}\uFF08\u6709\u5219\u63D0\u4F9B\u8BB0\u5F55\uFF0C\u65E0\u5219\u660E\u786E\u6CA1\u6709\uFF09` : r.label,
+        kind,
+        entry: privateKey.test(key) ? "local_only" : "ordinary",
+        state,
+        uses: r.uses,
+        format,
+        ...r.condition ? { condition: r.condition } : {}
+      });
+    };
+    for (const [section, reqs] of grouped) {
+      const source = sources[section];
+      if (source?.presence === "none") continue;
+      if (!source?.records.length) {
+        push({ ...reqs[0], uses: [...new Map(reqs.flatMap((r) => r.uses).map((use) => [JSON.stringify(use), use])).values()] }, void 0, 0, "presence");
+        continue;
+      }
+      source.records.forEach((row, index) => {
+        for (const r of reqs) {
+          if (r.condition && String(resolveFact(profile, sources, row, { key: r.condition.key })?.value ?? storedRecord(profile, section, row.id)?.[storedKey(r.condition.key)]) !== r.condition.equals) continue;
+          if (r.key === "end" && row.facts.current?.value === true) continue;
+          if (r.key === "current" && hasValue(row.facts.end?.value)) continue;
+          if (r.key === "combined_description" && (row.facts.description || row.facts.responsibilities)) continue;
+          if (section === "education" && r.key === "degree" && profile.education.find((e) => e.id === row.id)?.completed === false) continue;
+          if (section === "education" && ["degree", "completed"].includes(r.key) && profile.education.find((e) => e.id === row.id)?.education_level === "high_school") continue;
+          if (resolveFact(profile, sources, row, r)) continue;
+          if (hasValue(storedRecord(profile, section, row.id)?.[storedKey(r.key)])) continue;
+          push(r, row, index);
+        }
+      });
+    }
+    for (const [index, row] of (sources.unclassified_experience?.records ?? []).entries()) push({ section: "unclassified_experience", key: "kind", label: "\u7ECF\u5386\u7C7B\u578B\uFF1Awork\uFF08\u5DE5\u4F5C\uFF09\u6216 internship\uFF08\u5B9E\u4E60\uFF09", uses: [] }, row, index);
+    return [...new Map(result.map((q) => [q.id, q])).values()];
+  }
+  identity(profile, input, questions) {
+    return digest([profile.profile_id, profile.revision, this.catalog.version, input.scope, input.targets ?? [], questions]);
+  }
+  async read(raw) {
+    const input = readSchema.parse(raw), profile = await this.store.readForPlanning(input.profile_id, input.expected_revision);
+    const all = this.questions(profile, input), visible = all.filter((q) => input.include_marked || q.state === "missing");
+    const items = visible.slice(input.offset, input.offset + input.limit), next = input.offset + items.length < visible.length ? input.offset + items.length : null;
+    const id2 = this.identity(profile, input, all);
+    if (input.expected_questionnaire_id && input.expected_questionnaire_id !== id2) fail("questionnaire_changed", "\u8865\u5145\u8868\u5DF2\u53D8\u5316\uFF0C\u8BF7\u4ECE\u7B2C\u4E00\u9875\u91CD\u65B0\u8BFB\u53D6");
+    const lines = [
+      "# \u5F85\u8865\u5145\u4FE1\u606F",
+      "",
+      "\u8FD9\u662F\u5DF2\u9A8C\u8BC1\u6A21\u677F\u7684\u8D44\u6599\u51C6\u5907\u6E05\u5355\uFF0C\u4E0D\u4EE3\u8868\u6BCF\u5BB6\u516C\u53F8\u90FD\u5FC5\u586B\u3002\u5DF2\u6709\u5185\u5BB9\u5DF2\u7565\u8FC7\uFF1B\u6CA1\u6709\u7684\u7ECF\u5386\u8BF7\u660E\u786E\u5199\u201C\u6CA1\u6709\u201D\u3002\u53EF\u56DE\u7B54\u201C\u4E0D\u9002\u7528\u201D\u201C\u6682\u4E0D\u63D0\u4F9B\u201D\u6216\u201C\u7A0D\u540E\u8865\u5145\u201D\uFF0C\u8FD9\u4E9B\u72B6\u6001\u4E0D\u4F1A\u88AB\u586B\u6210\u7F51\u7AD9\u4E0A\u7684\u201C\u5426\u201D\u3002",
+      "\u624B\u673A\u53F7\u548C\u90AE\u7BB1\u4F18\u5148\u4F7F\u7528\u7B80\u5386\u5DF2\u6709\u5185\u5BB9\uFF0C\u4E0D\u91CD\u590D\u7D22\u53D6\u3002\u8EAB\u4EFD\u8BC1\u53F7\u7B49\u8BC1\u4EF6\u53F7\u7801\u6807\u8BB0\u4E3A\u672C\u5730\u5F55\u5165\uFF0C\u8BF7\u52FF\u5728\u804A\u5929\u8865\u5145\uFF1B\u79C1\u5BC6\u5165\u53E3\u63A5\u5165\u540E\u5904\u7406\u3002\u4EB2\u5C5E\u4EFB\u804C\u3001\u58F0\u660E\u548C\u9644\u4EF6\u7531\u672C\u4EBA\u5728\u7F51\u9875\u786E\u8BA4\u3002",
+      ""
+    ];
+    let heading = "";
+    for (const [index, q] of items.entries()) {
+      if (q.record_label !== heading) {
+        heading = q.record_label;
+        lines.push(`## ${escape2(heading)}`, "");
+      }
+      const sites = [...new Set(q.uses.map((u) => u.template_name))].join("\u3001");
+      lines.push(
+        `${input.offset + index + 1}. ${escape2(q.label)}\uFF1A${q.entry === "local_only" ? "\u3010\u4EC5\u672C\u5730\u5F55\u5165\uFF0C\u8BF7\u52FF\u5728\u804A\u5929\u8865\u5145\u3011" : "______"}`,
+        `   \u7528\u4E8E\uFF1A${escape2(sites || "\u5148\u786E\u8BA4\u7ECF\u5386\u7C7B\u522B\uFF0C\u907F\u514D\u4E32\u586B")}\u3002${q.state !== "missing" ? ` \u5DF2\u6807\u8BB0\uFF1A${{ not_applicable: "\u4E0D\u9002\u7528", withheld: "\u6682\u4E0D\u63D0\u4F9B", deferred: "\u7A0D\u540E\u8865\u5145" }[q.state]}\u3002` : ""}`,
+        ""
+      );
+    }
+    if (next !== null) lines.push("", `\u672C\u9875\u5C55\u793A ${items.length} \u9879\uFF0C\u5171 ${visible.length} \u9879\u3002\u7EE7\u7EED\u8BFB\u53D6 offset=${next} \u540E\u518D\u4EA4\u7ED9\u7528\u6237\uFF0C\u4E0D\u80FD\u628A\u672C\u9875\u5F53\u5B8C\u6574\u6E05\u5355\u3002`);
+    if (!visible.length) lines.push("\u5F53\u524D\u76EE\u5F55\u6CA1\u6709\u672A\u5904\u7406\u7684\u7F3A\u9879\uFF1B\u8FD9\u4E0D\u8868\u793A\u6240\u6709\u62DB\u8058\u7F51\u7AD9\u90FD\u5DF2\u9002\u914D\u6216\u5DF2\u7ECF\u4FDD\u5B58\u7B80\u5386\u3002");
+    return {
+      profile_id: profile.profile_id,
+      profile_revision: profile.revision,
+      catalog_version: this.catalog.version,
+      questionnaire_id: id2,
+      scope: input.scope,
+      counts: { total: all.length, missing: all.filter((q) => q.state === "missing").length, marked: all.filter((q) => q.state !== "missing").length, local_only: all.filter((q) => q.entry === "local_only").length },
+      total: visible.length,
+      offset: input.offset,
+      next_offset: next,
+      items,
+      markdown: lines.join("\n"),
+      private_entry_available: false
+    };
+  }
+  async apply(raw) {
+    const input = applySchema.parse(raw), profile = await this.store.readForPlanning(input.profile_id, input.expected_revision);
+    if (input.catalog_version !== this.catalog.version) fail("catalog_changed", "\u9700\u6C42\u76EE\u5F55\u5DF2\u66F4\u65B0\uFF0C\u8BF7\u91CD\u65B0\u751F\u6210\u8865\u5145\u8868");
+    const questions = this.questions(profile, input);
+    if (input.questionnaire_id !== this.identity(profile, input, questions)) fail("questionnaire_changed", "\u8865\u5145\u8868\u4E0E\u5F53\u524D\u8D44\u6599\u6216\u7B5B\u9009\u8303\u56F4\u4E0D\u4E00\u81F4");
+    const changes = {}, supplemental2 = structuredClone(profile.supplemental_fields);
+    const seen = /* @__PURE__ */ new Set();
+    const marker = (q, state) => {
+      const key = markerPrefix + q.id, index = supplemental2.findIndex((f2) => f2.field_key === key);
+      if (index >= 0) supplemental2.splice(index, 1);
+      if (state) supplemental2.push({ id: `prep_${q.id}`, field_key: key, label: q.label.slice(0, 80), description: "\u8D44\u6599\u51C6\u5907\u72B6\u6001\uFF0C\u4E0D\u4F5C\u4E3A\u7F51\u7AD9\u7B54\u6848", value_type: "text", value: state });
+    };
+    for (const answer2 of input.answers) {
+      if (seen.has(answer2.question_id)) fail("duplicate_answer", "\u540C\u4E00\u6761\u76EE\u4E0D\u80FD\u63D0\u4EA4\u591A\u4E2A\u7B54\u6848");
+      seen.add(answer2.question_id);
+      const q = questions.find((q2) => q2.id === answer2.question_id);
+      if (!q) fail("question_unavailable", "\u6761\u76EE\u5DF2\u586B\u5199\u3001\u5DF2\u79FB\u9664\u6216\u4E0D\u5C5E\u4E8E\u8FD9\u4EFD\u8865\u5145\u8868");
+      if (answer2.action !== "set" && answer2.value !== void 0) fail("invalid_answer", "\u72B6\u6001\u64CD\u4F5C\u4E0D\u80FD\u643A\u5E26\u4E8B\u5B9E\u503C");
+      if (answer2.action === "reopen") {
+        marker(q);
+        continue;
+      }
+      if (markedStates.includes(answer2.action)) {
+        marker(q, answer2.action);
+        continue;
+      }
+      if (answer2.action === "none") {
+        if (q.kind !== "presence") fail("invalid_answer", "\u53EA\u6709\u5C1A\u65E0\u8BB0\u5F55\u7684\u680F\u76EE\u53EF\u4EE5\u660E\u786E\u6CA1\u6709");
+        if (["family", "research", "it_skills"].includes(q.section)) this.putSupplemental(supplemental2, `section_status.${q.section}`, q, "none");
+        else (changes.section_status ??= {})[q.section] = "none";
+        marker(q);
+        continue;
+      }
+      if (q.entry === "local_only") fail("local_entry_required", "\u8BF7\u901A\u8FC7\u672C\u5730\u79C1\u5BC6\u5165\u53E3\u5F55\u5165\uFF0C\u4E0D\u8981\u5411\u6A21\u578B\u4F20\u9012\u660E\u6587");
+      if (q.kind === "presence") fail("records_required", "\u6709\u7ECF\u5386\u65F6\u5148\u7528\u8D44\u6599\u4FDD\u5B58\u5DE5\u5177\u6DFB\u52A0\u771F\u5B9E\u8BB0\u5F55\uFF0C\u518D\u6309\u65B0 revision \u751F\u6210\u8865\u5145\u8868");
+      if (!hasValue(answer2.value)) fail("empty_answer", "\u7A7A\u503C\u4E0D\u662F\u5DF2\u8865\u5145\uFF1B\u53EF\u9009\u62E9\u7A0D\u540E\u8865\u5145");
+      this.assign(profile, changes, supplemental2, q, answer2.value);
+      marker(q);
+    }
+    if (JSON.stringify(supplemental2) !== JSON.stringify(profile.supplemental_fields)) changes.supplemental_fields = supplemental2;
+    if (!Object.keys(changes).length) return { profile_id: profile.profile_id, profile_revision: profile.revision, changed: false };
+    const saved = await this.store.save({ profile_id: profile.profile_id, expected_revision: profile.revision, changes: ProfileChangesSchema.parse(changes) });
+    return { ...saved, answered: input.answers.length, changed: true };
+  }
+  putSupplemental(rows, key, q, value) {
+    const prior = rows.find((r) => r.field_key === key);
+    if (prior && hasValue(prior.value) && prior.value !== value) fail("answer_conflict", "\u8865\u5145\u4E8B\u5B9E\u5DF2\u6709\u4E0D\u540C\u7B54\u6848\uFF0C\u8BF7\u5148\u6838\u5BF9");
+    if (prior) prior.value = value;
+    else rows.push({ id: `req_${digest(key)}`, field_key: key, label: q.label.slice(0, 80), description: "\u7528\u6237\u5728\u8D44\u6599\u8865\u5145\u8868\u4E2D\u660E\u786E\u63D0\u4F9B", value_type: "text", value });
+  }
+  assign(profile, changes, supplemental2, q, value) {
+    const section = storedSection(q.section), key = storedKey(q.key);
+    if (typeof value === "string") {
+      if (key === "education_level") value = { \u9AD8\u4E2D: "high_school", \u5927\u4E13: "associate", \u672C\u79D1: "bachelor", \u7855\u58EB: "master", \u535A\u58EB: "doctor", \u5176\u4ED6: "other" }[value] ?? value;
+      if (key === "study_mode") value = { \u5168\u65E5\u5236: "full_time", \u975E\u5168\u65E5\u5236: "part_time", \u5176\u4ED6: "other" }[value] ?? value;
+      if (["is_current", "completed"].includes(key) && ["\u662F", "\u5426"].includes(value)) value = value === "\u662F";
+    }
+    const direct = ["basic", "intent"].includes(section);
+    const original = direct ? profile[section] : Array.isArray(profile[section]) ? profile[section].find((r) => r.id === q.record_id) : void 0;
+    if (original && Object.hasOwn(original, key)) {
+      if (hasValue(original[key])) fail("answer_conflict", "\u5DF2\u6709\u4E8B\u5B9E\u4E0D\u901A\u8FC7\u8865\u5145\u8868\u8986\u76D6");
+      const current = changes[section] ??= structuredClone(profile[section]);
+      const target = direct ? current : current.find((r) => r.id === q.record_id);
+      if (!target) fail("record_changed", "\u8BB0\u5F55\u5DF2\u53D8\u5316");
+      target[key] = value;
+    } else {
+      if (typeof value !== "string") fail("invalid_answer", "\u6B64\u8865\u5145\u5B57\u6BB5\u9700\u8981\u6587\u672C");
+      this.putSupplemental(supplemental2, canonical(q.section, q.record_id, q.key), q, value);
+    }
+  }
+};
+
+// src/browser/planning/requirements.ts
+import { createHash as createHash3 } from "node:crypto";
+
+// src/browser/manual-policy.ts
+function manualReason(target) {
+  const label = target.label.normalize("NFKC").replace(/\s+/g, "");
+  const scope = (target.scope ?? "").normalize("NFKC").replace(/\s+/g, "");
+  const context = `${target.scope ?? ""} ${target.policyContext ?? ""}`.normalize("NFKC").replace(/\s+/g, "");
+  const text3 = `${label} ${context}`;
+  if (/^(保密|对这家公司隐藏我的信息|保密当前简历|开启智能推荐|默认投递简历)$/.test(label)) return "privacy_setting";
+  if (target.type === "file" || /上传|upload/i.test(label)) return "attachment";
+  if (/验证码|密码|verificationcode|password/i.test(label) || target.type === "password") return "credential";
+  if (/最终提交|提交申请|立即申请|确认投递|投递确认|删除|支付|submitapplication/i.test(label)) return "irreversible_action";
+  if (/声明|承诺|授权|签署|是否同意|同意提供|同意条款|隐私(?:政策|协议)|接受.*条款|consent|declaration|privacyagreement/i.test(text3)) return "consent";
+  const relative = /亲属|亲戚|亲友|家属|配偶|近亲|直系血亲|relative|familymember|spouse/i;
+  const employment = /受雇|任职|工作|就职|员工|雇员|聘用|employ|work/i;
+  const employer = /本公司|本企业|本集团|本单位|本行|贵司|集团(?:系统)?|company|corporation|employer/i;
+  if (relative.test(text3) && (employment.test(text3) && /是否|有无|are|does|doany/i.test(text3) || employer.test(text3))) return "employer_relatives";
+  if (/亲属(?:任职|受雇|回避)|任职亲属|员工亲属|亲属员工|利益冲突|回避关系/.test(context)) return "employer_relatives";
+  if (relative.test(label) && /姓名|部门|单位|关系|职务|电话|name|department/i.test(label) && !/^(家庭关系|家庭成员|家庭成员信息)(?:\/第\d+条)?$/.test(scope)) return "employer_relatives";
+  return void 0;
+}
+
+// src/browser/planning/recipes.ts
+var f = (key, ...labels) => ({ key, labels });
+var basic2 = [f("full_name", "\u59D3\u540D"), f("phone", "\u624B\u673A\u53F7", "\u624B\u673A\u53F7\u7801"), f("email", "\u90AE\u7BB1"), f("gender", "\u6027\u522B"), f("birth_date", "\u51FA\u751F\u65E5\u671F"), f("city", "\u6240\u5728\u5730", "\u73B0\u5C45\u4F4F\u5730"), f("employment_status", "\u5DE5\u4F5C\u7ECF\u9A8C", "\u5DE5\u4F5C\u5E74\u9650"), f("highest_education", "\u6700\u9AD8\u5B66\u5386"), f("recent_company", "\u6700\u8FD1\u516C\u53F8")];
+var education2 = [f("school", "\u5B66\u6821\u540D\u79F0"), f("major", "\u4E13\u4E1A\u540D\u79F0", "\u4E13\u4E1A"), f("college", "\u5B66\u9662"), { ...f("level", "\u5B66\u5386"), transform: "degree" }, { ...f("study_mode", "\u5B66\u5386\u7C7B\u578B", "\u5B66\u4E60\u5F62\u5F0F"), transform: "study_mode" }, f("degree", "\u5B66\u4F4D"), f("range", "\u8D77\u6B62\u65F6\u95F4", "\u5C31\u8BFB\u65F6\u95F4"), f("current", "\u81F3\u4ECA"), f("start", "\u5F00\u59CB\u65F6\u95F4"), f("end", "\u7ED3\u675F\u65F6\u95F4")];
+var experience2 = [f("organization", "\u516C\u53F8\u540D\u79F0"), f("role", "\u804C\u4F4D\u540D\u79F0"), f("description", "\u63CF\u8FF0", "\u5DE5\u4F5C\u804C\u8D23"), f("range", "\u8D77\u6B62\u65F6\u95F4"), f("current", "\u81F3\u4ECA"), f("start", "\u5F00\u59CB\u65F6\u95F4"), f("end", "\u7ED3\u675F\u65F6\u95F4")];
+var project2 = [f("name", "\u9879\u76EE\u540D\u79F0"), f("role", "\u9879\u76EE\u89D2\u8272", "\u804C\u8D23", "\u804C\u52A1"), f("description", "\u9879\u76EE\u63CF\u8FF0"), f("responsibilities", "\u9879\u76EE\u4E2D\u804C\u8D23"), f("range", "\u8D77\u6B62\u65F6\u95F4"), f("current", "\u81F3\u4ECA"), f("start", "\u5F00\u59CB\u65F6\u95F4"), f("end", "\u7ED3\u675F\u65F6\u95F4"), f("url", "\u9879\u76EE\u94FE\u63A5")];
+var tail = [
+  { sections: ["\u8BED\u8A00\u80FD\u529B"], sources: ["languages"], repeated: true, fields: [f("name", "\u8BED\u8A00\u7C7B\u578B", "\u8BED\u8A00"), f("overall", "\u638C\u63E1\u7A0B\u5EA6", "\u7CBE\u901A\u7A0B\u5EA6"), f("speaking", "\u542C\u8BF4"), f("writing", "\u8BFB\u5199")] },
+  { sections: ["\u83B7\u5956\u7ECF\u5386"], sources: ["awards"], repeated: true, fields: [f("name", "\u5956\u9879\u540D\u79F0"), f("obtained_month", "\u83B7\u5956\u65F6\u95F4"), f("description", "\u63CF\u8FF0")] },
+  { sections: ["\u8BC1\u4E66"], sources: ["certificates"], repeated: true, fields: [f("name", "\u8BC1\u4E66\u540D\u79F0"), f("description", "\u63CF\u8FF0"), f("obtained_month", "\u83B7\u5F97\u65F6\u95F4"), f("issuer", "\u9881\u53D1\u673A\u6784")] },
+  { sections: ["\u7ADE\u8D5B"], sources: ["competitions"], repeated: true, fields: [f("name", "\u7ADE\u8D5B\u540D\u79F0"), f("description", "\u63CF\u8FF0")] },
+  { sections: ["\u6821\u56ED\u7ECF\u5386"], sources: ["campus"], repeated: true, fields: [f("organization", "\u7EC4\u7EC7\u540D\u79F0"), f("role", "\u804C\u4F4D\u540D\u79F0"), f("description", "\u63CF\u8FF0"), f("range", "\u8D77\u6B62\u65F6\u95F4")] },
+  { sections: ["\u81EA\u6211\u63CF\u8FF0", "\u81EA\u6211\u8BC4\u4EF7"], sources: ["basic"], reveal: true, fields: [f("self_description", "\u81EA\u6211\u63CF\u8FF0", "\u81EA\u6211\u8BC4\u4EF7")] },
+  { sections: ["\u4F5C\u54C1\u94FE\u63A5"], sources: ["basic"], fields: [f("portfolio_url", "\u4F5C\u54C1\u94FE\u63A5")] }
+];
+var basics = [{ sections: ["\u57FA\u672C\u4FE1\u606F", "\u57FA\u7840\u4FE1\u606F", "\u4E2A\u4EBA\u4FE1\u606F"], sources: ["basic"], fields: basic2 }];
+var intent = { sections: ["\u6C42\u804C\u610F\u5411"], sources: ["intent"], fields: [f("cities", "\u671F\u671B\u5DE5\u4F5C\u57CE\u5E02"), { ...f("cities", "\u671F\u671B\u57CE\u5E02"), transform: "cities_text" }, f("current_salary", "\u5F53\u524D\u85AA\u8D44"), f("expected_salary", "\u671F\u671B\u85AA\u8D44"), f("industry", "\u671F\u671B\u4ECE\u4E8B\u884C\u4E1A"), f("occupation", "\u671F\u671B\u4ECE\u4E8B\u804C\u4E1A")] };
+var detailedBasic = [
+  ...basic2,
+  f("phone", "\u79FB\u52A8\u7535\u8BDD", "\u624B\u673A", "\u624B\u673A\u53F7\u7801 / \u53F7\u7801", "\u624B\u673A\u53F7 / \u53F7\u7801", "\u624B\u673A / \u53F7\u7801"),
+  f("phone_country", "\u624B\u673A\u53F7\u7801 / \u533A\u53F7", "\u624B\u673A\u53F7 / \u533A\u53F7", "\u624B\u673A / \u533A\u53F7"),
+  f("english_test_type", "\u82F1\u8BED\u6C34\u5E73 / \u7C7B\u578B"),
+  f("english_test_result", "\u82F1\u8BED\u6C34\u5E73 / \u7B49\u7EA7"),
+  f("other_language", "\u5176\u4ED6\u5916\u8BED / \u7C7B\u578B"),
+  f("other_language_level", "\u5176\u4ED6\u5916\u8BED / \u7B49\u7EA7"),
+  f("email", "\u7535\u5B50\u90AE\u7BB1", "\u7535\u5B50\u90AE\u4EF6"),
+  f("highest_education", "\u5B66\u5386"),
+  f("identity_type", "\u8BC1\u4EF6\u7C7B\u578B", "\u8EAB\u4EFD\u8BC1\u53F7 / \u7C7B\u578B", "\u8EAB\u4EFD\u8BC1\u53F7\u7801 / \u7C7B\u578B", "\u8BC1\u4EF6\u53F7\u7801 / \u7C7B\u578B"),
+  f("identity_number", "\u8BC1\u4EF6\u53F7\u7801", "\u8EAB\u4EFD\u8BC1\u53F7\u7801", "\u8EAB\u4EFD\u8BC1\u53F7", "\u8BC1\u4EF6\u53F7\u7801 / \u53F7\u7801", "\u8EAB\u4EFD\u8BC1\u53F7\u7801 / \u53F7\u7801", "\u8EAB\u4EFD\u8BC1\u53F7 / \u53F7\u7801"),
+  f("ethnicity", "\u6C11\u65CF"),
+  f("political_status", "\u653F\u6CBB\u9762\u8C8C"),
+  f("marital_status", "\u5A5A\u59FB\u72B6\u51B5"),
+  f("health_status", "\u5065\u5EB7\u72B6\u51B5"),
+  f("medical_history", "\u75C5\u53F2\u4FE1\u606F"),
+  f("height_cm", "\u8EAB\u9AD8", "\u8EAB\u9AD8\uFF08cm\uFF09"),
+  f("weight_kg", "\u4F53\u91CD", "\u4F53\u91CD\uFF08kg\uFF09"),
+  f("residence_province", "\u73B0\u5C45\u4F4F\u5730 / \u7701\u4EFD", "\u73B0\u5C45\u4F4F\u57CE\u5E02 / \u7701\u4EFD", "\u76EE\u524D\u5C45\u4F4F\u5730 / \u7701\u4EFD", "\u76EE\u524D\u6240\u5728\u57CE\u5E02 / \u7701\u4EFD"),
+  f("residence_city", "\u73B0\u5C45\u4F4F\u5730 / \u57CE\u5E02", "\u73B0\u5C45\u4F4F\u57CE\u5E02 / \u57CE\u5E02", "\u76EE\u524D\u5C45\u4F4F\u5730 / \u57CE\u5E02", "\u76EE\u524D\u6240\u5728\u57CE\u5E02 / \u57CE\u5E02"),
+  f("native_province", "\u7C4D\u8D2F / \u7701\u4EFD"),
+  f("native_city", "\u7C4D\u8D2F / \u57CE\u5E02"),
+  f("origin_province", "\u9AD8\u8003\u751F\u6E90\u5730 / \u7701\u4EFD"),
+  f("origin_city", "\u9AD8\u8003\u751F\u6E90\u5730 / \u57CE\u5E02"),
+  f("target_province", "\u671F\u671B\u5DE5\u4F5C\u5730\u70B9 / \u7701\u4EFD"),
+  f("target_city", "\u671F\u671B\u5DE5\u4F5C\u5730\u70B9 / \u57CE\u5E02"),
+  f("address", "\u6709\u6548\u901A\u8BAF\u5730\u5740", "\u901A\u4FE1\u5730\u5740"),
+  f("training_mode", "\u57F9\u517B\u65B9\u5F0F"),
+  f("highest_school", "\u6700\u9AD8\u5B66\u5386\u6BD5\u4E1A\u9662\u6821"),
+  f("highest_major", "\u6700\u9AD8\u5B66\u5386\u4E13\u4E1A"),
+  f("graduation_date", "\u6BD5\u4E1A\u65F6\u95F4(\u4E0E\u6BD5\u4E1A\u8BC1\u4E00\u81F4)"),
+  f("major_rank", "\u6700\u9AD8\u5B66\u5386\u4E13\u4E1A\u6392\u540D"),
+  f("scholarship_status", "\u5956\u5B66\u91D1\u60C5\u51B5"),
+  f("failed_courses", "\u6302\u79D1\u60C5\u51B5"),
+  f("interview_location", "\u671F\u671B\u9762\u8BD5\u5730\u70B9"),
+  f("recruitment_channel", "\u62DB\u8058\u4FE1\u606F\u83B7\u53D6\u6E20\u9053"),
+  f("veteran_status", "\u662F\u5426\u9000\u5F79\u519B\u4EBA"),
+  f("applicant_type", "\u7533\u8BF7\u8005\u7C7B\u522B")
+];
+var detailedEducation = [
+  ...education2,
+  f("school", "\u5B66\u6821"),
+  f("major", "\u4E13\u4E1A\uFF08\u9AD8\u4E2D\u548C\u521D\u4E2D\u5B66\u5386\u4E13\u4E1A\u9009\u62E9\u201C\u5176\u4ED6\u201D\uFF09"),
+  f("description", "\u4E13\u4E1A\u63CF\u8FF0"),
+  f("city_province", "\u57CE\u5E02 / \u7701\u4EFD"),
+  f("city", "\u57CE\u5E02 / \u57CE\u5E02"),
+  f("major_rank", "\u4E13\u4E1A\u6392\u540D"),
+  f("full_time", "\u662F\u5426\u5168\u65E5\u5236")
+];
+var recipes = [
+  { id: "guopin/module-editor/v1", family: "guopin", sections: [
+    { sections: ["\u6C42\u804C\u610F\u5411"], sources: ["intent"], fields: [f("position_path", "\u671F\u671B\u804C\u4F4D"), f("location_path", "\u5DE5\u4F5C\u5730\u533A"), f("industry_path", "\u671F\u671B\u884C\u4E1A"), f("salary_min", "\u85AA\u8D44\u8981\u6C42\uFF08\u5143/\u6708\uFF09 / \u6700\u4F4E"), f("salary_max", "\u85AA\u8D44\u8981\u6C42\uFF08\u5143/\u6708\uFF09 / \u6700\u9AD8")] },
+    { sections: ["\u81EA\u6211\u8BC4\u4EF7"], sources: ["basic"], fields: [f("self_description", "\u81EA\u6211\u8BC4\u4EF7")] },
+    { sections: ["\u8D44\u683C\u8BC1\u4E66"], sources: ["basic"], fields: [f("guopin_certificate_paths", "\u8BC1\u4E66\u540D\u79F0")] },
+    { sections: ["\u9879\u76EE\u7ECF\u5386"], sources: ["projects"], repeated: true, fields: [f("name", "\u9879\u76EE\u540D\u79F0"), f("role", "\u9879\u76EE\u89D2\u8272"), f("range", "\u8D77\u6B62\u65F6\u95F4"), f("start", "\u8D77\u6B62\u65F6\u95F4 / \u5F00\u59CB"), f("end", "\u8D77\u6B62\u65F6\u95F4 / \u7ED3\u675F"), f("organization", "\u6240\u5728\u5355\u4F4D"), f("team_size", "\u56E2\u961F\u89C4\u6A21"), f("description", "\u9879\u76EE\u4ECB\u7ECD"), f("responsibilities", "\u9879\u76EE\u804C\u8D23"), f("results", "\u9879\u76EE\u6210\u679C")] },
+    { sections: ["\u5DE5\u4F5C/\u5B9E\u4E60\u7ECF\u5386"], sources: ["internships", "work"], repeated: true, fields: [f("organization", "\u5355\u4F4D\u540D\u79F0"), f("company_type", "\u5355\u4F4D\u6027\u8D28"), f("role", "\u804C\u4F4D\u540D\u79F0"), f("employment_type", "\u5DE5\u4F5C\u6027\u8D28"), f("range", "\u5728\u804C\u65F6\u95F4"), f("start", "\u5728\u804C\u65F6\u95F4 / \u5F00\u59CB"), f("end", "\u5728\u804C\u65F6\u95F4 / \u7ED3\u675F"), f("description", "\u5DE5\u4F5C\u5185\u5BB9"), f("company_headcount", "\u5355\u4F4D\u89C4\u6A21"), f("department", "\u90E8\u95E8"), f("reports_to", "\u6C47\u62A5\u5BF9\u8C61"), f("subordinates", "\u4E0B\u5C5E\u4EBA\u6570"), f("monthly_salary_yuan", "\u7A0E\u524D\u6708\u85AA"), f("industry_path", "\u6240\u5C5E\u884C\u4E1A"), f("location_path", "\u5DE5\u4F5C\u5730\u533A"), f("overseas", "\u6D77\u5916\u5DE5\u4F5C")] },
+    { sections: ["\u6559\u80B2\u7ECF\u5386"], sources: ["education"], repeated: true, fields: [...education2.filter((r) => r.key !== "study_mode"), f("enrollment_mode", "\u7EDF\u62DB"), f("study_mode", "\u5168\u65E5\u5236"), f("has_degree", "\u5B66\u4F4D\u8BC1"), f("degree_path", "\u5B66\u4F4D\u7EC6\u5206"), f("range", "\u5C31\u8BFB\u5E74\u6708"), f("guopin_major_category", "\u4E13\u4E1A\u5206\u7C7B"), f("major_rank", "\u4E13\u4E1A\u6392\u540D"), f("has_overseas", "\u6D77\u5916\u7559\u5B66"), f("description", "\u5728\u6821\u7ECF\u5386"), f("school_system", "\u5B66\u5236"), f("edu_cert_no", "\u5B66\u5386\u8BC1\u4E66\u7F16\u53F7"), f("degree_cert_no", "\u5B66\u4F4D\u8BC1\u4E66\u7F16\u53F7")] }
+  ] },
+  { id: "dayee/ant-resume/v1", family: "dayee", sections: [
+    { sections: ["\u4E2A\u4EBA\u57FA\u672C\u4FE1\u606F"], sources: ["basic"], fields: detailedBasic },
+    { sections: ["\u6559\u80B2\u7ECF\u5386"], sources: ["education"], repeated: true, fields: [...detailedEducation.filter((rule) => rule.key !== "study_mode"), f("enrollment_mode", "\u5B66\u4E60\u5F62\u5F0F")] },
+    { sections: ["\u5B9E\u4E60\u7ECF\u5386", "\u5DE5\u4F5C\u7ECF\u5386"], sources: ["internships", "work"], repeated: true, fields: [...experience2, f("organization", "\u4F01\u4E1A\u540D\u79F0"), f("company_type", "\u4F01\u4E1A\u6027\u8D28"), f("company_size", "\u4F01\u4E1A\u89C4\u6A21"), f("description", "\u5DE5\u4F5C\u63CF\u8FF0")] },
+    { sections: ["\u9879\u76EE\u7ECF\u9A8C"], sources: ["projects"], repeated: true, fields: [...project2, f("responsibilities", "\u9879\u76EE\u804C\u8D23"), f("organization", "\u6240\u5C5E\u516C\u53F8")] },
+    { sections: ["\u6821\u5185\u804C\u52A1"], sources: ["campus"], repeated: true, fields: [f("organization", "\u5B66\u6821\u540D\u79F0", "\u7EC4\u7EC7\u540D\u79F0", "\u7EC4\u7EC7/\u56E2\u4F53\u540D\u79F0"), f("role", "\u804C\u52A1\u540D\u79F0", "\u804C\u52A1", "\u62C5\u4EFB\u804C\u52A1"), f("cadre_level", "\u5E72\u90E8\u7EA7\u522B"), f("description", "\u804C\u52A1\u63CF\u8FF0", "\u5DE5\u4F5C\u63CF\u8FF0", "\u804C\u8D23\u548C\u6210\u5C31"), f("start", "\u5F00\u59CB\u65F6\u95F4"), f("end", "\u7ED3\u675F\u65F6\u95F4")] },
+    { sections: ["\u6280\u80FD\u8D44\u8D28"], sources: ["certificates"], repeated: true, fields: [f("name", "\u8BC1\u4E66\u540D\u79F0", "\u6280\u80FD\u540D\u79F0", "\u4E13\u4E1A\u6280\u80FD\u8BC1\u4E66\u540D\u79F0"), f("issuer", "\u9881\u53D1\u673A\u6784"), f("obtained_month", "\u83B7\u5F97\u65F6\u95F4"), f("description", "\u8BC1\u4E66\u63CF\u8FF0", "\u63CF\u8FF0")] },
+    { sections: ["\u5916\u8BED\u80FD\u529B"], sources: ["languages"], record_filter: "english", fields: [f("overall", "\u82F1\u8BED\u7B49\u7EA7"), f("score", "CET \u6210\u7EE9"), f("exam_id", "\u51C6\u8003\u8BC1\u53F7"), f("exam_month", "\u8003\u8BD5\u65F6\u95F4"), f("toefl_score", "TOFEL\u5206\u6570"), f("ielts_score", "IELTS\u5206\u6570"), f("testdaf_score", "Test Daf\u5206\u6570"), f("dsh_score", "DSH\u5206\u6570"), f("other_scores", "\u5176\u4ED6\u5916\u8BED\u53CA\u6210\u7EE9"), f("report_number", "\u6210\u7EE9\u5355\u7F16\u53F7")] },
+    { sections: ["\u5176\u4ED6\u5916\u8BED\u80FD\u529B"], sources: ["languages"], record_filter: "other_languages", repeated: true, fields: [f("name", "\u5916\u8BED\u8BED\u79CD", "\u8BED\u79CD", "\u5176\u4ED6\u5916\u8BED\u79CD\u7C7B"), f("overall", "\u638C\u63E1\u7A0B\u5EA6", "\u5916\u8BED\u7B49\u7EA7", "\u5176\u4ED6\u5916\u8BED\u6C34\u5E73"), f("score", "\u6210\u7EE9")] },
+    { sections: ["\u5BB6\u5EAD\u5173\u7CFB"], sources: ["family"], repeated: true, fields: [f("name", "\u59D3\u540D"), f("relation", "\u5173\u7CFB"), f("phone", "\u8054\u7CFB\u7535\u8BDD"), f("birth_date", "\u51FA\u751F\u65E5\u671F"), f("organization", "\u5DE5\u4F5C\u5355\u4F4D"), f("role", "\u804C\u4F4D"), f("address", "\u73B0\u4F4F\u5740"), f("status", "\u73B0\u72B6")] },
+    { sections: ["\u79D1\u7814\u7ECF\u5386"], sources: ["research"], repeated: true, fields: [f("start", "\u5F00\u59CB\u65F6\u95F4"), f("end", "\u7ED3\u675F\u65F6\u95F4"), f("name", "\u7814\u7A76\u8BFE\u9898/\u9879\u76EE"), f("participation", "\u53C2\u4E0E\u5EA6"), f("supervisor", "\u5BFC\u5E08"), f("description", "\u6210\u679C")] },
+    { sections: ["\u81EA\u6211\u8BC4\u4EF7"], sources: ["basic"], fields: [f("self_description", "\u8BC4\u4EF7\u5185\u5BB9")] }
+  ] },
+  { id: "51job/legacy-resume/v1", family: "job51", sections: [
+    { sections: ["\u4E2A\u4EBA\u4FE1\u606F", "\u57FA\u672C\u4FE1\u606F"], sources: ["basic"], fields: [
+      ...detailedBasic,
+      ...[
+        f("employment_status", "\u7533\u8BF7\u8005\u7C7B\u522B"),
+        f("origin_province", "\u751F\u6E90\u7C4D\u8D2F\u6240\u5728\u57CE\u5E02 / \u7701\u4EFD"),
+        f("origin_city", "\u751F\u6E90\u7C4D\u8D2F\u6240\u5728\u57CE\u5E02 / \u57CE\u5E02"),
+        f("origin_is_jiangsu", "\u751F\u6E90\u7C4D\u8D2F\u662F\u5426\u4E3A\u6C5F\u82CF\u7701 / \u7C7B\u578B"),
+        f("residence_is_jiangsu", "\u76EE\u524D\u6240\u5728\u57CE\u5E02\u662F\u5426\u4E3A\u6C5F\u82CF\u7701 / \u7C7B\u578B"),
+        f("criminal_record", "\u662F\u5426\u6709\u8FDD\u6CD5\u72AF\u7F6A\u8BB0\u5F55"),
+        f("qualification_category", "\u4E13\u4E1A\u6280\u672F\u8D44\u683C\u53CA\u804C\u4E1A\u8D44\u683C\u8BC1\u4E66 / \u7C7B\u578B"),
+        f("other_certificates", "\u5176\u4ED6\u8D44\u683C\u8BC1\u4E66"),
+        f("written_test_city", "\u610F\u5411\u7EBF\u4E0B\u7B14\u8BD5\u57CE\u5E02"),
+        f("recruitment_channel_job51", "\u4ECE\u54EA\u91CC\u77E5\u9053\u62DB\u8058\u4FE1\u606F"),
+        f("available_date", "\u4F55\u65F6\u53EF\u4EE5\u4E0A\u73ED"),
+        f("expected_monthly_salary_band", "\u671F\u671B\u6708\u85AA\uFF08\u5143\uFF09"),
+        f("self_description", "\u4E2A\u4EBA\u8BC4\u4EF7"),
+        ...[["origin", "\u751F\u6E90\u7C4D\u8D2F"], ["residence", "\u76EE\u524D\u6240\u5728\u57CE\u5E02"]].flatMap(([prefix, label]) => [
+          { ...f(`${prefix}_jiangsu_city`, `${label}\u662F\u5426\u4E3A\u6C5F\u82CF\u7701 / \u7C7B\u522B`), emptyBranch: { key: `${prefix}_is_jiangsu`, value: "\u5426" } },
+          { ...f(`${prefix}_jiangsu_district`, `${label}\u662F\u5426\u4E3A\u6C5F\u82CF\u7701 / \u660E\u7EC6`), emptyBranch: { key: `${prefix}_is_jiangsu`, value: "\u5426" } }
+        ]),
+        { ...f("qualification_type", "\u4E13\u4E1A\u6280\u672F\u8D44\u683C\u53CA\u804C\u4E1A\u8D44\u683C\u8BC1\u4E66 / \u7C7B\u522B"), emptyBranch: { key: "qualification_category", value: "\u65E0" } },
+        { ...f("qualification_name", "\u4E13\u4E1A\u6280\u672F\u8D44\u683C\u53CA\u804C\u4E1A\u8D44\u683C\u8BC1\u4E66 / \u660E\u7EC6"), emptyBranch: { key: "qualification_category", value: "\u65E0" } }
+      ].map((rule) => ({ ...rule, company: "26b69a02-efa5-4674-a984-40bcae578b0a" }))
+    ] },
+    { sections: ["\u6559\u80B2\u7ECF\u5386", "\u6559\u80B2\u80CC\u666F"], sources: ["education"], repeated: true, fields: [...detailedEducation.map((rule) => ["school", "major"].includes(rule.key) ? { ...rule, custom: true } : rule), f("level", "\u6700\u9AD8\u5B66\u5386", "\u5176\u4ED6\u5B66\u5386"), { ...f("school", "\u6BD5\u4E1A\u5B66\u6821"), custom: true }, { ...f("major", "\u6240\u5B66\u4E13\u4E1A"), custom: true }, f("school_other", "\u5176\u4ED6\u5B66\u6821"), f("major_other", "\u5176\u4ED6\u4E13\u4E1A"), f("start", "\u5165\u5B66\u65F6\u95F4"), f("end", "\u6BD5\u4E1A\u65F6\u95F4"), f("major_rank", "\u5B66\u4E60\u6210\u7EE9\u6392\u540D"), f("campus_role", "\u62C5\u4EFB\u804C\u52A1"), f("courses", "\u4E3B\u4FEE\u8BFE\u7A0B", "\u4E13\u4E1A\u8BFE\u7A0B"), f("enrolled_unified", "\u662F\u5426\u7EDF\u62DB"), f("upgraded_bachelor", "\u662F\u5426\u4E13\u5347\u672C"), f("overseas", "\u662F\u5426\u6709\u6D77\u5916\u7559\u5B66\u7ECF\u5386"), f("research_direction", "\u7814\u7A76\u65B9\u5411"), f("college", "\u6240\u5728\u9662\u7CFB"), f("full_time", "\u662F\u5426\u662F\u5168\u65E5\u5236"), f("class_rank", "\u73ED\u7EA7\u6392\u540D"), f("job51_school_region", "\u6BD5\u4E1A\u5B66\u6821 / \u7C7B\u578B"), f("job51_school_option", "\u6BD5\u4E1A\u5B66\u6821 / \u7B49\u7EA7"), f("job51_major_category", "\u4E13\u4E1A / \u7C7B\u578B"), f("job51_major_option", "\u4E13\u4E1A / \u7B49\u7EA7")] },
+    { sections: ["\u5B9E\u4E60/\u5DE5\u4F5C\u7ECF\u5386", "\u5B9E\u4E60/\u5DE5\u4F5C\u7ECF\u9A8C"], sources: ["internships", "work"], repeated: true, fields: [...experience2, f("organization", "\u4F01\u4E1A\u540D\u79F0"), f("role", "\u804C\u4F4D", "\u804C\u52A1", "\u804C\u4F4D / \u804C\u4F4D"), f("role_category", "\u804C\u4F4D / \u804C\u7C7B"), f("description", "\u5DE5\u4F5C\u63CF\u8FF0"), f("start", "\u5F00\u59CB\u65E5\u671F"), f("end", "\u7ED3\u675F\u65E5\u671F")] },
+    { sections: ["\u7814\u7A76\u9879\u76EE\u7ECF\u5386", "\u9879\u76EE\u7ECF\u5386"], sources: ["projects"], repeated: true, fields: [...project2, f("responsibilities", "\u9879\u76EE\u804C\u8D23"), f("start", "\u5F00\u59CB\u65E5\u671F"), f("end", "\u7ED3\u675F\u65E5\u671F"), f("role", "\u62C5\u4EFB\u804C\u4F4D/\u89D2\u8272"), f("organization", "\u9879\u76EE\u5355\u4F4D")] },
+    { sections: ["\u793E\u56E2\uFF08\u5B66\u751F\u5DE5\u4F5C\u3001\u6D3B\u52A8\uFF09\u7ECF\u5386"], sources: ["campus"], repeated: true, fields: [f("organization", "\u793E\u56E2\u540D\u79F0", "\u7EC4\u7EC7\u540D\u79F0", "\u793E\u56E2\uFF08\u7EC4\u7EC7\uFF09\u540D\u79F0"), f("role", "\u804C\u52A1"), f("description", "\u5DE5\u4F5C\u63CF\u8FF0", "\u7ECF\u5386\u63CF\u8FF0", "\u793E\u56E2\u5DE5\u4F5C\u7ECF\u5386\u63CF\u8FF0"), f("student_cadre", "\u662F\u5426\u4E3A\u5B66\u751F\u5E72\u90E8"), f("range", "\u8D77\u6B62\u65F6\u95F4"), f("start", "\u5F00\u59CB\u65F6\u95F4", "\u5F00\u59CB\u65E5\u671F"), f("end", "\u7ED3\u675F\u65F6\u95F4", "\u7ED3\u675F\u65E5\u671F")] },
+    { sections: ["\u81EA\u6211\u8BC4\u4EF7"], sources: ["basic"], fields: [f("self_description", "\u81EA\u6211\u8BC4\u4EF7"), f("cofco_understanding", "\u6211\u5BF9\u4E2D\u7CAE\u7684\u8BA4\u8BC6\u548C\u770B\u6CD5"), f("self_career_description", "\u81EA\u6211\u8BC4\u4EF7\u53CA\u804C\u4E1A\u751F\u6DAF\u89C4\u5212")] },
+    { sections: ["\u5BB6\u5EAD\u6210\u5458\u4FE1\u606F"], sources: ["basic"], fields: [f("father_name", "\u7236\u4EB2\u59D3\u540D"), f("father_organization_role", "\u7236\u4EB2\u5DE5\u4F5C\u5355\u4F4D\u53CA\u804C\u4F4D"), f("mother_name", "\u6BCD\u4EB2\u59D3\u540D"), f("mother_organization_role", "\u6BCD\u4EB2\u5DE5\u4F5C\u5355\u4F4D\u53CA\u804C\u4F4D")] },
+    { sections: ["\u8BED\u8A00\u80FD\u529B/\u6280\u80FD\u8BC1\u4E66"], sources: ["basic"], fields: [f("english_test_type", "\u82F1\u8BED\u6C34\u5E73"), f("english_score", "\u82F1\u8BED\u6210\u7EE9"), f("other_language", "\u5176\u4ED6\u5916\u8BED\u6C34\u5E73 / \u7C7B\u578B"), f("cofco_other_language_level", "\u5176\u4ED6\u5916\u8BED\u6C34\u5E73 / \u7B49\u7EA7"), f("primary_it_category", "IT\u6280\u80FD / \u7C7B\u578B"), f("primary_it_name", "IT\u6280\u80FD / \u7B49\u7EA7"), f("skills_text", "\u5176\u4ED6\u6280\u80FD"), f("certificate_names", "\u83B7\u5F97\u8BC1\u4E66\u540D\u79F0")] },
+    { sections: ["\u83B7\u5956\u60C5\u51B5"], sources: ["awards"], repeated: true, fields: [f("name", "\u5956\u9879\u540D\u79F0"), f("obtained_month", "\u83B7\u5956\u65F6\u95F4"), f("level", "\u7EA7\u522B / \u7C7B\u578B"), f("grade", "\u7EA7\u522B / \u7B49\u7EA7"), f("description", "\u5956\u9879\u63CF\u8FF0")] },
+    { sections: ["\u7ADE\u8D5B\u7ECF\u5386"], sources: ["competitions"], repeated: true, fields: [f("name", "\u7ADE\u8D5B\u540D\u79F0"), f("award_level", "\u83B7\u5956\u7B49\u7EA7"), f("obtained_month", "\u65F6\u95F4"), f("issuer", "\u4E3B\u529E\u5355\u4F4D"), f("description", "\u7ADE\u8D5B\u63CF\u8FF0")] },
+    { sections: ["IT\u6280\u80FD"], sources: ["it_skills"], repeated: true, fields: [f("category", "\u6280\u80FD / \u7C7B\u522B"), f("name", "\u6280\u80FD / \u540D\u79F0"), f("overall", "\u638C\u63E1\u7A0B\u5EA6")] },
+    ...tail
+  ] },
+  { id: "moka/sd-resume/v1", family: "sd", sections: [
+    ...basics.map((s) => ({ ...s, fields: [...s.fields, { ...f("birth_date", "\u51FA\u751F\u65E5\u671F (\u5E74\u9F84)"), transform: "birth_month" }] })),
+    intent,
+    { sections: ["\u6559\u80B2\u80CC\u666F"], sources: ["education"], repeated: true, fields: education2.map((x) => x.key === "school" || x.key === "major" ? { ...x, custom: true } : x) },
+    { sections: ["\u5DE5\u4F5C\u7ECF\u5386"], sources: ["work"], repeated: true, fields: experience2, negative: ["\u6CA1\u6709\u5DE5\u4F5C\u7ECF\u5386"] },
+    { sections: ["\u5B9E\u4E60\u7ECF\u5386"], sources: ["internships"], repeated: true, fields: experience2, negative: ["\u6CA1\u6709\u5B9E\u4E60\u7ECF\u5386"] },
+    { sections: ["\u9879\u76EE\u7ECF\u9A8C"], sources: ["projects"], repeated: true, fields: project2 },
+    ...tail
+  ] },
+  { id: "beisen/phoenix-resume/v1", family: "phoenix", sections: [
+    ...basics,
+    intent,
+    { sections: ["\u6559\u80B2\u7ECF\u5386"], sources: ["education"], repeated: true, fields: education2 },
+    { sections: ["\u5DE5\u4F5C\u7ECF\u5386"], sources: ["work", "internships"], repeated: true, fields: experience2 },
+    { sections: ["\u5B9E\u4E60\u7ECF\u5386"], sources: ["internships"], repeated: true, fields: experience2 },
+    { sections: ["\u9879\u76EE\u7ECF\u5386"], sources: ["projects"], repeated: true, fields: project2.map((x) => x.key === "description" ? { ...x, key: "combined_description" } : x) },
+    ...tail
+  ] },
+  { id: "feishu/ud-resume/v1", family: "ud", sections: [
+    ...basics.map((s) => ({ ...s, fields: [...s.fields, f("cities", "\u671F\u671B\u5DE5\u4F5C\u5730\u70B9")] })),
+    intent,
+    { sections: ["\u6559\u80B2\u7ECF\u5386"], sources: ["education"], repeated: true, fields: education2 },
+    { sections: ["\u5DE5\u4F5C\u7ECF\u5386"], sources: ["work"], repeated: true, fields: experience2, negative: ["\u6CA1\u6709\u5DE5\u4F5C\u7ECF\u5386"] },
+    { sections: ["\u5B9E\u4E60\u7ECF\u5386"], sources: ["internships"], repeated: true, fields: experience2, negative: ["\u6CA1\u6709\u5B9E\u4E60\u7ECF\u5386"] },
+    { sections: ["\u9879\u76EE\u7ECF\u5386"], sources: ["projects"], repeated: true, fields: [...project2, f("combined_description", "\u63CF\u8FF0")] },
+    ...tail
+  ] }
+];
+
+// src/browser/planning/capabilities.ts
+var CAPABILITY_VERSION = "2026-09-21.4";
+var evidence = "docs/51job\u4E0E\u5927\u6613\u9002\u914D\u5F00\u53D1\u8BB0\u5F55-2026-09-21.md";
+var automatic = "docs/reports/2026-09-21-automatic-preparation-024-development.md";
+var cofcoModules = ["\u4E2A\u4EBA\u4FE1\u606F", "\u6559\u80B2\u7ECF\u5386", "\u793E\u56E2\uFF08\u5B66\u751F\u5DE5\u4F5C\u3001\u6D3B\u52A8\uFF09\u7ECF\u5386", "\u5B9E\u4E60/\u5DE5\u4F5C\u7ECF\u5386", "\u7814\u7A76\u9879\u76EE\u7ECF\u5386", "\u7ADE\u8D5B\u7ECF\u5386", "\u83B7\u5956\u60C5\u51B5", "\u8BED\u8A00\u80FD\u529B/\u6280\u80FD\u8BC1\u4E66", "\u5BB6\u5EAD\u6210\u5458\u4FE1\u606F", "\u81EA\u6211\u8BC4\u4EF7"];
+var templates = [
+  {
+    id: "feishu/bytedance-campus",
+    name: "\u98DE\u4E66\uFF0F\u5B57\u8282\u6821\u56ED\u62DB\u8058",
+    family: "ud",
+    host: "jobs.bytedance.com",
+    path: "/campus/resume/edit",
+    status: "ordinary_fill_verified",
+    modules: ["\u57FA\u672C\u4FE1\u606F", "\u6559\u80B2\u7ECF\u5386", "\u5B9E\u4E60\u7ECF\u5386", "\u5DE5\u4F5C\u7ECF\u5386", "\u9879\u76EE\u7ECF\u5386", "\u4F5C\u54C1", "\u7ADE\u8D5B", "\u8BC1\u4E66", "\u8BED\u8A00\u80FD\u529B", "\u81EA\u6211\u8BC4\u4EF7", "\u793E\u4EA4\u8D26\u53F7"],
+    evidence: automatic,
+    verified_version: "0.24.0+codex.20260921020533",
+    verified_on: "2026-09-21",
+    persistence: "not_verified",
+    limitations: ["\u5DF2\u9A8C\u8BC1\u666E\u901A\u5B57\u6BB5\uFF1B\u4ECD\u6709\u8D44\u6599\u7F3A\u9879\u548C\u672A\u6620\u5C04\u7684\u4F01\u4E1A\u5B57\u6BB5\u3002", "\u672A\u9A8C\u8BC1\u4FDD\u5B58\u4E0E\u5237\u65B0\u6301\u4E45\u5316\u3002"],
+    observed_unmapped: [{ section: "\u57FA\u672C\u4FE1\u606F", labels: ["\u624B\u673A\u53F7\u7801 / \u533A\u53F7", "\u4E2A\u4EBA\u8BC1\u4EF6 / \u7C7B\u578B"], modes: ["choice"] }, { section: "\u57FA\u672C\u4FE1\u606F", labels: ["\u4E2A\u4EBA\u8BC1\u4EF6"], modes: ["text"] }, { section: "\u6559\u80B2\u7ECF\u5386", labels: ["\u5B9E\u9A8C\u5BA4", "\u9886\u57DF\u65B9\u5411", "\u5BFC\u5E08"], modes: ["text"] }]
+  },
+  {
+    id: "moka/kingdee-campus",
+    name: "Moka\uFF0F\u91D1\u8776\u6821\u56ED\u62DB\u8058",
+    family: "sd",
+    host: "app.mokahr.com",
+    path: "/campus-recruitment/kingdeehr/166565",
+    status: "ordinary_fill_verified",
+    modules: ["\u57FA\u7840\u4FE1\u606F", "\u4E2A\u4EBA\u4FE1\u606F", "\u6C42\u804C\u610F\u5411", "\u5DE5\u4F5C\u7ECF\u5386", "\u6559\u80B2\u80CC\u666F", "\u5B9E\u4E60\u7ECF\u5386", "\u9879\u76EE\u7ECF\u9A8C", "\u8BED\u8A00\u80FD\u529B", "\u81EA\u6211\u63CF\u8FF0", "\u83B7\u5956\u7ECF\u5386"],
+    evidence: automatic,
+    verified_version: "0.24.0+codex.20260921020533",
+    verified_on: "2026-09-21",
+    persistence: "not_verified",
+    limitations: ["\u8BED\u8A00\u7A0B\u5EA6\u53EF\u80FD\u6CA1\u6709\u7B49\u4EF7\u9009\u9879\uFF0C\u4E0D\u80FD\u7528\u8FD1\u4F3C\u9009\u9879\u66FF\u4EE3\u3002", "\u672A\u9A8C\u8BC1\u4FDD\u5B58\u4E0E\u5237\u65B0\u6301\u4E45\u5316\u3002"],
+    observed_unmapped: [{ section: "\u4E2A\u4EBA\u4FE1\u606F", labels: ["\u8BC1\u4EF6\u53F7\u7801 / \u7C7B\u578B"], modes: ["choice"] }, { section: "\u4E2A\u4EBA\u4FE1\u606F", labels: ["\u8BC1\u4EF6\u53F7\u7801"], modes: ["text"] }]
+  },
+  {
+    id: "beisen/chery",
+    name: "\u5317\u68EE\uFF0F\u5947\u745E",
+    family: "phoenix",
+    host: "chery.zhiye.com",
+    path: "/form",
+    status: "ordinary_fill_verified",
+    modules: ["\u4E2A\u4EBA\u4FE1\u606F", "\u6C42\u804C\u610F\u5411", "\u6559\u80B2\u7ECF\u5386", "\u5DE5\u4F5C\u7ECF\u5386", "\u9879\u76EE\u7ECF\u5386"],
+    evidence: automatic,
+    verified_version: "0.24.0+codex.20260921020533",
+    verified_on: "2026-09-21",
+    persistence: "not_verified",
+    limitations: ["\u5B66\u6821\u8BCD\u5E93\u65E0\u5019\u9009\u65F6\u4FDD\u7559\u672A\u5B8C\u6210\u9879\u3002", "\u672A\u9A8C\u8BC1\u4FDD\u5B58\u4E0E\u5237\u65B0\u6301\u4E45\u5316\u3002"],
+    observed_unmapped: [{ section: "\u4E2A\u4EBA\u4FE1\u606F", labels: ["\u8BC1\u4EF6\u53F7\u7801"], modes: ["text"] }, { section: "\u6C42\u804C\u610F\u5411", labels: ["\u73B0\u6708\u85AA(\u7A0E\u524D)", "\u671F\u671B\u6708\u85AA(\u7A0E\u524D)", "\u5230\u5C97\u65F6\u95F4"], modes: ["choice"] }]
+  },
+  {
+    id: "51job/cofco",
+    name: "51job\uFF0F\u4E2D\u7CAE",
+    family: "job51",
+    host: "xyz.51job.com",
+    path: "/External/MyResume/FillInResume.aspx",
+    company: "9f8de839-e7de-40c9-8f16-10526e9ac1be",
+    status: "ordinary_fill_verified",
+    modules: cofcoModules,
+    steps: [...cofcoModules.map((s) => [s]), ["\u672C\u4EBA\u627F\u8BFA"]],
+    evidence,
+    verified_version: "0.24.0+codex.20260921061719",
+    verified_on: "2026-09-21",
+    persistence: "preview_compared",
+    limitations: ["\u5DF2\u9A8C\u8BC1\u5341\u4E2A\u666E\u901A\u9875\uFF1B\u672A\u6D4B\u6761\u4EF6\u5206\u652F\u4ECD\u9700\u5B9E\u65F6\u68C0\u67E5\u3002", "\u7167\u7247\u3001\u4EB2\u5C5E\u4EFB\u804C\u53CA\u672C\u4EBA\u627F\u8BFA\u7531\u7528\u6237\u5904\u7406\u3002", "\u9884\u89C8\u6BD4\u5BF9\u4E0D\u4EE3\u8868\u6700\u7EC8\u7533\u8BF7\u63D0\u4EA4\u3002"]
+  },
+  {
+    id: "51job/j10058",
+    name: "51job\uFF0FJ10058",
+    family: "job51",
+    host: "xyz.51job.com",
+    path: "/External/MyResume/FillInResume.aspx",
+    company: "470877a9-5b7a-4eb3-ad0e-4f6c732e27ec",
+    status: "ordinary_fill_verified",
+    modules: ["\u57FA\u672C\u4FE1\u606F", "\u6559\u80B2\u7ECF\u5386", "\u6559\u80B2\u80CC\u666F", "IT\u6280\u80FD", "\u5B9E\u4E60/\u5DE5\u4F5C\u7ECF\u9A8C", "\u81EA\u6211\u8BC4\u4EF7"],
+    steps: [["\u4E0A\u4F20\u9644\u4EF6\u7B80\u5386", "\u4E0A\u4F20\u4E2A\u4EBA\u9644\u4EF6\u7B80\u5386"], ["\u57FA\u672C\u4FE1\u606F"], ["\u6559\u80B2\u7ECF\u5386", "\u6559\u80B2\u80CC\u666F"], ["IT\u6280\u80FD"], ["\u5B9E\u4E60/\u5DE5\u4F5C\u7ECF\u9A8C"], ["\u81EA\u6211\u8BC4\u4EF7"]],
+    evidence,
+    verified_version: "0.24.0+codex.20260921045442",
+    verified_on: "2026-09-21",
+    persistence: "sample_reopened",
+    limitations: ["\u53EA\u5BF9\u5DF2\u9A8C\u6536\u6837\u672C\u7684\u666E\u901A\u5B57\u6BB5\u6709\u4FDD\u5B58\u540E\u91CD\u5F00\u8BC1\u636E\u3002", "\u53EF\u9009\u9644\u4EF6\u8DF3\u8FC7\uFF0C\u6700\u7EC8\u63D0\u4EA4\u4E0D\u81EA\u52A8\u6267\u884C\u3002"]
+  },
+  {
+    id: "dayee/faw",
+    name: "\u5927\u6613\uFF0F\u4E2D\u56FD\u4E00\u6C7D",
+    family: "dayee",
+    host: "faw-zhaopin.hotjob.cn",
+    path: "/SU603374380dcad4635b836531/pb/resumeOperation.html",
+    status: "ordinary_fill_verified",
+    modules: ["\u4E2A\u4EBA\u57FA\u672C\u4FE1\u606F", "\u6559\u80B2\u7ECF\u5386", "\u5B9E\u4E60\u7ECF\u5386", "\u5DE5\u4F5C\u7ECF\u5386", "\u9879\u76EE\u7ECF\u9A8C", "\u6821\u5185\u804C\u52A1", "\u6280\u80FD\u8D44\u8D28", "\u5916\u8BED\u80FD\u529B", "\u5176\u4ED6\u5916\u8BED\u80FD\u529B", "\u5BB6\u5EAD\u5173\u7CFB", "\u79D1\u7814\u7ECF\u5386", "\u81EA\u6211\u8BC4\u4EF7"],
+    evidence: "docs/reports/2026-09-21-dayee-guopin-development.md",
+    verified_version: "0.24.0+codex.20260921125511",
+    verified_on: "2026-09-21",
+    persistence: "sample_reopened",
+    limitations: ["\u672C\u7855\u3001\u57FA\u7840\u4FE1\u606F\u548C\u666E\u901A\u7ECF\u5386\u5171 114 \u9879\u5B8C\u6210 UI \u8BFB\u56DE\uFF1B\u5FC5\u586B\u8BC1\u4EF6\u7167\u53CA\u58F0\u660E\u4ECD\u7531\u672C\u4EBA\u5904\u7406\u3002", "\u6574\u4EFD\u4FDD\u5B58\u548C\u5237\u65B0\u5185\u5BB9\u9A8C\u6536\u672A\u5B8C\u6210\uFF1B\u4E0D\u80FD\u636E\u6B64\u58F0\u79F0\u6295\u9012\u6216\u6574\u7AD9\u9A8C\u6536\u901A\u8FC7\u3002"],
+    observed_unmapped: [{ section: "\u4E2A\u4EBA\u57FA\u672C\u4FE1\u606F", labels: ["\u671F\u671B\u9762\u8BD5\u5730\u70B9"], modes: ["choice"] }]
+  },
+  {
+    id: "51job/jiangsu-bank",
+    name: "51job\uFF0F\u6C5F\u82CF\u519C\u5546\u94F6\u884C",
+    family: "job51",
+    host: "xyz.51job.com",
+    path: "/External/MyResume/FillInResume.aspx",
+    company: "26b69a02-efa5-4674-a984-40bcae578b0a",
+    status: "in_development",
+    modules: ["\u4E2A\u4EBA\u4FE1\u606F", "\u6559\u80B2\u80CC\u666F"],
+    evidence: "docs/\u4EA7\u54C1\u6D41\u7A0B\u4E0E\u67B6\u6784\u6536\u655B\u8BA1\u5212-2026-09-21.md",
+    verified_version: "0.24.0+codex.20260921061719",
+    verified_on: "2026-09-21",
+    persistence: "not_verified",
+    limitations: ["\u4EC5\u4E2A\u4EBA\u9875\u7ECF\u8FC7\u539F\u7AD9\u586B\u5199\uFF1B\u6559\u80B2\u4E0E\u540E\u7EED\u9875\u9762\u5C1A\u672A\u5B8C\u6210\u9A8C\u6536\u3002"]
+  },
+  {
+    id: "guopin/resume",
+    name: "\u56FD\u8058\uFF0F\u7B80\u5386\u7F16\u8F91\u5668",
+    family: "guopin",
+    host: "c.iguopin.com",
+    path: "/resume",
+    status: "ordinary_fill_verified",
+    modules: ["\u6C42\u804C\u610F\u5411", "\u6559\u80B2\u7ECF\u5386", "\u9879\u76EE\u7ECF\u5386", "\u5DE5\u4F5C/\u5B9E\u4E60\u7ECF\u5386", "\u81EA\u6211\u8BC4\u4EF7", "\u8D44\u683C\u8BC1\u4E66"],
+    evidence: "docs/reports/2026-09-21-dayee-guopin-development.md",
+    verified_version: "0.24.0+codex.20260921125511",
+    verified_on: "2026-09-21",
+    persistence: "sample_reopened",
+    limitations: ["\u516D\u7C7B\u6A21\u5757\u5DF2\u6709\u586B\u5199\u3001\u4FDD\u5B58\u53CA\u5237\u65B0\u8BC1\u636E\uFF1B\u672C\u7855\u3001\u4E09\u6761\u5DE5\u4F5C\u3001\u610F\u5411\u3001\u81EA\u8BC4\u53CA\u56DB\u9879\u8BC1\u4E66\u5B8C\u6210 72 \u9879\u72EC\u7ACB\u9884\u89C8\u6BD4\u5BF9\u3002", "\u8D26\u53F7\u57FA\u672C\u4FE1\u606F\u4FDD\u6301\u5DF2\u6709\u503C\uFF0C\u672A\u9A8C\u8BC1\u7A7A\u767D\u8D26\u53F7\u57FA\u7840\u4FE1\u606F\u586B\u5199\uFF1B\u81EA\u5B9A\u4E49\u589E\u52A0\u7684\u5176\u4ED6\u6A21\u5757\u3001\u9644\u4EF6\u53CA\u5F53\u524D\u5728\u804C\u5206\u652F\u4E0D\u5728\u672C\u6B21\u5DF2\u9A8C\u6536\u8303\u56F4\u3002", "\u6A21\u5757\u4FDD\u5B58\u4E0D\u7B49\u4E8E\u6700\u7EC8\u7533\u8BF7\u63D0\u4EA4\u3002"]
+  }
+];
+var platforms = [
+  { id: "feishu-recruitment", name: "\u98DE\u4E66\u62DB\u8058", family: "ud", hosts: [{ kind: "exact", value: "jobs.bytedance.com" }], compatible: true, limitations: ["\u5F53\u524D\u53EF\u4FE1\u6765\u6E90\u4EC5\u5305\u542B\u5DF2\u5B9E\u6D4B\u7684\u62DB\u8058\u7AD9\uFF1B\u65B0\u589E\u5B98\u65B9\u627F\u8F7D\u57DF\u540D\u9700\u52A0\u5165\u76EE\u5F55\u3002"] },
+  { id: "moka", name: "Moka", family: "sd", hosts: [{ kind: "exact", value: "app.mokahr.com" }], compatible: true, limitations: ["\u517C\u5BB9\u9875\u9762\u53EA\u586B\u5199\u5B9E\u65F6\u626B\u63CF\u540E\u53EF\u8BC6\u522B\u7684\u666E\u901A\u5B57\u6BB5\u3002"] },
+  { id: "beisen", name: "\u5317\u68EE", family: "phoenix", hosts: [{ kind: "suffix", value: "zhiye.com" }], compatible: true, limitations: ["\u4E0D\u540C\u4F01\u4E1A\u8BCD\u5E93\u4ECD\u4EE5\u9875\u9762\u5019\u9009\u548C\u6267\u884C\u6838\u9A8C\u4E3A\u51C6\u3002"] },
+  { id: "dayee", name: "\u5927\u6613", family: "dayee", hosts: [{ kind: "suffix", value: "hotjob.cn" }], compatible: true, limitations: ["\u4F01\u4E1A\u4E13\u7528\u5B57\u6BB5\u548C\u9009\u9879\u8F6C\u6362\u4E0D\u4ECE\u4E00\u6C7D\u6A21\u677F\u7EE7\u627F\u3002"] },
+  { id: "guopin", name: "\u56FD\u8058", family: "guopin", hosts: [{ kind: "exact", value: "c.iguopin.com" }], compatible: true, limitations: ["\u53EA\u5904\u7406\u5DF2\u8BC6\u522B\u7684\u7B80\u5386\u6A21\u5757\uFF0C\u4E0D\u81EA\u52A8\u589E\u52A0\u7F51\u7AD9\u672A\u5F00\u653E\u7684\u6A21\u5757\u3002"] },
+  { id: "51job-custom", name: "51job \u4F01\u4E1A\u5B9A\u5236", family: "job51", hosts: [{ kind: "exact", value: "xyz.51job.com" }], compatible: false, limitations: ["\u5206\u9875\u548C\u4F01\u4E1A\u5DEE\u5F02\u8F83\u5927\uFF0C\u7EE7\u7EED\u6309\u7CBE\u786E\u4F01\u4E1A\u6A21\u677F\u9A8C\u6536\u3002"] }
+];
+function publicTemplate(t) {
+  return { id: t.id, name: t.name, family: t.family, status: t.status, modules: t.modules, evidence: t.evidence, verified_version: t.verified_version, verified_on: t.verified_on, persistence: t.persistence, limitations: t.limitations };
+}
+function platformModules(p) {
+  return [...new Set(templates.filter((t) => t.family === p.family && t.status === "ordinary_fill_verified").flatMap((t) => t.modules))];
+}
+function publicPlatform(p) {
+  return { id: p.id, name: p.name, family: p.family, compatible: p.compatible, modules: platformModules(p), evidence_templates: templates.filter((t) => t.family === p.family && t.status === "ordinary_fill_verified").map((t) => t.id), limitations: p.limitations };
+}
+function capabilityCatalog() {
+  return { catalog_version: CAPABILITY_VERSION, platforms: platforms.map(publicPlatform), templates: templates.map(publicTemplate) };
+}
+
+// src/browser/planning/requirements.ts
+function requirementsCatalog() {
+  const templates2 = capabilityCatalog().templates.filter((t) => t.status === "ordinary_fill_verified");
+  const entries = /* @__PURE__ */ new Map();
+  const add = (section, key, label, use, condition) => {
+    const id2 = JSON.stringify([section, key, condition]);
+    const entry = entries.get(id2) ?? { section, key, label, uses: [], ...condition ? { condition } : {} };
+    if (!entry.uses.some((u) => u.template_id === use.template_id && u.module === use.module)) entry.uses.push(use);
+    entries.set(id2, entry);
+  };
+  for (const template of templates2) {
+    const recipe = recipes.find((r) => r.family === template.family);
+    for (const module of template.modules) {
+      const group = recipe.sections.find((s) => s.sections.includes(module));
+      if (!group) continue;
+      const use = { template_id: template.id, template_name: template.name, module };
+      for (const source of group.sources) for (const rule of group.fields) {
+        if (rule.company || manualReason({ label: rule.labels[0], scope: module })) continue;
+        const key = rule.key, label = rule.labels[0];
+        if (["school_other", "major_other", "job51_school_option", "job51_major_option", "full_time"].includes(key)) continue;
+        if (key === "range") {
+          add(source, "start", "\u5F00\u59CB\u5E74\u6708\uFF08YYYY-MM\uFF09", use);
+          add(source, "end", "\u7ED3\u675F\u5E74\u6708\uFF08YYYY-MM\uFF1B\u4ECD\u5728\u8FDB\u884C\u5219\u7559\u7A7A\uFF09", use);
+          add(source, "current", "\u662F\u5426\u4ECD\u5728\u8FDB\u884C\uFF08\u662F/\u5426\uFF09", use);
+          continue;
+        }
+        if (key === "cities") {
+          add("intent", "cities", "\u671F\u671B\u5DE5\u4F5C\u57CE\u5E02\uFF08\u5217\u8868\uFF09", use);
+          continue;
+        }
+        if (key === "combined_description") {
+          add(source, "description", "\u9879\u76EE\u63CF\u8FF0", use);
+          add(source, "responsibilities", "\u9879\u76EE\u804C\u8D23", use);
+          continue;
+        }
+        if (key === "self_career_description") {
+          add("basic", "self_description", "\u81EA\u6211\u8BC4\u4EF7", use);
+          add("basic", "career_plan", "\u804C\u4E1A\u89C4\u5212", use);
+          continue;
+        }
+        if (/^father_|^mother_/.test(key)) {
+          for (const [k, l] of [["relation", "\u5173\u7CFB\uFF08\u7236\u4EB2/\u6BCD\u4EB2\u7B49\uFF09"], ["name", "\u59D3\u540D"], ["organization", "\u5DE5\u4F5C\u5355\u4F4D"], ["role", "\u804C\u4F4D"]]) add("family", k, l, use);
+          continue;
+        }
+        if (key === "certificate_names") {
+          add("certificates", "name", "\u8BC1\u4E66\u540D\u79F0", use);
+          continue;
+        }
+        if (key === "skills_text") {
+          add("basic", "skills_text", "\u5176\u4ED6\u6280\u80FD", use);
+          continue;
+        }
+        if (key === "degree") {
+          add(source, "completed", "\u6B64\u6BB5\u5B66\u5386\u662F\u5426\u5DF2\u5B8C\u6210\uFF08\u662F/\u5426\uFF09", use);
+          add(source, key, "\u5DF2\u7ECF\u83B7\u5F97\u7684\u5B66\u4F4D\uFF08\u672A\u83B7\u5F97\u4E0D\u586B\u9884\u8BA1\u5B66\u4F4D\uFF09", use, { key: "completed", equals: "true" });
+          continue;
+        }
+        const labels = { level: "\u6B64\u6BB5\u5C31\u8BFB\u5B66\u5386\uFF08\u9AD8\u4E2D/\u5927\u4E13/\u672C\u79D1/\u7855\u58EB/\u535A\u58EB/\u5176\u4ED6\uFF09", study_mode: "\u5B66\u4E60\u5F62\u5F0F\uFF08\u5168\u65E5\u5236/\u975E\u5168\u65E5\u5236/\u5176\u4ED6\uFF09", highest_education: "\u6700\u9AD8\u5B66\u5386\uFF08\u6CE8\u660E\u5DF2\u83B7\u5F97\u8FD8\u662F\u5728\u8BFB\uFF0C\u52FF\u6DF7\u7528\uFF09", start: "\u5F00\u59CB\u5E74\u6708\uFF08YYYY-MM\uFF09", end: "\u7ED3\u675F\u5E74\u6708\uFF08YYYY-MM\uFF09", current: "\u662F\u5426\u4ECD\u5728\u8FDB\u884C\uFF08\u662F/\u5426\uFF09" };
+        add(source, key, labels[key] ?? label, use);
+      }
+    }
+  }
+  const requirements = [...entries.values()];
+  return { version: `req-${createHash3("sha256").update(JSON.stringify(requirements)).digest("hex").slice(0, 16)}`, requirements, template_ids: templates2.map((t) => t.id), templates: templates2.map((t) => ({ id: t.id, modules: t.modules })) };
+}
+
 // src/index.ts
 var store = new ProfileStore();
 await store.initialize();
+var preparation = new ProfilePreparation(store, requirementsCatalog());
 function toolResult(data) {
   const structuredContent = isRecord(data) ? data : { value: data };
   return { content: [{ type: "text", text: JSON.stringify(data) }], structuredContent };
@@ -21954,8 +22761,8 @@ async function runLocal(job) {
 }
 var server = new McpServer({ name: "resume-companion", version: RUNTIME_PLUGIN_VERSION });
 server.registerTool("resume_status", {
-  title: "\u68C0\u67E5\u7B80\u5386\u968F\u884C\u8D44\u6599\u5E93\u72B6\u6001",
-  description: "\u8FD4\u56DE\u672C\u5730\u8D44\u6599\u5E93\u76EE\u5F55\u3001\u683C\u5F0F\u7248\u672C\u548C\u8D44\u6599\u6570\u91CF\u3002\u6D4F\u89C8\u5668\u7531\u72EC\u7ACB\u7684 Resume Browser MCP \u63D0\u4F9B\uFF0C\u56E0\u6B64\u672C\u5DE5\u5177\u4E0D\u4F1A\u542F\u52A8\u6216\u68C0\u67E5 Chrome\u3002",
+  title: "\u68C0\u67E5 ApplyMCP \u8D44\u6599\u5E93\u72B6\u6001",
+  description: "\u8FD4\u56DE\u672C\u5730\u8D44\u6599\u5E93\u76EE\u5F55\u3001\u683C\u5F0F\u7248\u672C\u548C\u8D44\u6599\u6570\u91CF\u3002\u6D4F\u89C8\u5668\u7531\u72EC\u7ACB\u7684 ApplyMCP Browser \u63D0\u4F9B\uFF0C\u56E0\u6B64\u672C\u5DE5\u5177\u4E0D\u4F1A\u542F\u52A8\u6216\u68C0\u67E5 Chrome\u3002",
   annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true }
 }, async () => runLocal(async () => ({
   storage: await store.status(),
@@ -21978,6 +22785,18 @@ server.registerTool("resume_profile_save", {
   inputSchema: ProfileSaveSchema,
   annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false }
 }, async (input) => runLocal(() => store.save(ProfileSaveSchema.parse(input))));
+server.registerTool("resume_prepare", {
+  title: "\u751F\u6210\u4E00\u6B21\u6027\u7B80\u5386\u8D44\u6599\u8865\u5145\u8868",
+  description: "\u4ECE\u56FA\u5B9A\u8D44\u6599 revision \u548C\u5DF2\u9A8C\u8BC1\u4F01\u4E1A\u9700\u6C42\u5E76\u96C6\u751F\u6210\u7F3A\u9879 Markdown\uFF0C\u4E0D\u8FD4\u56DE\u5DF2\u6709\u7B54\u6848\u3002\u9ED8\u8BA4 all_supported\uFF1B\u4EC5\u8FD0\u884C\u524D\u5DEE\u5F02\u68C0\u67E5\u4F7F\u7528 selected_modules\u3002\u6CA1\u6709\u7684\u7ECF\u5386\u4E0D\u5C55\u5F00\uFF0C\u8EAB\u4EFD\u8BC1\u53F7\u7B49\u8BC1\u4EF6\u53F7\u7801\u6807\u8BB0\u4E3A\u672C\u5730\u5F55\u5165\uFF0C\u624B\u673A\u53F7/\u90AE\u7BB1\u5DF2\u6709\u5219\u4E0D\u518D\u95EE\u3002\u5206\u9875\u672A\u7ED3\u675F\u65F6\u9700\u7EE7\u7EED\u8BFB\u53D6\u5E76\u5408\u5E76\u6E05\u5355\u3002",
+  inputSchema: PreparationReadSchema,
+  annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true }
+}, async (input) => runLocal(() => preparation.read(input)));
+server.registerTool("resume_prepare_apply", {
+  title: "\u5408\u5E76\u7528\u6237\u660E\u786E\u8865\u5145\u7684\u8D44\u6599",
+  description: "\u6309 question ID\u3001\u8D44\u6599 revision\u3001\u76EE\u5F55\u7248\u672C\u548C questionnaire_id \u5408\u5E76\u7528\u6237\u7B54\u6848\uFF0C\u4FDD\u7559\u5176\u4ED6\u8BB0\u5F55\uFF0C\u4E0D\u8986\u76D6\u5DF2\u6709\u4E8B\u5B9E\u3002none \u4EC5\u7528\u4E8E\u65E0\u8BB0\u5F55\u680F\u76EE\uFF1Bnot_applicable/withheld/deferred \u4E0D\u4F1A\u53D8\u6210\u7F51\u7AD9\u4E0A\u7684\u5426\u3002\u8BC1\u4EF6\u53F7\u7801\u4E0D\u80FD\u901A\u8FC7\u6B64\u5DE5\u5177\u5F55\u5165\u3002\u6709\u65B0\u7ECF\u5386\u65F6\u5148\u901A\u8FC7\u8D44\u6599\u4FDD\u5B58\u5DE5\u5177\u5EFA\u7ACB\u8BB0\u5F55\uFF0C\u518D\u91CD\u65B0\u751F\u6210\u8865\u5145\u8868\u3002",
+  inputSchema: PreparationApplySchema,
+  annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false }
+}, async (input) => runLocal(() => preparation.apply(input)));
 var transport = new StdioServerTransport();
 await server.connect(transport);
 var closing = false;
