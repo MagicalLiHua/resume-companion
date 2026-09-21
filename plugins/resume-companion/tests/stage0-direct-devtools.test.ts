@@ -60,7 +60,11 @@ function selectedPageId(text: string): number {
 
 async function call(name: string, arguments_: Record<string, unknown> = {}): Promise<ToolResult> {
   if (!client) throw new Error('Stage 0 MCP client is not connected');
-  const result = await client.callTool({ name, arguments: arguments_ });
+  const result = await client.callTool(
+    { name, arguments: arguments_ },
+    undefined,
+    { timeout: ciTimeout(60_000) },
+  );
   if (result.isError) throw new Error(`${name}: ${textOf(result)}`);
   return result;
 }
