@@ -44,8 +44,6 @@ for (const file of [
   'agent-clients.md',
   '51job与大易适配开发记录-2026-09-21.md',
   '51job与大易适配调研-2026-09-21.md',
-  'reports/2026-09-21-dayee-guopin-development.md',
-  'reports/2026-09-21-dayee-guopin-development.metrics.json',
 ]) {
   await cp(resolve(root, 'docs', file), resolve(staging, 'docs', file));
 }
