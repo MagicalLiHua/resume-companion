@@ -112,6 +112,7 @@ async function reloadCodexMcp() {
         finish(message.error ? new Error(message.error.message || 'MCP reload failed') : undefined);
       }
     });
+    proxy.stdin.on('error', finish);
     proxy.once('error', finish);
     proxy.once('exit', code => {
       if (!finished) finish(new Error(`Codex app-server proxy exited with code ${code ?? 'unknown'}`));
