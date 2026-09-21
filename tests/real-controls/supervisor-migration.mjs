@@ -30,7 +30,7 @@ try{
  const reuse=await launch();assert.equal(reuse.code,0,reuse.stderr);assert.match(reuse.stdout,/legacy-browser-kept/);
  mode='upgrade_required';const upgrade=await launch();assert.equal(upgrade.code,1);assert.match(upgrade.stderr,/browser_upgrade_pending/);
  assert.deepEqual(kinds,['connect','connect'],'discovery must neither restart nor shut down the legacy service');
- const mock=join(root,'codex-mock');await writeFile(mock,'#!/bin/sh\necho "failed to connect to socket" >&2\nexit 1\n');await chmod(mock,0o700);
+ const mock=join(root,'codex-mock');await writeFile(mock,'#!/bin/sh\nexec 0<&-\nsleep 1\necho "failed to connect to socket" >&2\nexit 1\n');await chmod(mock,0o700);
  const runReload=async flags=>{const child=spawn(process.execPath,[join(plugin,'scripts/reload-codex-mcp.mjs'),...flags],{env:{...process.env,TMPDIR:root,RESUME_COMPANION_CHROME_DATA_DIR:profile,RESUME_COMPANION_CODEX_BIN:mock},stdio:['ignore','pipe','pipe']});let out='';child.stdout.on('data',b=>out+=b);child.stderr.on('data',b=>out+=b);const code=await new Promise(resolve=>child.once('exit',resolve));return {code,out};};
  const safe=await runReload([]);assert.equal(safe.code,0,safe.out);assert.match(safe.out,/Preserved the dedicated browser/);assert.deepEqual(kinds,['connect','connect']);
  mode='shutting_down';const explicit=await runReload(['--restart-browser']);assert.equal(explicit.code,0,explicit.out);assert.equal(kinds.at(-1),'shutdown');assert.match(explicit.out,/Stopped the previous/);

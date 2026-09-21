@@ -97,7 +97,7 @@ async function reloadCodexMcp() {
       if (!proxy.killed) proxy.kill('SIGTERM');
       if (!error) return resolveReload(true);
       const detail = stderr.trim().split('\n').slice(-4).join(' ');
-      if (/failed to connect to socket|No such file or directory/i.test(`${error.message} ${detail}`)) return resolveReload(false);
+      if (/failed to connect to socket|No such file or directory|\bEPIPE\b/i.test(`${error.message} ${detail}`)) return resolveReload(false);
       rejectReload(new Error(`${error.message}${detail ? ` (${detail})` : ''}`));
     };
 
