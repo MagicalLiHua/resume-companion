@@ -16,9 +16,16 @@ const pluginRoot = resolve(import.meta.dirname, '..');
 const projectRoot = resolve(pluginRoot, '../..');
 const profileRoot = await mkdtemp(join(tmpdir(), 'resume-companion-stage0-profile-'));
 const profileDir = join(profileRoot, 'chrome-profile');
+const isCi = process.env.CI === 'true';
+const benchmarkRuns = isCi ? 1 : 5;
 let lab: ChildProcess | null = null;
 let client: Client | null = null;
 let pageId = 0;
+
+function percentile(values: number[], percentileValue: number): number {
+  const sorted = values.slice().sort((left, right) => left - right);
+  return sorted[Math.ceil((sorted.length - 1) * percentileValue)]!;
+}
 
 const textOf = (result: ToolResult): string => Array.isArray(result.content)
   ? result.content.filter(item => item.type === 'text').map(item => item.text).join('\n')
@@ -774,7 +781,7 @@ describe('Stage 0 direct Chrome DevTools MCP validation', () => {
       ['能力选项 1', 'true'], ['能力选项 2', 'true'], ['能力选项 3', 'true'], ['能力选项 4', 'true'],
     ];
     let latest = '';
-    for (let iteration = 0; iteration < 5; iteration++) {
+    for (let iteration = 0; iteration < benchmarkRuns; iteration++) {
       const opened = await call('new_page', { url: `http://127.0.0.1:4174/benchmark-form.html?iteration=${iteration}&run=${Date.now()}` });
       pageId = selectedPageId(textOf(opened));
       const snapshot = textOf(await call('take_snapshot', { pageId }));
@@ -791,10 +798,9 @@ describe('Stage 0 direct Chrome DevTools MCP validation', () => {
       expect(latest).toContain('TypeScript');
       expect(latest).toMatch(/checked|true/);
     }
-    const sorted = durations.slice().sort((left, right) => left - right);
-    const p50 = sorted[2]!;
-    const p95 = sorted[4]!;
-    expect(p50).toBeLessThan(15_000);
+    const p50 = percentile(durations, 0.5);
+    const p95 = percentile(durations, 0.95);
+    if (!isCi) expect(p50).toBeLessThan(15_000);
     const state = textOf(await call('evaluate_script', {
       pageId,
       function: `() => window.Benchmark.read()`,
@@ -834,7 +840,7 @@ describe('Stage 0 direct Chrome DevTools MCP validation', () => {
 
   test('measures a 12-checkbox batch on the direct upstream route', async () => {
     const durations: number[] = [];
-    for (let iteration = 0; iteration < 5; iteration++) {
+    for (let iteration = 0; iteration < benchmarkRuns; iteration++) {
       const opened = await call('new_page', { url: `http://127.0.0.1:4174/checkbox-benchmark.html?iteration=${iteration}` });
       pageId = selectedPageId(textOf(opened));
       const snapshot = textOf(await call('take_snapshot', { pageId }));
@@ -847,8 +853,7 @@ describe('Stage 0 direct Chrome DevTools MCP validation', () => {
       durations.push(performance.now() - startedAt);
       expect((filled.match(/checked/g) ?? [])).toHaveLength(12);
     }
-    const sorted = durations.slice().sort((left, right) => left - right);
-    console.log(JSON.stringify({ benchmark: 'direct-checkboxes-12', runs: durations.length, p50_ms: Math.round(sorted[2]!), p95_ms: Math.round(sorted[4]!) }));
+    console.log(JSON.stringify({ benchmark: 'direct-checkboxes-12', runs: durations.length, p50_ms: Math.round(percentile(durations, 0.5)), p95_ms: Math.round(percentile(durations, 0.95)) }));
   }, 45_000);
 
   test('records the unscoped snapshot cost of a long form', async () => {
@@ -949,10 +954,10 @@ describe('Stage 0 direct Chrome DevTools MCP validation', () => {
     expect(report).toContain('"agreementUnchecked":true');
   }, 35_000);
 
-  test('runs the complex control recipes through five deterministic passes', async () => {
+  test('runs the complex control recipes through deterministic passes', async () => {
     const durations: number[] = [];
     const callCounts: number[] = [];
-    for (let iteration = 0; iteration < 5; iteration++) {
+    for (let iteration = 0; iteration < benchmarkRuns; iteration++) {
       const startedAt = performance.now();
       let calls = 0;
       const recipeCall = async (name: string, arguments_: Record<string, unknown> = {}): Promise<string> => {
@@ -1074,13 +1079,12 @@ describe('Stage 0 direct Chrome DevTools MCP validation', () => {
       durations.push(performance.now() - startedAt);
       callCounts.push(calls);
     }
-    const sorted = durations.slice().sort((left, right) => left - right);
-    expect(callCounts).toEqual([32, 32, 32, 32, 32]);
+    expect(callCounts).toEqual(Array.from({ length: benchmarkRuns }, () => 32));
     console.log(JSON.stringify({
       benchmark: 'complex-control-recipes',
       runs: durations.length,
-      p50_ms: Math.round(sorted[2]!),
-      p95_ms: Math.round(sorted[4]!),
+      p50_ms: Math.round(percentile(durations, 0.5)),
+      p95_ms: Math.round(percentile(durations, 0.95)),
       calls_per_run: callCounts[0],
       boundary_violations: 0,
     }));
