@@ -12,19 +12,22 @@
 
 当前 `0.24.0` 是有人监督的开发预览版。ApplyMCP 负责重复填写，登录、验证码、附件、声明和最终提交由用户完成。
 
-<p align="center">
-  <a href="https://developers.openai.com/codex/" title="Codex"><img src="docs/assets/agent-icons/codex.png" width="40" height="40" alt="Codex"></a>&nbsp;&nbsp;
-  <a href="https://www.anthropic.com/claude-code" title="Claude Code"><img src="docs/assets/agent-icons/claude-code.png" width="40" height="40" alt="Claude Code"></a>&nbsp;&nbsp;
-  <a href="https://cursor.com/" title="Cursor"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/agent-icons/cursor-dark.svg"><img src="docs/assets/agent-icons/cursor.svg" width="40" height="40" alt="Cursor"></picture></a>&nbsp;&nbsp;
-  <a href="https://www.kimi.com/code/en" title="Kimi Code"><img src="docs/assets/agent-icons/kimi-code.png" width="40" height="40" alt="Kimi Code"></a>&nbsp;&nbsp;
-  <a href="https://hermes-agent.nousresearch.com/" title="Hermes Agent"><img src="docs/assets/agent-icons/hermes-agent.png" width="40" height="40" alt="Hermes Agent"></a>&nbsp;&nbsp;
-  <a href="https://open.workbuddy.cn/" title="WorkBuddy"><img src="docs/assets/agent-icons/workbuddy.svg" width="40" height="40" alt="WorkBuddy"></a>&nbsp;&nbsp;
-  <a href="https://www.trae.ai/" title="Trae"><img src="docs/assets/agent-icons/trae.png" width="40" height="40" alt="Trae"></a>&nbsp;&nbsp;
-  <a href="https://opencode.ai/" title="OpenCode"><img src="docs/assets/agent-icons/opencode.png" width="40" height="40" alt="OpenCode"></a>&nbsp;&nbsp;
-  <a href="https://geminicli.com/" title="Gemini CLI"><img src="docs/assets/agent-icons/gemini-cli.png" width="40" height="40" alt="Gemini CLI"></a>
-  <br>
-  <sub>Codex · Claude Code · Cursor · Kimi Code · Hermes Agent · WorkBuddy · Trae · OpenCode · Gemini CLI</sub>
-</p>
+<table align="center">
+  <tr>
+    <td align="center" width="20%"><a href="https://developers.openai.com/codex/"><img src="docs/assets/agent-icons/codex.png" width="40" height="40" alt="Codex"><br><sub>Codex</sub></a></td>
+    <td align="center" width="20%"><a href="https://www.anthropic.com/claude-code"><img src="docs/assets/agent-icons/claude-code.png" width="40" height="40" alt="Claude Code"><br><sub>Claude Code</sub></a></td>
+    <td align="center" width="20%"><a href="https://cursor.com/"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/agent-icons/cursor-dark.svg"><img src="docs/assets/agent-icons/cursor.svg" width="40" height="40" alt="Cursor"></picture><br><sub>Cursor</sub></a></td>
+    <td align="center" width="20%"><a href="https://www.kimi.com/code/en"><img src="docs/assets/agent-icons/kimi-code.png" width="40" height="40" alt="Kimi Code"><br><sub>Kimi Code</sub></a></td>
+    <td align="center" width="20%"><a href="https://hermes-agent.nousresearch.com/"><img src="docs/assets/agent-icons/hermes-agent.png" width="40" height="40" alt="Hermes Agent"><br><sub>Hermes Agent</sub></a></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="https://open.workbuddy.cn/"><img src="docs/assets/agent-icons/workbuddy.svg" width="40" height="40" alt="WorkBuddy"><br><sub>WorkBuddy</sub></a></td>
+    <td align="center"><a href="https://www.trae.ai/"><img src="docs/assets/agent-icons/trae.png" width="40" height="40" alt="Trae"><br><sub>Trae</sub></a></td>
+    <td align="center"><a href="https://opencode.ai/"><img src="docs/assets/agent-icons/opencode.png" width="40" height="40" alt="OpenCode"><br><sub>OpenCode</sub></a></td>
+    <td align="center"><a href="https://geminicli.com/"><img src="docs/assets/agent-icons/gemini-cli.png" width="40" height="40" alt="Gemini CLI"><br><sub>Gemini CLI</sub></a></td>
+    <td></td>
+  </tr>
+</table>
 
 <p align="center">
   <a href="docs/assets/applymcp-demo.mp4">
@@ -90,16 +93,16 @@ ApplyMCP 会先确认招聘系统和页面模块，再将页面与本地资料�
 
 ## 支持的招聘系统
 
-目前已为飞书招聘、Moka、北森、大易和国聘 5 种主流招聘系统建立平台识别、模块扫描和填写路径；51job 则按企业定制模板支持。下表中的页面是当前开发与验收样本，不代表对应平台的所有企业配置。每次填写前仍会重新扫描企业实际开放的栏目。
+目前已为飞书招聘、Moka、北森、大易和国聘 5 种主流招聘系统建立平台识别、模块扫描和填写路径；51job 则按已登记的企业定制模板支持。不同企业可能开放不同模块，因此每次填写前仍会扫描当前页面。
 
-| 招聘系统 | 当前覆盖 | 开发与验收样本 |
-| --- | --- | --- |
-| 飞书招聘 | 企业模板验证 + 实时模块扫描 | 字节跳动校园招聘 |
-| Moka | 可信平台兼容扫描 | 金蝶招聘 |
-| 北森 | `*.zhiye.com` 平台兼容扫描 | 奇瑞招聘 |
-| 大易 | `*.hotjob.cn` 平台兼容扫描 | 中国一汽招聘 |
-| 国聘 | 同站模块化简历流程 | `c.iguopin.com` 简历编辑页 |
-| 51job 企业定制版 | 按企业模板精确适配 | 中粮等已登记模板；不作为整个 51job 平台通用能力 |
+| 招聘系统 | 当前覆盖 |
+| --- | --- |
+| 飞书招聘 | 平台识别、实时模块扫描与普通字段填写 |
+| Moka | 平台识别、兼容扫描与普通字段填写 |
+| 北森 | `*.zhiye.com` 平台识别、模块扫描与普通字段填写 |
+| 大易 | `*.hotjob.cn` 平台识别、模块扫描与普通字段填写 |
+| 国聘 | 同站模块化简历扫描与普通字段填写 |
+| 51job 企业定制版 | 按已登记模板精确适配，不作为整个 51job 平台的通用能力 |
 
 这里的“支持”表示能够识别页面、生成受约束的填写计划并执行已识别的普通字段，不表示每家企业的全部问卷、服务端保存或最终投递都已验收。具体测试样本、通过项和未决项见[验证范围](docs/validation.md)。
 
