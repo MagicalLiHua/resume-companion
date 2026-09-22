@@ -12,22 +12,17 @@
 
 当前 `0.24.0` 是有人监督的开发预览版。ApplyMCP 负责重复填写，登录、验证码、附件、声明和最终提交由用户完成。
 
-<table align="center">
-  <tr>
-    <td align="center" width="20%"><a href="https://developers.openai.com/codex/"><img src="docs/assets/agent-icons/codex.png" width="40" height="40" alt="Codex"><br><sub>Codex</sub></a></td>
-    <td align="center" width="20%"><a href="https://www.anthropic.com/claude-code"><img src="docs/assets/agent-icons/claude-code.png" width="40" height="40" alt="Claude Code"><br><sub>Claude Code</sub></a></td>
-    <td align="center" width="20%"><a href="https://cursor.com/"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/agent-icons/cursor-dark.svg"><img src="docs/assets/agent-icons/cursor.svg" width="40" height="40" alt="Cursor"></picture><br><sub>Cursor</sub></a></td>
-    <td align="center" width="20%"><a href="https://www.kimi.com/code/en"><img src="docs/assets/agent-icons/kimi-code.png" width="40" height="40" alt="Kimi Code"><br><sub>Kimi Code</sub></a></td>
-    <td align="center" width="20%"><a href="https://hermes-agent.nousresearch.com/"><img src="docs/assets/agent-icons/hermes-agent.png" width="40" height="40" alt="Hermes Agent"><br><sub>Hermes Agent</sub></a></td>
-  </tr>
-  <tr>
-    <td align="center"><a href="https://open.workbuddy.cn/"><img src="docs/assets/agent-icons/workbuddy.svg" width="40" height="40" alt="WorkBuddy"><br><sub>WorkBuddy</sub></a></td>
-    <td align="center"><a href="https://www.trae.ai/"><img src="docs/assets/agent-icons/trae.png" width="40" height="40" alt="Trae"><br><sub>Trae</sub></a></td>
-    <td align="center"><a href="https://opencode.ai/"><img src="docs/assets/agent-icons/opencode.png" width="40" height="40" alt="OpenCode"><br><sub>OpenCode</sub></a></td>
-    <td align="center"><a href="https://geminicli.com/"><img src="docs/assets/agent-icons/gemini-cli.png" width="40" height="40" alt="Gemini CLI"><br><sub>Gemini CLI</sub></a></td>
-    <td></td>
-  </tr>
-</table>
+<p align="center">
+  <a href="https://developers.openai.com/codex/" title="Codex"><img src="docs/assets/agent-icons/codex.png" width="40" height="40" alt="Codex"></a>&nbsp;&nbsp;&nbsp;
+  <a href="https://www.anthropic.com/claude-code" title="Claude Code"><img src="docs/assets/agent-icons/claude-code.png" width="40" height="40" alt="Claude Code"></a>&nbsp;&nbsp;&nbsp;
+  <a href="https://cursor.com/" title="Cursor"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/agent-icons/cursor-dark.svg"><img src="docs/assets/agent-icons/cursor.svg" width="40" height="40" alt="Cursor"></picture></a>&nbsp;&nbsp;&nbsp;
+  <a href="https://www.kimi.com/code/en" title="Kimi Code"><img src="docs/assets/agent-icons/kimi-code.png" width="40" height="40" alt="Kimi Code"></a>&nbsp;&nbsp;&nbsp;
+  <a href="https://hermes-agent.nousresearch.com/" title="Hermes Agent"><img src="docs/assets/agent-icons/hermes-agent.png" width="40" height="40" alt="Hermes Agent"></a>&nbsp;&nbsp;&nbsp;
+  <a href="https://open.workbuddy.cn/" title="WorkBuddy"><img src="docs/assets/agent-icons/workbuddy.svg" width="40" height="40" alt="WorkBuddy"></a>&nbsp;&nbsp;&nbsp;
+  <a href="https://www.trae.ai/" title="Trae"><img src="docs/assets/agent-icons/trae.png" width="40" height="40" alt="Trae"></a>&nbsp;&nbsp;&nbsp;
+  <a href="https://opencode.ai/" title="OpenCode"><img src="docs/assets/agent-icons/opencode.png" width="40" height="40" alt="OpenCode"></a>&nbsp;&nbsp;&nbsp;
+  <a href="https://geminicli.com/" title="Gemini CLI"><img src="docs/assets/agent-icons/gemini-cli.png" width="40" height="40" alt="Gemini CLI"></a>
+</p>
 
 <p align="center">
   <a href="docs/assets/applymcp-demo.mp4">
